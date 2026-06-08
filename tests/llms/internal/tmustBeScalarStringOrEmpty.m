@@ -1,0 +1,29 @@
+classdef tmustBeScalarStringOrEmpty < matlab.unittest.TestCase
+% Tests for aisdk.llms.internal.mustBeScalarStringOrEmpty.
+
+%   Copyright 2026 The MathWorks, Inc.
+
+    properties (TestParameter)
+        validInput = struct( ...
+            'scalarString', {"hello"}, ...
+            'charVector', {'hello'}, ...
+            'emptyChar', {''}, ...
+            'doubleEmpty', {[]})
+        invalidInput = struct( ...
+            'numericScalar', {0}, ...
+            'stringArray', {["a","b"]})
+    end
+
+    methods (Test)
+        function acceptsValidInput(testCase, validInput)
+            testCase.verifyWarningFree( ...
+                @() aisdk.llms.internal.mustBeScalarStringOrEmpty(validInput));
+        end
+
+        function rejectsInvalidInput(testCase, invalidInput)
+            testCase.verifyError( ...
+                @() aisdk.llms.internal.mustBeScalarStringOrEmpty(invalidInput), ...
+                "llms:message:InvalidToolCallID");
+        end
+    end
+end

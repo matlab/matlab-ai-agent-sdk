@@ -1,0 +1,6 @@
+.agents/
+AGENTS.md
+CLAUDE.md
+*.asv
+.claude/
+.env

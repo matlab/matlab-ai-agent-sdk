@@ -1,0 +1,64 @@
+{
+    "llmTool": {
+        "inputs": [
+            {
+                "mutuallyExclusiveGroup": [
+                    [
+                        {
+                            "name": "toolDefinition",
+                            "kind": "required",
+                            "type": [["function_handle"]]
+                        },
+                        {
+                            "name": "Name",
+                            "kind": "namevalue",
+                            "type": [["string", "scalar"], ["char"]]
+                        },
+                        {
+                            "name": "Description",
+                            "kind": "namevalue",
+                            "type": [["string", "scalar"], ["char"]]
+                        },
+                        {
+                            "name": "DisplayTitle",
+                            "kind": "namevalue",
+                            "type": [["string", "scalar"], ["char"]]
+                        },
+                        {
+                            "name": "InputArguments",
+                            "kind": "namevalue",
+                            "type": [["llmToolArgument"], ["struct"]]
+                        },
+                        {
+                            "name": "OutputArguments",
+                            "kind": "namevalue",
+                            "type": [["llmToolArgument"], ["struct"]]
+                        },
+                        {
+                            "name": "Annotations",
+                            "kind": "namevalue",
+                            "type": [["struct", "scalar"]]
+                        },
+                        {
+                            "name": "RequiresApproval",
+                            "kind": "namevalue",
+                            "type": [["choices={'never','once','always'}"]]
+                        },
+                        {
+                            "name": "Workspace",
+                            "kind": "namevalue",
+                            "type": [["choices={'none','agent'}"]]
+                        }
+                    ],
+                    [
+                        {
+                            "name": "mcpClient",
+                            "kind": "required",
+                            "type": [["mcpHTTPClient"]]
+                        }
+                    ]
+                ]
+            }
+        ]
+    }
+}
