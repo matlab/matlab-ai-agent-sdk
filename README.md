@@ -1,70 +1,34 @@
-# MATLAB&reg; AI Agent SDK
+# MATLAB AI Agent SDK
 
 [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=matlab/matlab-ai-agent-sdk)
 
-Build AI agents in MATLAB, call tools from Toolboxes, and connect to OpenAI&reg; and Ollama&trade;.
+> [!IMPORTANT]
+> This SDK is a research preview under active development and APIs may change.
 
-**Why use this SDK?** Build LLM agents with tool-calling by defining tools as ordinary MATLAB functions and attaching them to an agent. Manage conversation state, tool dispatch, and run multi-turn interactions in a few lines of code.
 
-## Research Preview
+MATLAB® AI Agent SDK lets you build and run AI agents in MATLAB.
 
-This SDK is a Research Preview under active development and APIs may change.
+•	Connect to OpenAI® or Ollama™.
 
-Please leave feedback, report bugs and feature requests via [Issues](../../issues). We review all contributions, but we do not merge external pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+•	Give agents access to MATLAB functions and toolbox workflows.
 
-## Getting Started
+•	Create agents that reason about a goal, call MATLAB tools, and maintain state across turns.
 
-Create a client using either OpenAI or Ollama:
+•	Keep domain logic, validation, and workflow control in MATLAB code.
 
-```matlab
-client = aisdk.LLMClient("openai", "gpt-4.1-mini");
-% or
-client = aisdk.LLMClient("ollama", "<model-name>");
-```
+•	Run multi-step workflows in MATLAB with full control over the tools an agent can use.
 
-Then use the same workflow for both — generate a single response:
-
-```matlab
-text = generate(client, "Why is the sky blue?");
-disp(text)
-```
-
-Or create an agent for multi-turn conversations with tools:
-
-```matlab
-addTool = aisdk.LLMTool(@addTwoNumbers, Description="Add two numbers");
-agent = aisdk.AIAgent(client, "You are a helpful assistant.", addTool);
-text = run(agent, "What is 2 + 3?");
-disp(text)
-```
-
-See [Persisting Data Between Tool Calls](#persisting-data-between-tool-calls) for the full pattern.
-
-## Persisting Data Between Tool Calls
-
-Give an agent access to MATLAB functions so it can compute, store, and retrieve data during a conversation. The agent passes data between tools via a shared workspace struct.
-
-```matlab
-function [observation, workspace] = storeNumber(workspace, value)
-    workspace.storedValue = value;
-    observation = "Stored " + value + ".";
-end
-
-storeTool = aisdk.LLMTool(@storeNumber, ...
-    Description="Store a number for later use", ...
-    InputArguments=struct("value", 0));
-
-client = aisdk.LLMClient("openai", "gpt-4.1-mini");
-agent = aisdk.AIAgent(client, "Store the number the user gives you.", ...
-    storeTool, Workspace=struct());
-run(agent, "The number is 42.");
-
-agent.Workspace.storedValue   % 42
-```
-
-See the API reference: [AIAgent](doc/AIAgent.md) | [LLMClient](doc/LLMClient.md) | [LLMTool](doc/LLMTool.md) | [LLMToolArgument](doc/LLMToolArgument.md) | [LLMMessage](doc/LLMMessage.md) | [OpenAIClient](doc/llms/client/OpenAIClient.md) | [OllamaClient](doc/llms/client/OllamaClient.md) | [LocalLLMTool](doc/llms/tool/LocalLLMTool.md) | [MCPTool](doc/llms/tool/MCPTool.md) | [LLMTextMessage](doc/llms/message/LLMTextMessage.md) | [LLMImageMessage](doc/llms/message/LLMImageMessage.md) | [LLMToolCallMessage](doc/llms/message/LLMToolCallMessage.md) | [LLMToolResultMessage](doc/llms/message/LLMToolResultMessage.md)
+•	Connect agents to tools from Model Context Protocol (MCP) servers
 
 ## Setup
+
+You can use the add-on in MATLAB Online™ by clicking this link: [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=matlab/matlab-ai-agent-sdk)
+
+The recommended way of using the add-on on an installed version of MATLAB is to use the Add-On Explorer.
+
+In MATLAB, go to the Home tab, and in the Environment section, click the Add-Ons icon.
+In the Add-On Explorer, search for "MATLAB AI Agent SDK".
+Select Install.
 
 ### OpenAI
 
@@ -76,7 +40,7 @@ Set your key as an environment variable in a `.env` file:
 OPENAI_API_KEY=<your key>
 ```
 
-Then load it in MATLAB:
+Then load it in MATLAB.
 
 ```matlab
 loadenv(".env")
@@ -84,29 +48,193 @@ loadenv(".env")
 
 ### Ollama
 
-Connect to [Ollama](https://ollama.com/) models locally or on a remote server. Connecting requires an installed version of Ollama, as well as installed versions of the models you want to use.
+To connect to local or remote [Ollama](https://ollama.com/) models, first install Ollama.
+
+After you have installed Ollama, you can install models from the MATLAB Command Window:
+```matlab
+!ollama pull <modelname>
+```
+
+## Get Started
+
+Create an LLM client by using the `aisdk.LLMClient` function and using the API and the model name as input arguments, for example:
+
+```matlab
+clientOpenAI = aisdk.LLMClient("openai", "gpt-4.1-mini");
+clientOllama = aisdk.LLMClient("ollama", "<model-name>");
+```
+
+Then, generate text by using the `generate` function.
+
+```matlab
+text = generate(client, "This is an example prompt.")
+```
+```
+text = 
+    "This is an example reponse."
+```
+
+### Create Chat With LLM
+
+This example shows how to create a conversation with an LLM and automatically keep track of the message history by using the `aisdk.aiAgent` function.
+
+Create the agent from an LLM client `client` by using the `aisdk.aiAgent` function. Provide a system prompt.
+
+```matlab
+systemPrompt = "Reply as if you are writing telegrams.";
+agent = aiAgent(client,systemPrompt);
+```
+Run the agent by using the `aisdk.run` function. Provide a prompt.
+
+```matlab
+prompt = "TOMATO FRUIT OR VEGETABLE STOP";
+run(agent,prompt)
+```
+```
+ans = 
+
+    "TOMATO TECHNICALLY A FRUIT STOP COMMONLY USED AS VEGETABLE IN CULINARY CONTEXT STOP END OF TRANSMISSION."
+```
+
+Ask a follow up question by using the `aisdk.run` function.
+
+```matlab
+run(agent,"HOW ABOUT AVOCADO STOP")
+```
+```
+ans = 
+
+    "AVOCADO ALSO A FRUIT STOP KNOWN AS ALLIGATOR PEAR STOP HIGH IN HEALTHY FATS AND NUTRIENTS STOP END OF TRANSMISSION."
+```
+Inspect the chat history by using the `Messages` property of the agent.
+
+```matlab
+agent.Messages
+```
+```
+ans = 
+
+  1×4 LLMTextMessage array with messages:
+
+    1    User         Text    "TOMTATO FRUIT OR VEGETABLE STOP"
+    2    Assistant    Text    "TOMATO TECHNICALLY A FRUIT STOP COMMONLY USED AS VEGETABLE I..."
+    3    User         Text    "HOW ABOUT AVOCADO STOP"
+    4    Assistant    Text    "AVOCADO ALSO A FRUIT STOP KNOWN AS ALLIGATOR PEAR STOP HIGH ..."
+```
+
+### Create AI Agent With Tools
+
+This example shows how to create an AI agent with a set of tools by using the `aisdk.aiAgent` function.
+
+Create a function that counts the number of times a letter appears in a word.
+
+```matlab
+function numLetter = countLetters(word,letter)
+    numLetter = length(extract(word,letter));
+end
+```
+Create a tool from the `countLetters` function by using the `aisdk.llmTool` function. Add information about input and output arguments to the tool by using the `aisdk.llmToolArgument` function.
+
+```matlab
+tool = llmTool(@countLetters);
+tool.InputArguments(1) = llmToolArgument("word",DataType="string");
+tool.InputArguments(2) = llmToolArgument("letter",DataType="string");
+tool.OutputArguments = llmToolArgument("numLetter",DataType="number");
+```
+
+Create the agent from an LLM client `client` by using the `aisdk.aiAgent` function. Leave the system prompt empty.
+
+```matlab
+systemPrompt = "";
+agent = aiAgent(client,systemPrompt,tool);
+```
+
+Run the agent by using the `aisdk.run` function.
+
+```matlab
+run(agent,"How many times is the letter r in the word strawberry?")
+```
+```
+ans = "The letter "r" appears 3 times in the word "strawberry.""
+```
+
+### Configure Tool to Use Agent Workspace
+This example shows how to configure an LLM tool to use data from the agent workspace as input or output data.
+
+The `eig` function calculates the eigenvectors and eigenvalues of matrices. Vectors and matrices can contain a lot of numerical data. Instead of sending all this data to an LLM, which would cost tokens, keep the data in the agent workspace and configure your tools to work on that workspace.
+
+Create a function called `eigTool`.
+
+- The first input argument of the function must be a structure array. Call the argument `workspace`.
+
+- The last output argument of the function must be the same structure array.
+
+To allow the agent to understand the outcome of the tool call, add another output argument, observation, that contains a natural language description of the outcome of the tool call. If the call to the `eig` function is successful, then describe the outcome using the observation output argument. If the call returns an error, capture the error and return the error message as the observation string.
+
+```matlab
+function [observation,workspace] = eigTool(workspace)
+% Compute the eigenvalues of a matrix
+try
+    workspace.eigenvalues = eig(workspace.matrix);
+    observation = "Eigenvalues added to the workspace as a variable called eigenvalues.";
+catch error
+    observation = error;
+end
+end
+```
+
+Create an LLM tool from the `eigTool` function by using the `aisdk.llmTool` function. Set the `Contextual` name-value argument to `true`.
+
+```matlab
+tool = llmTool(@eigTool,Contextual=true);
+```
+
+Add information about the observation output argument to the tool. Do not add information about the workspace argument.
+
+```matlab
+tool.OutputArguments = llmToolArgument("observation",DataType="string", ...
+    Description="Natural language description of outcome of function call");
+```
+
+You can now add the tool to an agent.
+
+
+## Functions
+
+| Function | Description |
+|----|----|
+| [AIAgent](doc/AIAgent.md) | Build AI agent | 
+|[LLMClient](doc/LLMClient.md) | Connect to third-party LLM API |
+| [LLMTool](doc/LLMTool.md) | Tool for AI agent |
+| [LLMToolArgument](doc/LLMToolArgument.md) | Argument for LLM tool |
+| [LLMMessage](doc/LLMMessage.md) | Create LLM message |
+| [OpenAIClient](doc/llms/client/OpenAIClient.md) | Client for OpenAI API |
+| [OllamaClient](doc/llms/client/OllamaClient.md) | Client for Ollama API |
+| [LocalLLMTool](doc/llms/tool/LocalLLMTool.md) | Tool for AI agent from local function |
+| [MCPTool](doc/llms/tool/MCPTool.md) | Tool for AI agent from MCP server |
+| [LLMTextMessage](doc/llms/message/LLMTextMessage.md) | LLM message containing text |
+| [LLMImageMessage](doc/llms/message/LLMImageMessage.md) | LLM message containing image |
+| [LLMToolCallMessage](doc/llms/message/LLMToolCallMessage.md) | LLM message containing tool call |
+| [LLMToolResultMessage](doc/llms/message/LLMToolResultMessage.md) | LLM message containing tool result |
 
 ## Examples
 
 | Example                                                                              | Description                                                                                                                                                                                                                 |
 | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [CreateSimpleChatBotUsingAIAgent.m](doc/examples/CreateSimpleChatBotUsingAIAgent.m)     | Interactive chatbot in the Command Window                                                                                                                                                                                   |
-| [AnalyzeTextUsingParallelToolCalls.m](doc/examples/AnalyzeTextUsingParallelToolCalls.m) | Extract structured data from text using parallel tool calls                                                                                                                                                                 |
-| [FitPolynomialToDataUsingAIAgent.m](doc/examples/FitPolynomialToDataUsingAIAgent.m)     | AI agent that fits polynomials to data (requires Curve Fitting Toolbox&trade;; based on [this example](https://github.com/matlab-deep-learning/llms-with-matlab/blob/main/examples/FitPolynomialToDataUsingAIAgentExample.md)) |
-| [NestedToolsAndSubagentsExample.m](doc/examples/NestedToolsAndSubagentsExample.m)       | Tools that provide other tools (nested pattern)                                                                                                                                                                             |
-| [SimpleMathAgent.m](doc/examples/SimpleMathAgent.m)                                     | Solve a quadratic equation using an agent with mathematical tools                                                                                                                                                           |
-| [SendImageMessagesToVisionModels.m](doc/examples/SendImageMessagesToVisionModels.m)     | Send images to vision-capable models                                                                                                                                                                                        |
-| [SupervisorSubagentExample.m](doc/examples/SupervisorSubagentExample.m)                 | Supervisor-subagent orchestration pattern                                                                                                                                                                                   |
-| [MCPClientAndAgentTools.m](doc/examples/MCPClientAndAgentTools.m)                       | Connect an agent to a Model Context Protocol (MCP) server                                                                                                                                                                   |
+| [CreateSimpleChatBotUsingAIAgent.m](doc/examples/CreateSimpleChatBotUsingAIAgent.m)     | Create interactive chatbot in Command Window                                                                                                                                                                                   |
+| [AnalyzeTextUsingParallelToolCalls.m](doc/examples/AnalyzeTextUsingParallelToolCalls.m) | Extract structured data from text                                                                                                                                                                 |
+| [FitPolynomialToDataUsingAIAgent.m](doc/examples/FitPolynomialToDataUsingAIAgent.m)     | Build AI agent that fits polynomials to data (requires Curve Fitting Toolbox™) |
+| [NestedToolsAndSubagentsExample.m](doc/examples/NestedToolsAndSubagentsExample.m)       | Create tools that provide other tools                                                                                                                                                                             |
+| [MCPClientAndAgentTools.m](doc/examples/MCPClientAndAgentTools.m)                       | Connect agent to Model Context Protocol (MCP) server                                                                                                                                                                   |
 
 ## License
 
-See [LICENSE](LICENSE) for details.
+The license is available in the [LICENSE](LICENSE) file in this GitHub repository.
 
 ## Contact
 
-For questions or support, please open an [Issue](../../issues).
+To ask questions, report issues, or request technical support, open an [Issue](../../issues).
 
 ---
 
-Copyright 2026 The MathWorks, Inc.
+*Copyright 2026 The MathWorks, Inc.*
