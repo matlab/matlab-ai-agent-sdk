@@ -116,28 +116,25 @@ cleanupObj = onCleanup(@() rmdir(tempDirectory,"s"));
 
 % Create and save plots, then add them to the message history.
 msgContext = [];
-for i = 1:length(polynomialDegrees)
-    imgName = createAndSaveExtrapolatedFitPlot(workspace,polynomialDegrees(i),tempDirectory);
+for i = polynomialDegrees(workspace.polynomials.IsCandidateFit)
+    imgName = createAndSaveExtrapolatedFitPlot(workspace,i,tempDirectory);
     msgContext = [msgContext, ...
-        aisdk.LLMMessage("Polynomial degree " + polynomialDegrees(i)), ...
+        aisdk.LLMMessage("Polynomial degree " + i), ...
         aisdk.LLMMessage(imgName, Type="image")]; %#ok<AGROW>
 end
 
 % Use vision model to assess the plots.
 responseFormat = struct("rationale","Example rationale","isVisuallyReasonable",[1 2]);
-if true %[control:checkbox:118e]{"position":[4,8]}
-    client = aisdk.LLMClient("openai", "gpt-4.1-mini", responseFormat=responseFormat);
-else
-    client = aisdk.LLMClient("ollama", "moondream", responseFormat=responseFormat);
-end
+client = aisdk.LLMClient("openai", "gpt-4.1-mini", responseFormat=responseFormat);
 visionModel = aisdk.AIAgent(client, "You are a curve fitting expert, receiving plots of different polynomial fits of the same data. " + ...
     "Check whether the fits look reasonable and reject those that do not.", Messages=msgContext, Workspace=workspace);
 try
-    structResponse = visionModel.run;
+    structResponse = run(visionModel, "Assess each polynomial fit plot. " + ...
+        "Return the degrees that look visually reasonable.");
 catch errMsg
     error("OpenAI request failed: %s", errMsg.message);
 end
-isVisuallyReasonable = ismember(workspace.polynomials.Degree,structResponse.isVisuallyReasonable);
+isVisuallyReasonable = ismember(polynomialDegrees,structResponse.isVisuallyReasonable);
 workspace.polynomials.IsCandidateFit = workspace.polynomials.IsCandidateFit & isVisuallyReasonable;
 observation = "Remaining degrees: " + jsonencode(polynomialDegrees(workspace.polynomials.IsCandidateFit)) + newline + "Rationale: " + wrapText(structResponse.rationale);
 end
