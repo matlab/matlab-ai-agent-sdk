@@ -96,6 +96,18 @@ classdef tLLMToolArgument < matlab.unittest.TestCase
             testCase.verifyEqual(args(2).Name, "b");
         end
 
+        function fromPrototype_scalarRequired_appliesToAll(testCase)
+            args = aisdk.LLMToolArgument(struct("x", 1, "y", "hi"), Required=false);
+            testCase.verifyFalse(args(1).Required);
+            testCase.verifyFalse(args(2).Required);
+        end
+
+        function fromPrototype_arrayRequired_appliesPerField(testCase)
+            args = aisdk.LLMToolArgument(struct("a", 1, "b", 2), Required=[true, false]);
+            testCase.verifyTrue(args(1).Required);
+            testCase.verifyFalse(args(2).Required);
+        end
+
         function arrayConstruction(testCase)
             args = [aisdk.LLMToolArgument("a"), aisdk.LLMToolArgument("b")];
             testCase.verifyLength(args, 2);
@@ -125,6 +137,33 @@ classdef tLLMToolArgument < matlab.unittest.TestCase
             s = [struct("a", 1), struct("a", 2)];
             testCase.verifyError(@() aisdk.LLMToolArgument(s), ...
                 "llmToolArgument:invalidInput");
+        end
+
+        function nonScalarRequired_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.LLMToolArgument("x", Required=[true, false]), ...
+                "llmToolArgument:nonScalarRequired");
+        end
+
+        function nonScalarNameValue_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.LLMToolArgument("x", NameValue=[true, false]), ...
+                "llmToolArgument:nonScalarNameValue");
+        end
+
+        function nameValue_noExplicitRequired_defaultsToFalse(testCase)
+            arg = aisdk.LLMToolArgument("x", NameValue=true);
+            testCase.verifyFalse(arg.Required);
+        end
+
+        function nameValue_explicitRequiredTrue_succeeds(testCase)
+            % MATLAB-required: must be provided to call the function without
+            % error. For name-values, this is always false (they have defaults).
+            % Schema-required: the LLM must provide this in its tool call.
+            % LLMToolArgument.Required controls the latter, not the former.
+            arg = aisdk.LLMToolArgument("x", Required=true, NameValue=true);
+            testCase.verifyTrue(arg.Required);
+            testCase.verifyTrue(arg.NameValue);
         end
 
         function errorOnComplexNumericInPrototype(testCase)

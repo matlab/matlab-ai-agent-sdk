@@ -58,6 +58,9 @@ catalog("llms:unsupportedMATLABType") = "Unable to convert data type ""{1}"" to 
 catalog("llms:invalidFunctionDefinition") = "First argument must be a function handle or an mcpHTTPClient object.";
 catalog("llms:invalidClientType") = "Client must be an OpenAIClient or OllamaClient object.";
 catalog("llmToolArgument:invalidInput") = "First argument must be a string scalar or a structure array.";
+catalog("llmToolArgument:requiredNameValue") = "A name-value argument cannot be required. Set Required=false or NameValue=false.";
+catalog("llmToolArgument:nonScalarRequired") = "Required must be a scalar logical when constructing a single LLMToolArgument.";
+catalog("llmToolArgument:nonScalarNameValue") = "NameValue must be a scalar logical when constructing a single LLMToolArgument.";
 catalog("llms:message:InvalidContent") = "Message content must be empty or a string scalar.";
 catalog("llms:invalidFunctionCall") = "Unrecognized tool {1}.";
 catalog("llms:message:InvalidToolCallID") = "Tool call ID must be empty or a string scalar.";
