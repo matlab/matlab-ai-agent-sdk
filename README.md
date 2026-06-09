@@ -1,6 +1,6 @@
 # MATLAB&reg; AI Agent SDK
 
-[![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=matlab/ai-agent-sdk)
+[![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=matlab/matlab-ai-agent-sdk)
 
 Build AI agents in MATLAB, call tools from Toolboxes, and connect to OpenAI&reg; and Ollama&trade;.
 
@@ -12,30 +12,7 @@ This SDK is a Research Preview under active development and APIs may change.
 
 Please leave feedback, report bugs and feature requests via [Issues](../../issues). We review all contributions, but we do not merge external pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
-
-## OpenAI
-
-### Key Setup
-
-Using the OpenAI API requires an OpenAI API key. For information on how to obtain one, as well as pricing, terms and conditions of use, and available models, see the [OpenAI documentation](https://platform.openai.com/docs/overview).
-
-Set your key as an environment variable in a `.env` file:
-
-```
-OPENAI_API_KEY=<your key>
-```
-
-Then load it in MATLAB:
-
-```matlab
-loadenv(".env")
-```
-
-### Ollama Setup
-
-Connect to [Ollama](https://ollama.com/) models locally or on a remote server. Connecting requires an installed version of Ollama, as well as installed versions of the models you want to use.
-
-### Getting Started
+## Getting Started
 
 Create a client using either OpenAI or Ollama:
 
@@ -85,19 +62,39 @@ run(agent, "The number is 42.");
 agent.Workspace.storedValue   % 42
 ```
 
-See the API reference: [AIAgent](doc/aiAgent.md) | [LLMClient](doc/llmClient.md) | [LLMTool](doc/llmTool.md) | [LLMToolArgument](doc/llmToolArgument.md) | [LLMMessage](doc/llmMessage.md) | [OpenAIClient](doc/llms/client/OpenAIClient.md) | [OllamaClient](doc/llms/client/OllamaClient.md) | [LocalLLMTool](doc/llms/tool/LocalLLMTool.md) | [MCPTool](doc/llms/tool/MCPTool.md) | [LLMTextMessage](doc/llms/message/LLMTextMessage.md) | [LLMImageMessage](doc/llms/message/LLMImageMessage.md) | [LLMToolCallMessage](doc/llms/message/LLMToolCallMessage.md) | [LLMToolResultMessage](doc/llms/message/LLMToolResultMessage.md)
+See the API reference: [AIAgent](doc/AIAgent.md) | [LLMClient](doc/LLMClient.md) | [LLMTool](doc/LLMTool.md) | [LLMToolArgument](doc/LLMToolArgument.md) | [LLMMessage](doc/LLMMessage.md) | [OpenAIClient](doc/llms/client/OpenAIClient.md) | [OllamaClient](doc/llms/client/OllamaClient.md) | [LocalLLMTool](doc/llms/tool/LocalLLMTool.md) | [MCPTool](doc/llms/tool/MCPTool.md) | [LLMTextMessage](doc/llms/message/LLMTextMessage.md) | [LLMImageMessage](doc/llms/message/LLMImageMessage.md) | [LLMToolCallMessage](doc/llms/message/LLMToolCallMessage.md) | [LLMToolResultMessage](doc/llms/message/LLMToolResultMessage.md)
+
+## Setup
+
+### OpenAI
+
+Using the OpenAI API requires an OpenAI API key. For information on how to obtain one, as well as pricing, terms and conditions of use, and available models, see the [OpenAI documentation](https://platform.openai.com/docs/overview).
+
+Set your key as an environment variable in a `.env` file:
+
+```
+OPENAI_API_KEY=<your key>
+```
+
+Then load it in MATLAB:
+
+```matlab
+loadenv(".env")
+```
+
+### Ollama
+
+Connect to [Ollama](https://ollama.com/) models locally or on a remote server. Connecting requires an installed version of Ollama, as well as installed versions of the models you want to use.
 
 ## Examples
 
-| Example | Description |
-|---------|-------------|
-| [SimpleClientWorkflows.m](doc/examples/SimpleClientWorkflows.m) | Basic `LLMClient` usage with different APIs and models |
-| [CreateSimpleChatBotUsingAIAgent.m](doc/examples/CreateSimpleChatBotUsingAIAgent.m) | Interactive chatbot in the Command Window |
-| [AnalyzeTextUsingParallelToolCalls.m](doc/examples/AnalyzeTextUsingParallelToolCalls.m) | Extract structured data from text using parallel tool calls |
-| [FitPolynomialToDataUsingAIAgent.m](doc/examples/FitPolynomialToDataUsingAIAgent.m) | AI agent that fits polynomials to data (requires Curve Fitting Toolbox&trade;; based on [this example](https://github.com/matlab-deep-learning/llms-with-matlab/blob/main/examples/FitPolynomialToDataUsingAIAgentExample.md)) |
-| [CreateToolsUsingLLMToolFactory.m](doc/examples/CreateToolsUsingLLMToolFactory.m) | Create tools automatically from function signatures |
-| [NestedToolsAndSubagentsExample.m](doc/examples/NestedToolsAndSubagentsExample.m) | Tools that provide other tools (nested pattern) |
-| [MCPClientAndAgentTools.m](doc/examples/MCPClientAndAgentTools.m) | Connect an agent to a Model Context Protocol (MCP) server |
+| Example                                                                              | Description                                                                                                                                                                                                                 |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [CreateSimpleChatBotUsingAIAgent.m](doc/examples/CreateSimpleChatBotUsingAIAgent.m)     | Interactive chatbot in the Command Window                                                                                                                                                                                   |
+| [AnalyzeTextUsingParallelToolCalls.m](doc/examples/AnalyzeTextUsingParallelToolCalls.m) | Extract structured data from text using parallel tool calls                                                                                                                                                                 |
+| [FitPolynomialToDataUsingAIAgent.m](doc/examples/FitPolynomialToDataUsingAIAgent.m)     | AI agent that fits polynomials to data (requires Curve Fitting Toolbox&trade;; based on [this example](https://github.com/matlab-deep-learning/llms-with-matlab/blob/main/examples/FitPolynomialToDataUsingAIAgentExample.md)) |
+| [NestedToolsAndSubagentsExample.m](doc/examples/NestedToolsAndSubagentsExample.m)       | Tools that provide other tools (nested pattern)                                                                                                                                                                             |
+| [MCPClientAndAgentTools.m](doc/examples/MCPClientAndAgentTools.m)                       | Connect an agent to a Model Context Protocol (MCP) server                                                                                                                                                                   |
 
 ## License
 
@@ -106,3 +103,7 @@ See [LICENSE](LICENSE) for details.
 ## Contact
 
 For questions or support, please open an [Issue](../../issues).
+
+---
+
+Copyright 2026 The MathWorks, Inc.
