@@ -8,27 +8,24 @@
 
 MATLAB® AI Agent SDK lets you build and run AI agents in MATLAB.
 
-•	Connect to OpenAI® or Ollama™.
+- Create agents based on OpenAI®, Ollama™, or OpenAI-compatible APIs.
 
-•	Give agents access to MATLAB functions and toolbox workflows.
+- Integrate LLMs and agentic workflows into your workflows in a targeted manner, retaining deterministic workflows when those are more suitable.
 
-•	Create agents that reason about a goal, call MATLAB tools, and maintain state across turns.
-
-•	Keep domain logic, validation, and workflow control in MATLAB code.
-
-•	Run multi-step workflows in MATLAB with full control over the tools an agent can use.
-
-•	Connect agents to tools from Model Context Protocol (MCP) servers
+- Let your agent work on large amounts of data without needing to send the data to the LLM.
 
 ## Setup
 
-You can use the add-on in MATLAB Online™ by clicking this link: [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=matlab/matlab-ai-agent-sdk)
+You can use the add\-on in MATLAB Online™ by clicking this link: [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=matlab/matlab-ai-agent-sdk)
 
-The recommended way of using the add-on on an installed version of MATLAB is to use the Add-On Explorer.
-
-In MATLAB, go to the Home tab, and in the Environment section, click the Add-Ons icon.
-In the Add-On Explorer, search for "MATLAB AI Agent SDK".
-Select Install.
+To use the add\-on on an installed version of MATLAB, you can clone the GitHub repository. In the MATLAB Command Window, run this command:
+```
+>> !git clone https://github.com/matlab/matlab-ai-agent-sdk.git
+```
+To run code from the add\-on outside of the installation directory, add the path to the installation directory.
+```
+>> addpath("path/to/matlab-ai-agent-sdk")
+```
 
 ### OpenAI
 
@@ -76,15 +73,15 @@ text =
 
 ### Create Chat With LLM
 
-This example shows how to create a conversation with an LLM and automatically keep track of the message history by using the `aisdk.aiAgent` function.
+This example shows how to create a conversation with an LLM and automatically keep track of the message history.
 
-Create the agent from an LLM client `client` by using the `aisdk.aiAgent` function. Provide a system prompt.
+Create the agent from an LLM client `client` by using the `aisdk.AIAgent` function. Provide a system prompt.
 
 ```matlab
 systemPrompt = "Reply as if you are writing telegrams.";
-agent = aiAgent(client,systemPrompt);
+agent = aisdk.AIAgent(client,systemPrompt);
 ```
-Run the agent by using the `aisdk.run` function. Provide a prompt.
+Run the agent by using the `run` function. Provide a prompt.
 
 ```matlab
 prompt = "TOMATO FRUIT OR VEGETABLE STOP";
@@ -96,7 +93,7 @@ ans =
     "TOMATO TECHNICALLY A FRUIT STOP COMMONLY USED AS VEGETABLE IN CULINARY CONTEXT STOP END OF TRANSMISSION."
 ```
 
-Ask a follow up question by using the `aisdk.run` function.
+Ask a follow up question by using the `run` function.
 
 ```matlab
 run(agent,"HOW ABOUT AVOCADO STOP")
@@ -116,7 +113,7 @@ ans =
 
   1×4 LLMTextMessage array with messages:
 
-    1    User         Text    "TOMTATO FRUIT OR VEGETABLE STOP"
+    1    User         Text    "TOMATO FRUIT OR VEGETABLE STOP"
     2    Assistant    Text    "TOMATO TECHNICALLY A FRUIT STOP COMMONLY USED AS VEGETABLE I..."
     3    User         Text    "HOW ABOUT AVOCADO STOP"
     4    Assistant    Text    "AVOCADO ALSO A FRUIT STOP KNOWN AS ALLIGATOR PEAR STOP HIGH ..."
@@ -124,32 +121,32 @@ ans =
 
 ### Create AI Agent With Tools
 
-This example shows how to create an AI agent with a set of tools by using the `aisdk.aiAgent` function.
+This example shows how to create an AI agent with a set of tools.
 
 Create a function that counts the number of times a letter appears in a word.
 
 ```matlab
 function numLetter = countLetters(word,letter)
-    numLetter = length(extract(word,letter));
+    numLetter = count(word,letter);
 end
 ```
-Create a tool from the `countLetters` function by using the `aisdk.llmTool` function. Add information about input and output arguments to the tool by using the `aisdk.llmToolArgument` function.
+Create a tool from the `countLetters` function by using the `aisdk.LLMTool` function. Add information about input and output arguments to the tool by using the `aisdk.LLMToolArgument` function.
 
 ```matlab
-tool = llmTool(@countLetters);
-tool.InputArguments(1) = llmToolArgument("word",DataType="string");
-tool.InputArguments(2) = llmToolArgument("letter",DataType="string");
-tool.OutputArguments = llmToolArgument("numLetter",DataType="number");
+tool = aisdk.LLMTool(@countLetters);
+tool.InputArguments(1) = aisdk.LLMToolArgument("word",DataType="string");
+tool.InputArguments(2) = aisdk.LLMToolArgument("letter",DataType="string");
+tool.OutputArguments = aisdk.LLMToolArgument("numLetter",DataType="number");
 ```
 
-Create the agent from an LLM client `client` by using the `aisdk.aiAgent` function. Leave the system prompt empty.
+Create the agent from an LLM client `client` by using the `aisdk.AIAgent` function. Leave the system prompt empty.
 
 ```matlab
 systemPrompt = "";
-agent = aiAgent(client,systemPrompt,tool);
+agent = aisdk.AIAgent(client,systemPrompt,tool);
 ```
 
-Run the agent by using the `aisdk.run` function.
+Run the agent by using the `run` function.
 
 ```matlab
 run(agent,"How many times is the letter r in the word strawberry?")
@@ -165,49 +162,42 @@ The `eig` function calculates the eigenvectors and eigenvalues of matrices. Vect
 
 Create a function called `eigTool`.
 
-- The first input argument of the function must be a structure array. Call the argument `workspace`.
+- The first input argument of the function must be a structure array. Call the argument `ws`.
 
 - The last output argument of the function must be the same structure array.
 
-To allow the agent to understand the outcome of the tool call, add another output argument, observation, that contains a natural language description of the outcome of the tool call. If the call to the `eig` function is successful, then describe the outcome using the observation output argument. If the call returns an error, capture the error and return the error message as the observation string.
+To allow the agent to understand the outcome of the tool call, add another output argument, observation, that contains a natural language description of the outcome of the tool call. Describe the outcome using the observation output argument.
 
 ```matlab
-function [observation,workspace] = eigTool(workspace)
+function [observation,ws] = eigTool(ws)
 % Compute the eigenvalues of a matrix
-try
-    workspace.eigenvalues = eig(workspace.matrix);
-    observation = "Eigenvalues added to the workspace as a variable called eigenvalues.";
-catch error
-    observation = error;
-end
+ws.eigenvalues = eig(ws.matrix);
+observation = "Eigenvalues added to the workspace as a variable called eigenvalues.";
 end
 ```
 
-Create an LLM tool from the `eigTool` function by using the `aisdk.llmTool` function. Set the `Contextual` name-value argument to `true`.
+Create an LLM tool from the `eigTool` function by using the `aisdk.LLMTool` function. Set the `Workspace` name-value argument to `"agent"`.
 
 ```matlab
-tool = llmTool(@eigTool,Contextual=true);
+tool = aisdk.LLMTool(@eigTool,Workspace="agent");
 ```
 
-Add information about the observation output argument to the tool. Do not add information about the workspace argument.
+You can now add the tool to an agent `agentWithWorkspace`. Add a matrix `A` to the agent workspace by setting the `Workspace` property. Call the field `matrix` to match the field name in the tool definition.
 
 ```matlab
-tool.OutputArguments = llmToolArgument("observation",DataType="string", ...
-    Description="Natural language description of outcome of function call");
+agentWithWorkspace.Tools = tool;
+agentWithWorkspace.Workspace.matrix = A;
 ```
-
-You can now add the tool to an agent.
-
 
 ## Functions
 
 | Function | Description |
 |----|----|
-| [AIAgent](doc/AIAgent.md) | Build AI agent | 
-|[LLMClient](doc/LLMClient.md) | Connect to third-party LLM API |
-| [LLMTool](doc/LLMTool.md) | Tool for AI agent |
-| [LLMToolArgument](doc/LLMToolArgument.md) | Argument for LLM tool |
-| [LLMMessage](doc/LLMMessage.md) | Create LLM message |
+| [aisdk.AIAgent](doc/AIAgent.md) | Build AI agent | 
+|[aisdk.LLMClient](doc/LLMClient.md) | Connect to third-party LLM API |
+| [aisdk.LLMTool](doc/LLMTool.md) | Tool for AI agent |
+| [aisdk.LLMToolArgument](doc/LLMToolArgument.md) | Argument for LLM tool |
+| [aisdk.LLMMessage](doc/LLMMessage.md) | Create LLM message |
 | [OpenAIClient](doc/llms/client/OpenAIClient.md) | Client for OpenAI API |
 | [OllamaClient](doc/llms/client/OllamaClient.md) | Client for Ollama API |
 | [LocalLLMTool](doc/llms/tool/LocalLLMTool.md) | Tool for AI agent from local function |
