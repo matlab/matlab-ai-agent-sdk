@@ -28,6 +28,9 @@ classdef OpenAIClient < aisdk.llms.client.ClientBase
 %   MaxNumTokens            - Maximum number of tokens in the generated response.
 %                             Default value is inf.
 %
+%   ResponseFormat          - The format of response the model returns.
+%                             "text" (default) | "json" | struct | string with JSON Schema
+%
 %   PresencePenalty         - Penalty value for using a token in the response
 %                             that has already been used. Default value is 0.
 %                             Higher values reduce repetition of words in the output.
@@ -35,9 +38,6 @@ classdef OpenAIClient < aisdk.llms.client.ClientBase
 %   FrequencyPenalty        - Penalty value for using a token that is frequent
 %                             in the output. Default value is 0.
 %                             Higher values reduce repetition of words in the output.
-%
-%   ResponseFormat          - The format of response the model returns.
-%                             "text" (default) | "json" | struct | string with JSON Schema
 %
 %   APIKey                  - API key for OpenAI. If omitted, reads from
 %                             OPENAI_API_KEY environment variable.

@@ -42,6 +42,7 @@ classdef MockClient < aisdk.llms.client.ClientBase
                 ~
                 nvp.Tools = []
                 nvp.ToolChoice = "auto"
+                nvp.ResponseFormat = "text"
                 nvp.SystemPrompt = []
             end
             this.CallCounter('n') = this.CallCounter('n') + 1;

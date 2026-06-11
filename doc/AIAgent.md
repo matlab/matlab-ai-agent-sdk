@@ -26,6 +26,7 @@ The `client` argument is any object created by [`LLMClient`](../+aisdk/LLMClient
 |----------|------|---------|-------------|
 | `Client` | | | The LLM client used for API calls. |
 | `Messages` | `aisdk.llms.message.LLMMessage` array | `[]` | Conversation history, updated automatically by `run`. |
+| `ResponseFormat` | | `"text"` | Response format: `"text"`, `"json"`, `struct`, or JSON schema string. |
 | `Workspace` | `struct` | `struct()` | Shared data passed into and out of tool calls. |
 | `SystemPrompt` | `string` | | System prompt sent with every request. |
 | `Verbose` | `logical` | `false` | Print debug output (tool calls, responses) to the command window. |
@@ -60,6 +61,7 @@ Run the agentic loop: send `query` to the model, execute any tool calls the mode
 |------|------|---------|-------------|
 | `Tools` | tools created by [`LLMTool`](../+aisdk/LLMTool.m) | agent tools | Override the tools available for this run. |
 | `ToolChoice` | `string` | `"auto"` | Controls which tool the model calls. Must be one of `"auto"` (model decides), `"none"` (no tool calls), `"required"` (model must call a tool), or the name of a specific tool to force (e.g., `"addNumbers"`). |
+| `ResponseFormat` | | `"text"` | Override the response format for this run. `"text"`, `"json"`, `struct`, or JSON schema string. |
 | `MaxIterations` | positive numeric | `25` | Maximum number of generate-then-tool-call loop iterations. When reached, a warning is issued, the message history is preserved in `agent.Messages`, and accumulated text responses are returned. |
 
 **Outputs:**

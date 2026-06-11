@@ -1,4 +1,4 @@
-# llms.tool.MCPTool
+# aisdk.llms.tool.MCPTool
 
 Tool wrapping an MCP server tool for use with an LLM.
 

@@ -1,4 +1,4 @@
-# llms.tool.LocalLLMTool
+# aisdk.llms.tool.LocalLLMTool
 
 Tool wrapping a MATLAB function for use with an LLM.
 
@@ -123,7 +123,7 @@ function [observation, workspace] = storeNumber(workspace, value)
     observation = "Stored " + value;
 end
 
-tool = llms.tool.LocalLLMTool(@storeNumber, ...
+tool = aisdk.llms.tool.LocalLLMTool(@storeNumber, ...
     Description="Store a number in the workspace", ...
     InputArguments=struct("value", 42), ...
     Workspace="agent");

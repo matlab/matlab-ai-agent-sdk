@@ -1,4 +1,4 @@
-# llms.client.OpenAIClient
+# aisdk.llms.client.OpenAIClient
 
 Client for OpenAI chat completions.
 

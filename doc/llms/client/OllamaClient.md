@@ -1,4 +1,4 @@
-# llms.client.OllamaClient
+# aisdk.llms.client.OllamaClient
 
 Client for Ollama chat completions.
 

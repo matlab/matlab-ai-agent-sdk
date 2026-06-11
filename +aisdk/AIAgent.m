@@ -15,7 +15,8 @@ classdef AIAgent < handle
 %       Tools            - Tools available to the agent during a run call
 %       Messages         - Array of aisdk.llms.message.LLMMessage objects
 %       Workspace        - Struct for passing data between tool calls
-%       Verbose          - Print debug output
+%       Verbose          - Print debug output (true/false)
+%       ResponseFormat   - Format of response ("text", "json", struct, or JSON schema string)
 %
 %   AIAgent Methods:
 %       run              - Run agentic loop with tool calling until completion
@@ -41,14 +42,17 @@ classdef AIAgent < handle
 
         %Workspace   Struct for passing data between tool calls
         Workspace struct
-    end
 
-    properties (SetAccess=private)
         Verbose(1,1) logical = false
+
+        %ResponseFormat   Response format, "text" or "json" or struct or JSON schema string.
+        ResponseFormat      {aisdk.llms.internal.mustBeResponseFormat} = "text"
 
         %MaxIterations   Maximum tool-calling iterations per run call.
         MaxIterations(1,1) double {mustBePositive} = aisdk.AIAgent.DefaultMaxIterations
+    end
 
+    properties (SetAccess=private)
         %NumInputTokens   Cumulative input (prompt) tokens across all generate calls.
         NumInputTokens(1,1) double = 0
 
@@ -79,6 +83,7 @@ classdef AIAgent < handle
                 systemPrompt                       {aisdk.llms.internal.mustBeTextOrEmpty} = []
                 tools                        (1,:) aisdk.llms.tool.LLMTool = aisdk.llms.tool.LLMTool.empty(1,0)
                 nvp.Messages                 (1,:) aisdk.llms.message.LLMMessage = aisdk.llms.message.LLMMessage.empty(1,0)
+                nvp.ResponseFormat                 {aisdk.llms.internal.mustBeResponseFormat} = "text"
                 nvp.Workspace                (1,1) struct = struct()
                 nvp.Verbose                  (1,1) logical = false
                 nvp.MaxIterations            (1,1) {mustBePositive} = aisdk.AIAgent.DefaultMaxIterations
@@ -86,6 +91,7 @@ classdef AIAgent < handle
             end
 
             this.Client = client;
+            this.ResponseFormat = nvp.ResponseFormat;
             this.Messages = nvp.Messages;
             this.Workspace = nvp.Workspace;
             this.Verbose = nvp.Verbose;
@@ -117,6 +123,7 @@ classdef AIAgent < handle
                 query {aisdk.llms.internal.mustBeMessagesInput}
                 nvp.Tools(1, :) aisdk.llms.tool.LLMTool = this.Tools
                 nvp.ToolChoice (1,:) {mustBeTextScalar} = "auto"
+                nvp.ResponseFormat      {aisdk.llms.internal.mustBeResponseFormat} = this.ResponseFormat
                 nvp.MaxIterations (1,1) {mustBePositive} = this.MaxIterations
             end
 
@@ -130,7 +137,8 @@ classdef AIAgent < handle
                 this.print("[think]");
 
                 [text, msgs, info] = this.Client.generate(this.Messages, ...
-                    Tools=nvp.Tools, ToolChoice=currentToolChoice, SystemPrompt=this.SystemPrompt);
+                    Tools=nvp.Tools, ToolChoice=currentToolChoice, ...
+                    ResponseFormat=nvp.ResponseFormat, SystemPrompt=this.SystemPrompt);
 
                 % Revert to "auto" after the first call so the model can
                 % produce a final text response and exit the loop.
