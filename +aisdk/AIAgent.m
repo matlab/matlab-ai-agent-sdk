@@ -142,7 +142,7 @@ classdef AIAgent < handle
 
                 % Revert to "auto" after the first call so the model can
                 % produce a final text response and exit the loop.
-                if currentToolChoice == "required"
+                if ~ismember(currentToolChoice, ["auto", "none"])
                     currentToolChoice = "auto";
                 end
                 this.print(text);

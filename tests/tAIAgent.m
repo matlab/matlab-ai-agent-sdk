@@ -446,6 +446,32 @@ classdef tAIAgent < matlab.unittest.TestCase
             toolResults = agent.Messages([agent.Messages.Role] == "tool");
             testCase.verifySubstring(toolResults(1).Content, "Error");
         end
+
+        function toolChoice_withSpecificName_callsNamedToolAndCompletes(testCase)
+            toolAdd = aisdk.LLMTool(@addTwoNumbers);
+            toolGreet = aisdk.LLMTool(@greetUser);
+
+            client = MockClient();
+            client.GenerateOutputs = {
+                % Round 1: model calls greetUser (forced by ToolChoice="greetUser")
+                {"", aisdk.llms.message.LLMToolCallMessage("greetUser", struct("name", "Alice", "greeting", "Hi"), "call_1"), ...
+                 struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
+                        "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
+                % Round 2: text response (model is free to finish with "auto")
+                {"Hi, Alice!", aisdk.llms.message.LLMTextMessage("Hi, Alice!", "assistant"), ...
+                 struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
+                        "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
+            };
+
+            agent = aisdk.AIAgent(client, "You are helpful.", [toolAdd, toolGreet]);
+            response = agent.run("Greet Alice", ToolChoice="greetUser");
+
+            testCase.verifyEqual(response, "Hi, Alice!");
+
+            log = client.getToolChoiceLog();
+            testCase.verifyEqual(log{1}, "greetUser");
+            testCase.verifyEqual(log{2}, "auto");
+        end
     end
 
 end

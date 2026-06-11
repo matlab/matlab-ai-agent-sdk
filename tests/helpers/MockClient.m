@@ -25,6 +25,10 @@ classdef MockClient < aisdk.llms.client.ClientBase
         % automatically.  Uses containers.Map (a handle object) so the
         % counter survives value-class copying into AIAgent.
         CallCounter
+        % Log of ToolChoice values received on each generate call.
+        % Uses a cell column stored in a containers.Map so it survives
+        % value-class copying.
+        ToolChoiceHistory
     end
 
     methods
@@ -34,6 +38,12 @@ classdef MockClient < aisdk.llms.client.ClientBase
             this.APIKey = "mock-key";
             this.CallCounter = containers.Map('KeyType','char','ValueType','double');
             this.CallCounter('n') = 0;
+            this.ToolChoiceHistory = containers.Map('KeyType','char','ValueType','any');
+            this.ToolChoiceHistory('log') = {};
+        end
+
+        function log = getToolChoiceLog(this)
+            log = this.ToolChoiceHistory('log');
         end
 
         function [text, messages, info] = generate(this, ~, nvp)
@@ -46,6 +56,9 @@ classdef MockClient < aisdk.llms.client.ClientBase
                 nvp.SystemPrompt = []
             end
             this.CallCounter('n') = this.CallCounter('n') + 1;
+            history = this.ToolChoiceHistory('log');
+            history{end+1} = nvp.ToolChoice;
+            this.ToolChoiceHistory('log') = history;
             row = this.GenerateOutputs{this.CallCounter('n')};
             text = row{1};
             messages = row{2};
