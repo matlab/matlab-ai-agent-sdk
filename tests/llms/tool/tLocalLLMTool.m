@@ -394,8 +394,8 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
         end
 
         function constructor_functionWithVarargin_excludesFromInputArguments(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@sin);
-            testCase.verifyEmpty(tool.InputArguments);
+            tool = aisdk.llms.tool.LocalLLMTool(@normcdf);
+            testCase.verifySize(tool.InputArguments, [1 1]);
         end
 
         function constructor_functionWithVarargout_excludesFromOutputArguments(testCase)

@@ -237,7 +237,7 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
                 args(idx).Identifier.Name = a.Name;
                 args(idx).Description = a.Description;
                 args(idx).NameValue = (a.Kind == "namevalue");
-                args(idx).Required = ~a.HasDefault && (a.Kind ~= "namevalue");
+                args(idx).Required = isempty(a.DefaultValue) && (a.Kind ~= "namevalue");
                 args(idx).Validation = a.Validation;
             end
         end
