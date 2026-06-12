@@ -2,10 +2,6 @@
 
 [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=matlab/matlab-ai-agent-sdk)
 
-> [!IMPORTANT]
-> This SDK is a research preview under active development and APIs may change.
-
-
 MATLAB® AI Agent SDK lets you build and run AI agents in MATLAB.
 
 - Create agents based on OpenAI®, Ollama™, or OpenAI-compatible APIs.
@@ -13,6 +9,12 @@ MATLAB® AI Agent SDK lets you build and run AI agents in MATLAB.
 - Integrate LLMs and agentic workflows into your workflows in a targeted manner, retaining deterministic workflows when those are more suitable.
 
 - Let your agent work on large amounts of data without needing to send the data to the LLM.
+
+## Research Preview
+
+This SDK is a Research Preview under active development and APIs may change.
+
+Please leave feedback, report bugs and feature requests via [Issues](../../issues). We review all contributions, but we do not merge external pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Setup
 
