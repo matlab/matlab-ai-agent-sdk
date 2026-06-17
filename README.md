@@ -55,7 +55,7 @@ OPENAI_API_KEY=<your key>
 
 If your API does not need an API key, set the environment variable `OPENAI_API_KEY` to `"EMPTY"`.
 
-Then, when creating an LLM client, set the `api` argument of the `llmClient` function to `"openai"` and set the `BaseURL` name-value argument to the base URL of the API. For example, for OpenAI, `BaseURL` is `"https://api.openai.com/v1"`.
+Then, when creating an LLM client, set the `api` argument of the `aisdk.LLMClient` function to `"openai"` and set the `BaseURL` name-value argument to the base URL of the API. For example, for OpenAI, `BaseURL` is `"https://api.openai.com/v1"`.
 
 ### Ollama
 
