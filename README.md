@@ -45,6 +45,18 @@ Then load it in MATLAB.
 loadenv(".env")
 ```
 
+### OpenAI-Compatible APIs
+
+To connect to APIs that are compatible with the OpenAI Chat Completions API, set your key as an environment variable in a `.env` file:
+
+```
+OPENAI_API_KEY=<your key>
+```
+
+If your API does not need an API key, set the environment variable `OPENAI_API_KEY` to `"EMPTY"`.
+
+Then, when creating an LLM client, set the `api` argument of the `llmClient` function to `"openai"` and set the `BaseURL` name-value argument to the base URL of the API. For example, for OpenAI, `BaseURL` is `"https://api.openai.com/v1"`.
+
 ### Ollama
 
 To connect to local or remote [Ollama](https://ollama.com/) models, first install Ollama.
