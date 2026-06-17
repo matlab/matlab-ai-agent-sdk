@@ -165,7 +165,6 @@ classdef OllamaClient < aisdk.llms.client.ClientBase
                 messagesIn                        {aisdk.llms.internal.mustBeMessagesInput}
                 nvp.Tools                         = []
                 nvp.ToolChoice              (1,:) = "auto"
-                nvp.SystemPrompt                  {aisdk.llms.internal.mustBeTextOrEmpty} = []
                 nvp.Temperature                   {aisdk.llms.internal.mustBeValidTemperature} = this.Temperature
                 nvp.TopP                          {aisdk.llms.internal.mustBeValidProbability} = this.TopP
                 nvp.MinP                          {aisdk.llms.internal.mustBeValidProbability} = this.MinP
@@ -183,10 +182,6 @@ classdef OllamaClient < aisdk.llms.client.ClientBase
             [functionsStruct, ~] = this.convertToolsWithNames(nvp.Tools);
 
             apiMessages = this.convertMessages(messagesIn);
-
-            if ~isempty(nvp.SystemPrompt)
-                apiMessages = horzcat({struct("role", "system", "content", string(nvp.SystemPrompt))}, apiMessages);
-            end
 
             try
                 [text, message, response] = aisdk.llms.client.internal.callOllamaChatAPI(...

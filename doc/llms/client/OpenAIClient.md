@@ -55,7 +55,6 @@ Name-value arguments allow overriding any client property for a single call, plu
 |------|-------------|
 | `Tools` | Tools available to the model, as tools created by `LLMTool` or a pre-converted cell/struct. |
 | `ToolChoice` | Controls tool selection: `"auto"`, `"none"`, `"required"`, or a tool name. |
-| `SystemPrompt` | System prompt prepended to the conversation. |
 
 ## Examples
 

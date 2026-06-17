@@ -228,6 +228,16 @@ classdef tOpenAIClient < hconstructorCommon
             testCase.verifyEqual(params.messages{1}.content, "hello");
         end
 
+        function generate_systemMessage_mapsToDeveloperRole(testCase)
+            messages = [
+                aisdk.llms.message.LLMTextMessage("Be concise.", "system"), ...
+                aisdk.llms.message.LLMTextMessage("hello", "user")];
+            params = captureGenerateParams(testCase, messages);
+            testCase.verifyEqual(params.messages{1}.role, "developer");
+            testCase.verifyEqual(params.messages{1}.content, "Be concise.");
+            testCase.verifyEqual(params.messages{2}.role, "user");
+        end
+
         function generate_toolResultMessage_producesToolRole(testCase)
             messages = [
                 aisdk.llms.message.LLMTextMessage("hi", "user"), ...

@@ -17,6 +17,11 @@ classdef MockClient < aisdk.llms.client.ClientBase
         GenerateOutputs cell = {}
     end
 
+    properties (Dependent)
+        %GenerateInputs   Cell array recording messages passed to each generate call.
+        GenerateInputs
+    end
+
     properties (Access=private)
         % Counter tracks which scripted response to return next.  Needed
         % because AIAgent.run calls generate multiple times internally
@@ -25,6 +30,10 @@ classdef MockClient < aisdk.llms.client.ClientBase
         % automatically.  Uses containers.Map (a handle object) so the
         % counter survives value-class copying into AIAgent.
         CallCounter
+
+        % Handle-based store for messages passed to each generate call.
+        GenerateInputsStore
+
         % Log of ToolChoice values received on each generate call.
         % Uses a cell column stored in a containers.Map so it survives
         % value-class copying.
@@ -38,6 +47,7 @@ classdef MockClient < aisdk.llms.client.ClientBase
             this.APIKey = "mock-key";
             this.CallCounter = containers.Map('KeyType','char','ValueType','double');
             this.CallCounter('n') = 0;
+            this.GenerateInputsStore = containers.Map('KeyType','double','ValueType','any');
             this.ToolChoiceHistory = containers.Map('KeyType','char','ValueType','any');
             this.ToolChoiceHistory('log') = {};
         end
@@ -46,16 +56,23 @@ classdef MockClient < aisdk.llms.client.ClientBase
             log = this.ToolChoiceHistory('log');
         end
 
-        function [text, messages, info] = generate(this, ~, nvp)
+        function inputs = get.GenerateInputs(this)
+            inputs = cell(1, this.GenerateInputsStore.Count);
+            for k = 1:this.GenerateInputsStore.Count
+                inputs{k} = this.GenerateInputsStore(k);
+            end
+        end
+
+        function [text, messages, info] = generate(this, messagesIn, nvp)
             arguments
                 this
-                ~
+                messagesIn
                 nvp.Tools = []
                 nvp.ToolChoice = "auto"
                 nvp.ResponseFormat = "text"
-                nvp.SystemPrompt = []
             end
             this.CallCounter('n') = this.CallCounter('n') + 1;
+            this.GenerateInputsStore(this.CallCounter('n')) = messagesIn;
             history = this.ToolChoiceHistory('log');
             history{end+1} = nvp.ToolChoice;
             this.ToolChoiceHistory('log') = history;

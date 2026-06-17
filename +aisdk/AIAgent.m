@@ -136,9 +136,17 @@ classdef AIAgent < handle
             for iteration = 1:nvp.MaxIterations
                 this.print("[think]");
 
-                [text, msgs, info] = this.Client.generate(this.Messages, ...
+                if ~isempty(this.SystemPrompt)
+                    messagesWithSystem = [
+                        aisdk.llms.message.LLMTextMessage(this.SystemPrompt, "system"), ...
+                        this.Messages];
+                else
+                    messagesWithSystem = this.Messages;
+                end
+
+                [text, msgs, info] = this.Client.generate(messagesWithSystem, ...
                     Tools=nvp.Tools, ToolChoice=currentToolChoice, ...
-                    ResponseFormat=nvp.ResponseFormat, SystemPrompt=this.SystemPrompt);
+                    ResponseFormat=nvp.ResponseFormat);
 
                 % Revert to "auto" after the first call so the model can
                 % produce a final text response and exit the loop.

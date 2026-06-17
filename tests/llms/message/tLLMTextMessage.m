@@ -51,9 +51,14 @@ classdef tLLMTextMessage < matlab.unittest.TestCase
             testCase.verifyEqual(msg.Role, "tool");
         end
 
+        function constructorAcceptsRoleSystem_setsRole(testCase)
+            msg = aisdk.llms.message.LLMTextMessage("hello", "system");
+            testCase.verifyEqual(msg.Role, "system");
+        end
+
         function constructorRejectsInvalidRole_throwsError(testCase)
             testCase.verifyError( ...
-                @() aisdk.llms.message.LLMTextMessage("hello", "system"), ...
+                @() aisdk.llms.message.LLMTextMessage("hello", "developer"), ...
                 "MATLAB:validators:mustBeMember");
         end
     end

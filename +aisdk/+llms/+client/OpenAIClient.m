@@ -168,7 +168,6 @@ classdef OpenAIClient < aisdk.llms.client.ClientBase
                 messagesIn                        {aisdk.llms.internal.mustBeMessagesInput}
                 nvp.Tools                         = []
                 nvp.ToolChoice              (1,:) = "auto"
-                nvp.SystemPrompt                  {aisdk.llms.internal.mustBeTextOrEmpty} = []
                 nvp.Temperature                   {aisdk.llms.internal.mustBeValidTemperature} = this.Temperature
                 nvp.TopP                          {aisdk.llms.internal.mustBeValidProbability} = this.TopP
                 nvp.StopSequences                 {aisdk.llms.internal.mustBeValidStop} = this.StopSequences
@@ -191,9 +190,6 @@ classdef OpenAIClient < aisdk.llms.client.ClientBase
             toolChoice = aisdk.llms.client.ClientBase.convertToolChoice(nvp.ToolChoice, functionNames);
 
             apiMessages = this.convertMessages(messagesIn);
-            if ~isempty(nvp.SystemPrompt)
-                apiMessages = horzcat({struct("role", "system", "content", string(nvp.SystemPrompt))}, apiMessages);
-            end
 
             try
                 [text, messageBody, response] = aisdk.llms.client.internal.callOpenAIChatAPI(apiMessages, functionsStruct, ...
@@ -258,8 +254,12 @@ classdef OpenAIClient < aisdk.llms.client.ClientBase
                 msg = messages(i);
                 switch class(msg)
                     case 'aisdk.llms.message.LLMTextMessage'
+                        role = msg.Role;
+                        if role == "system"
+                            role = "developer";
+                        end
                         idx = idx + 1;
-                        messagesOut{idx} = struct("role", msg.Role, "content", msg.Content);
+                        messagesOut{idx} = struct("role", role, "content", msg.Content);
 
                     case 'aisdk.llms.message.LLMToolResultMessage'
                         idx = idx + 1;

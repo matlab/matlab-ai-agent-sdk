@@ -427,6 +427,39 @@ classdef tAIAgent < matlab.unittest.TestCase
                 "llms:invalidClientType");
         end
 
+        function run_withSystemPrompt_prependsSystemMessage(testCase)
+            client = MockClient();
+            client.GenerateOutputs = {
+                {"Hi!", aisdk.llms.message.LLMTextMessage("Hi!", "assistant"), ...
+                 struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
+                        "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
+            };
+
+            agent = aisdk.AIAgent(client, "Be concise.");
+            agent.run("Hello");
+
+            messagesPassedToGenerate = client.GenerateInputs{1};
+            firstMsg = messagesPassedToGenerate(1);
+            testCase.verifyEqual(firstMsg.Role, "system");
+            testCase.verifyEqual(firstMsg.Content, "Be concise.");
+        end
+
+        function run_withoutSystemPrompt_doesNotPrependSystemMessage(testCase)
+            client = MockClient();
+            client.GenerateOutputs = {
+                {"Hi!", aisdk.llms.message.LLMTextMessage("Hi!", "assistant"), ...
+                 struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
+                        "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
+            };
+
+            agent = aisdk.AIAgent(client);
+            agent.run("Hello");
+
+            messagesPassedToGenerate = client.GenerateInputs{1};
+            firstMsg = messagesPassedToGenerate(1);
+            testCase.verifyNotEqual(firstMsg.Role, "system");
+        end
+
         function run_hallucinatedToolName_returnsErrorAsObservation(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers);
 

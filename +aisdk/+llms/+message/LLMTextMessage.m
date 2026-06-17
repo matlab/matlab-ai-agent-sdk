@@ -14,7 +14,7 @@ classdef LLMTextMessage < aisdk.llms.message.LLMMessage
         function this = LLMTextMessage(content, role)
             arguments
                 content {mustBeTextContent}
-                role(1,1) string {mustBeMember(role, ["user","assistant","tool"])}
+                role(1,1) string {mustBeMember(role, ["system","user","assistant","tool"])}
             end
 
             this@aisdk.llms.message.LLMMessage(role, "text");
