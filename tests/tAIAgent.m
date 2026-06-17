@@ -480,6 +480,110 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifySubstring(toolResults(1).Content, "Error");
         end
 
+        function displayMode_default_isDetailed(testCase)
+            client = MockClient();
+            agent = aisdk.AIAgent(client, "You are helpful.");
+
+            testCase.verifyEqual(agent.DisplayMode, "detailed");
+        end
+
+        function displayMode_withDetailed_printsOutput(testCase)
+            client = MockClient();
+            client.GenerateOutputs = {
+                {"Hello!", aisdk.LLMTextMessage("Hello!", Role="assistant"), ...
+                 struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
+                        "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
+            };
+
+            agent = aisdk.AIAgent(client, "You are helpful.", DisplayMode="detailed");
+            output = evalc('agent.run("Hi");');
+
+            testCase.verifyNotEmpty(output);
+            testCase.verifySubstring(output, "Hello!");
+        end
+
+        function displayMode_withOff_suppressesOutput(testCase)
+            client = MockClient();
+            client.GenerateOutputs = {
+                {"Hello!", aisdk.LLMTextMessage("Hello!", Role="assistant"), ...
+                 struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
+                        "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
+            };
+
+            agent = aisdk.AIAgent(client, "You are helpful.", DisplayMode="off");
+            output = evalc('agent.run("Hi");');
+
+            testCase.verifyEmpty(output);
+        end
+
+        function displayMode_withInvalidValue_throwsError(testCase)
+            client = MockClient();
+            testCase.verifyError( ...
+                @() aisdk.AIAgent(client, "You are helpful.", DisplayMode="someNonExistentMode"), ...
+                "MATLAB:validators:mustBeMember");
+        end
+
+        function displayMode_withDetailed_printsToolCallInfo(testCase)
+            tool = aisdk.LLMTool(@addTwoNumbers);
+
+            tokens = struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
+                "NumTotalTokens", 15, "NumCachedInputTokens", 0));
+
+            client = MockClient();
+            client.GenerateOutputs = {
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), ToolCallID="call_1"), tokens}
+                {"5.", aisdk.LLMTextMessage("5.", Role="assistant"), tokens}
+            };
+
+            agent = aisdk.AIAgent(client, "You are helpful.", tool, DisplayMode="detailed");
+            output = evalc('agent.run("Add 2+3.");');
+
+            testCase.verifySubstring(output, "addTwoNumbers");
+        end
+
+        function run_displayModeDetailed_overridesAgentOff(testCase)
+            client = MockClient();
+            client.GenerateOutputs = {
+                {"Hello!", aisdk.LLMTextMessage("Hello!", Role="assistant"), ...
+                 struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
+                        "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
+            };
+
+            agent = aisdk.AIAgent(client, "You are helpful.", DisplayMode="off");
+            output = evalc('agent.run("Hi", DisplayMode="detailed");');
+
+            testCase.verifySubstring(output, "Hello!");
+        end
+
+        function run_displayModeOff_overridesAgentDetailed(testCase)
+            client = MockClient();
+            client.GenerateOutputs = {
+                {"Hello!", aisdk.LLMTextMessage("Hello!", Role="assistant"), ...
+                 struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
+                        "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
+            };
+
+            agent = aisdk.AIAgent(client, "You are helpful.", DisplayMode="detailed");
+            output = evalc('agent.run("Hi", DisplayMode="off");');
+
+            testCase.verifyEmpty(output);
+        end
+
+        function run_displayModeOverride_restoresAfterRun(testCase)
+            client = MockClient();
+            client.GenerateOutputs = {
+                {"Hello!", aisdk.LLMTextMessage("Hello!", Role="assistant"), ...
+                 struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
+                        "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
+            };
+
+            agent = aisdk.AIAgent(client, "You are helpful.", DisplayMode="off");
+            agent.run("Hi", DisplayMode="detailed");
+
+            testCase.verifyEqual(agent.DisplayMode, "off");
+        end
+
+
         function toolChoice_withSpecificName_callsNamedToolAndCompletes(testCase)
             toolAdd = aisdk.LLMTool(@addTwoNumbers);
             toolGreet = aisdk.LLMTool(@greetUser);

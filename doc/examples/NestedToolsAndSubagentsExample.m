@@ -57,8 +57,7 @@ end
     llmOpts = aisdk.LLMClient("openai", "gpt-4.1-mini");
     subAgent = aisdk.AIAgent(llmOpts, systemPrompt, ...
         workspace.Tools, ...
-        Workspace=workspace, ...
-        Verbose=true);
+        Workspace=workspace);
     obs = subAgent.run(query);
     workspace = subAgent.Workspace;
 end
@@ -81,8 +80,7 @@ topLevelPrompt = "You are an assistant who has two sets of tools available for e
 %[text] ## Run Agent
 topLevelClient = aisdk.LLMClient("openai", "gpt-4.1-mini");
 topLevelAgent = aisdk.AIAgent(topLevelClient, topLevelPrompt, ...
-    topLevelTools, ...
-    Verbose=true);
+    topLevelTools);
 query = "Create two random integers between 1 and 10, tell me what they are and compute their sum?";
 output = topLevelAgent.run(query) %[output:542cc9f9] %[output:654a7ec5]
 %%

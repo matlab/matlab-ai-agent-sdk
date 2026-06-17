@@ -47,7 +47,7 @@ function [observation, workspace] = runMathAgent(workspace, NVP)
     llmOpts = aisdk.LLMClient(api, model);
     subAgent = aisdk.AIAgent(llmOpts, "You are a math expert. Always use one tool at a time.", ...
        mathTools, ...
-       Workspace=workspace, Verbose=true);
+       Workspace=workspace);
     observation = subAgent.run(NVP.Query);
     workspace = subAgent.Workspace;
 end
@@ -94,8 +94,7 @@ model = "gpt-4.1-mini"; %[control:dropdown:16ae]{"position":[9,23]}
 
 client = aisdk.LLMClient(api, model);
 topLevelAgent = aisdk.AIAgent(client, systemPrompt, ...
-    topLevelTools, ...
-    Verbose=true);
+    topLevelTools);
 %%
 %[text] Run a task. You should see several queries to the "research" agent to get the FAANG headcounts, then some calls to the maths agent for the arithmetic.
 query = "What's the total headcount of FAANG companies using 2024 data? Use whatever information you have available.";

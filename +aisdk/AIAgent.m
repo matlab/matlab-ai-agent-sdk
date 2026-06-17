@@ -15,7 +15,7 @@ classdef AIAgent < handle
 %       Tools            - Tools available to the agent during a run call
 %       Messages         - Array of aisdk.llms.message.LLMMessage objects
 %       Workspace        - Struct for passing data between tool calls
-%       Verbose          - Print debug output (true/false)
+%       DisplayMode      - Display mode ("off" or "detailed")
 %       ResponseFormat   - Format of response ("text", "json", struct, or JSON schema string)
 %
 %   AIAgent Methods:
@@ -43,7 +43,8 @@ classdef AIAgent < handle
         %Workspace   Struct for passing data between tool calls
         Workspace struct
 
-        Verbose(1,1) logical = false
+        %DisplayMode   Display mode: "off" or "detailed".
+        DisplayMode(1,1) string {mustBeMember(DisplayMode, ["off","detailed"])} = "detailed"
 
         %ResponseFormat   Response format, "text" or "json" or struct or JSON schema string.
         ResponseFormat      {aisdk.llms.internal.mustBeResponseFormat} = "text"
@@ -85,7 +86,7 @@ classdef AIAgent < handle
                 nvp.Messages                 (1,:) aisdk.llms.message.LLMMessage = aisdk.llms.message.LLMMessage.empty(1,0)
                 nvp.ResponseFormat                 {aisdk.llms.internal.mustBeResponseFormat} = "text"
                 nvp.Workspace                (1,1) struct = struct()
-                nvp.Verbose                  (1,1) logical = false
+                nvp.DisplayMode              (1,1) string {mustBeMember(nvp.DisplayMode, ["off","detailed"])} = "detailed"
                 nvp.MaxIterations            (1,1) {mustBePositive} = aisdk.AIAgent.DefaultMaxIterations
                 nvp.ApprovalFcn                    (1,1) {mustBeA(nvp.ApprovalFcn,'function_handle')} = @aisdk.llms.internal.uiconfirm
             end
@@ -94,7 +95,7 @@ classdef AIAgent < handle
             this.ResponseFormat = nvp.ResponseFormat;
             this.Messages = nvp.Messages;
             this.Workspace = nvp.Workspace;
-            this.Verbose = nvp.Verbose;
+            this.DisplayMode = nvp.DisplayMode;
             this.MaxIterations = nvp.MaxIterations;
             this.ApprovalFcn = nvp.ApprovalFcn;
 
@@ -125,7 +126,10 @@ classdef AIAgent < handle
                 nvp.ToolChoice (1,:) {mustBeTextScalar} = "auto"
                 nvp.ResponseFormat      {aisdk.llms.internal.mustBeResponseFormat} = this.ResponseFormat
                 nvp.MaxIterations (1,1) {mustBePositive} = this.MaxIterations
+                nvp.DisplayMode (1,1) string {mustBeMember(nvp.DisplayMode, ["off","detailed"])} = this.DisplayMode
             end
+
+            displayMode = nvp.DisplayMode;
 
             newMessages = aisdk.llms.client.ClientBase.normalizeMessages(query);
             this.Messages = [this.Messages, newMessages];
@@ -134,7 +138,7 @@ classdef AIAgent < handle
             currentToolChoice = nvp.ToolChoice;
 
             for iteration = 1:nvp.MaxIterations
-                this.print("[think]");
+                this.print(displayMode,"[think]");
 
                 if ~isempty(this.SystemPrompt)
                     messagesWithSystem = [
@@ -153,7 +157,7 @@ classdef AIAgent < handle
                 if ~ismember(currentToolChoice, ["auto", "none"])
                     currentToolChoice = "auto";
                 end
-                this.print(text);
+                this.print(displayMode,text);
                 this.Messages = [this.Messages, msgs];
 
                 this.NumInputTokens       = this.NumInputTokens       + info.Tokens.NumInputTokens;
@@ -187,7 +191,7 @@ classdef AIAgent < handle
                         tool = nvp.Tools.selectTool(tc.Name);
                     catch ME
                         output = "Error: " + ME.message;
-                        this.print("[function return] " + string(jsonencode(output)));
+                        this.print(displayMode,"[function return] " + string(jsonencode(output)));
                         this.Messages(end+1) = aisdk.LLMToolResultMessage( ...
                             string(output), ToolCallID=tc.ToolCallID, Name=tc.Name);
                         continue
@@ -201,7 +205,7 @@ classdef AIAgent < handle
                             if strlength(approval.Reason) > 0
                                 msg = msg + ": " + approval.Reason;
                             end
-                            this.print("[denied] " + msg);
+                            this.print(displayMode,"[denied] " + msg);
                             this.Messages(end+1) = aisdk.LLMToolResultMessage( ...
                                 msg, ToolCallID=tc.ToolCallID, Name=tc.Name);
                             continue
@@ -210,18 +214,18 @@ classdef AIAgent < handle
                             this.ApprovedTools(end+1) = tc.Name;
                         end
                         if strlength(approval.Reason) > 0
-                            this.print("[approved] " + approval.Reason);
+                            this.print(displayMode,"[approved] " + approval.Reason);
                             this.Messages(end+1) = aisdk.LLMTextMessage(approval.Reason);
                         end
                     end
-                    this.print("[call function " + tc.Name + " with inputs " + jsonencode(tc.Arguments) + "]");
+                    this.print(displayMode,"[call function " + tc.Name + " with inputs " + jsonencode(tc.Arguments) + "]");
                     try
                         [output, workspaceOut] = evaluate(tool, tc.Arguments, this.Workspace);
                         this.Workspace = workspaceOut;
                     catch ME
                         output = "Error: " + ME.message;
                     end
-                    this.print("[function return] " + string(jsonencode(output)));
+                    this.print(displayMode,"[function return] " + string(jsonencode(output)));
                     if isstring(output) || ischar(output)
                         resultStr = string(output);
                     else
@@ -244,8 +248,8 @@ classdef AIAgent < handle
     end
 
     methods (Access=private)
-        function print(this, msg)
-            if this.Verbose
+        function print(~, displayMode, msg)
+            if displayMode == "detailed"
                 if isstruct(msg)
                     disp(jsonencode(msg));
                 else

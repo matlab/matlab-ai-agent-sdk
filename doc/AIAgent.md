@@ -29,7 +29,7 @@ The `client` argument is any object created by [`LLMClient`](../+aisdk/LLMClient
 | `ResponseFormat` | | `"text"` | Response format: `"text"`, `"json"`, `struct`, or JSON schema string. |
 | `Workspace` | `struct` | `struct()` | Shared data passed into and out of tool calls. |
 | `SystemPrompt` | `string` | | System prompt sent with every request. |
-| `Verbose` | `logical` | `false` | Print debug output (tool calls, responses) to the command window. |
+| `DisplayMode` | `string` | `"detailed"` | Display mode: `"off"` (silent) or `"detailed"` (print tool calls and responses to the command window). |
 | `ApprovalFcn` | `function_handle` | `@aisdk.llms.internal.uiconfirm` | Callback used to prompt the user for tool call confirmation. |
 | `MaxIterations` | positive numeric | `25` | Maximum tool-calling iterations per `run` call. Can be overridden per call via Name-Value argument. |
 | `NumInputTokens` | numeric (read-only) | `0` | Cumulative input (prompt) tokens across all `run` calls. |
@@ -63,6 +63,7 @@ Run the agentic loop: send `query` to the model, execute any tool calls the mode
 | `ToolChoice` | `string` | `"auto"` | Controls which tool the model calls. Must be one of `"auto"` (model decides), `"none"` (no tool calls), `"required"` (model must call a tool), or the name of a specific tool to force (e.g., `"addNumbers"`). |
 | `ResponseFormat` | | `"text"` | Override the response format for this run. `"text"`, `"json"`, `struct`, or JSON schema string. |
 | `MaxIterations` | positive numeric | `25` | Maximum number of generate-then-tool-call loop iterations. When reached, a warning is issued, the message history is preserved in `agent.Messages`, and accumulated text responses are returned. |
+| `DisplayMode` | `string` | agent's `DisplayMode` | Override display mode for this run. `"off"` or `"detailed"`. Does not mutate the agent property. |
 
 **Outputs:**
 
@@ -150,7 +151,7 @@ tool = aisdk.LLMTool(@web_search, ...
     RequiresApproval="always");
 
 client = aisdk.LLMClient("openai", "gpt-4.1-mini");
-agent = aisdk.AIAgent(client, "You are a helpful researcher.", tool, Verbose=true);
+agent = aisdk.AIAgent(client, "You are a helpful researcher.", tool);
 run(agent, "Search for the population of France.");
 ```
 
