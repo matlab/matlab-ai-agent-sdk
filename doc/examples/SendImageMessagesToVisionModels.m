@@ -18,7 +18,7 @@ img = imread("peppers.png");
 imshow(img)
 title("Image sent to the model")
 %%
-msgs = [aisdk.LLMMessage("What colours dominate this image?"), ...
+msgs = [aisdk.LLMMessage("What colors dominate this image?"), ...
         aisdk.LLMMessage(img)];
 
 resp = generate(client, msgs);

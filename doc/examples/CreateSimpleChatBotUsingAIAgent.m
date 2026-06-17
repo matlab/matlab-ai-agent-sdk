@@ -11,7 +11,7 @@
 api = "openai";
 modelName = "gpt-4.1-mini";
 client = aisdk.LLMClient(api, modelName);
-%[text] Create an instance of `AIAgent` to manage the message history in the chat. Also define the bot behaviour through a system prompt.
+%[text] Create an instance of `AIAgent` to manage the message history in the chat. Also define the bot behavior through a system prompt.
 sysPrompt = "You are a helpful assistant. You reply in a very concise way, keeping answers limited to short sentences.";
 session = aisdk.AIAgent(client, sysPrompt);
 %%

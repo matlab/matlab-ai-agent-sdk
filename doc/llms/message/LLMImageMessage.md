@@ -54,7 +54,7 @@ resp = generate(client, msgs);
 ```matlab
 img = imread("peppers.png");
 
-msgs = [aisdk.LLMMessage("Describe the colours in this image."), ...
+msgs = [aisdk.LLMMessage("Describe the colors in this image."), ...
         aisdk.LLMMessage(img)];
 
 resp = generate(client, msgs);
