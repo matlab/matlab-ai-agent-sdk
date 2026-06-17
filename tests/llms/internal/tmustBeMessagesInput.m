@@ -23,7 +23,7 @@ classdef tmustBeMessagesInput < matlab.unittest.TestCase
         end
 
         function acceptsLLMMessageObject(testCase)
-            message = aisdk.llms.message.LLMTextMessage("hi", "user");
+            message = aisdk.LLMTextMessage("hi");
             testCase.verifyWarningFree( ...
                 @() aisdk.llms.internal.mustBeMessagesInput(message));
         end

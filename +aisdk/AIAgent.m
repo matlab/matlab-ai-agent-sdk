@@ -138,7 +138,7 @@ classdef AIAgent < handle
 
                 if ~isempty(this.SystemPrompt)
                     messagesWithSystem = [
-                        aisdk.llms.message.LLMTextMessage(this.SystemPrompt, "system"), ...
+                        aisdk.LLMTextMessage(this.SystemPrompt, Role="system"), ...
                         this.Messages];
                 else
                     messagesWithSystem = this.Messages;
@@ -171,7 +171,7 @@ classdef AIAgent < handle
                     allTexts(end+1) = text; %#ok<AGROW>
                 end
 
-                toolCalls = msgs(arrayfun(@(m) isa(m, 'aisdk.llms.message.LLMToolCallMessage'), msgs));
+                toolCalls = msgs(arrayfun(@(m) isa(m, 'aisdk.LLMToolCallMessage'), msgs));
                 if isempty(toolCalls)
                     if ~isempty(allTexts)
                         response = join(allTexts, newline);
@@ -188,8 +188,8 @@ classdef AIAgent < handle
                     catch ME
                         output = "Error: " + ME.message;
                         this.print("[function return] " + string(jsonencode(output)));
-                        this.Messages(end+1) = aisdk.llms.message.LLMToolResultMessage( ...
-                            string(output), tc.Name, tc.ToolCallID);
+                        this.Messages(end+1) = aisdk.LLMToolResultMessage( ...
+                            string(output), ToolCallID=tc.ToolCallID, Name=tc.Name);
                         continue
                     end
                     if tool.RequiresApproval == "once" && ismember(tc.Name, this.ApprovedTools)
@@ -202,8 +202,8 @@ classdef AIAgent < handle
                                 msg = msg + ": " + approval.Reason;
                             end
                             this.print("[denied] " + msg);
-                            this.Messages(end+1) = aisdk.llms.message.LLMToolResultMessage( ...
-                                msg, tc.Name, tc.ToolCallID);
+                            this.Messages(end+1) = aisdk.LLMToolResultMessage( ...
+                                msg, ToolCallID=tc.ToolCallID, Name=tc.Name);
                             continue
                         end
                         if approval.Permanent
@@ -211,7 +211,7 @@ classdef AIAgent < handle
                         end
                         if strlength(approval.Reason) > 0
                             this.print("[approved] " + approval.Reason);
-                            this.Messages(end+1) = aisdk.llms.message.LLMTextMessage(approval.Reason, "user");
+                            this.Messages(end+1) = aisdk.LLMTextMessage(approval.Reason);
                         end
                     end
                     this.print("[call function " + tc.Name + " with inputs " + jsonencode(tc.Arguments) + "]");
@@ -227,8 +227,8 @@ classdef AIAgent < handle
                     else
                         resultStr = jsonencode(output);
                     end
-                    this.Messages(end+1) = aisdk.llms.message.LLMToolResultMessage(resultStr, tc.Name, ...
-                        tc.ToolCallID);
+                    this.Messages(end+1) = aisdk.LLMToolResultMessage(resultStr, ...
+                        ToolCallID=tc.ToolCallID, Name=tc.Name);
                 end
             end
 

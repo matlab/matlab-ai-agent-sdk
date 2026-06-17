@@ -1,23 +1,24 @@
 classdef LLMImageMessage < aisdk.llms.message.LLMMessage
 %LLMImageMessage An image message in a conversation.
 %
-%   msg = aisdk.llms.message.LLMImageMessage(CONTENT, ROLE) creates an image
-%   message from CONTENT, which can be a file path, URL, or MATLAB image
-%   array.
+%   msg = aisdk.LLMImageMessage(IMGARRAY) creates a user image message
+%   from a MATLAB image array (numeric or logical).
 %
-%   msg = aisdk.llms.message.LLMImageMessage(CONTENT, ROLE, Detail=D) sets the
-%   image resolution detail level ("auto", "low", "high", or "original").
-%   Only consumed by providers that support it (currently OpenAI).
+%   msg = aisdk.LLMImageMessage(SOURCE) creates a user image message from
+%   a file path or URL.
 %
-%   LLMImageMessage Properties (inherited):
-%       Role                 - "user", "assistant", or "tool".
+%   msg = aisdk.LLMImageMessage(__, Detail=D) sets the image resolution
+%   detail level ("auto", "low", "high", or "original"). Only consumed by
+%   providers that support it (currently OpenAI).
+%
+%   LLMImageMessage Properties:
+%       Role                 - Always "user".
 %
 %       Type                 - Always "image".
 %
 %       Content              - MATLAB image array (numeric), usable
 %                              with imshow/imwrite.
 %
-%   LLMImageMessage Properties:
 %       Detail               - Image resolution detail level.
 
 %   Copyright 2026 The MathWorks, Inc.
@@ -27,17 +28,22 @@ classdef LLMImageMessage < aisdk.llms.message.LLMMessage
         Detail(1,1) string {mustBeMember(Detail, ["auto","low","high","original"])} = "auto"
     end
 
+    properties (Hidden)
+        DownloadFcn function_handle = @websave
+    end
+
     methods
-        function this = LLMImageMessage(content, role, nvp)
+        function this = LLMImageMessage(content, nvp)
             arguments
                 content
-                role(1,1) string {mustBeMember(role, ["user","assistant","tool"])}
                 nvp.Detail(1,1) string {mustBeMember(nvp.Detail, ["auto","low","high","original"])} = "auto"
+                nvp.DownloadFcn function_handle = @websave
             end
 
-            this@aisdk.llms.message.LLMMessage(role, "image");
+            this@aisdk.llms.message.LLMMessage("user", "image");
             this.Detail = nvp.Detail;
-            this.Content = resolveToImageArray(content);
+            this.DownloadFcn = nvp.DownloadFcn;
+            this.Content = resolveToImageArray(content, this.DownloadFcn);
         end
     end
 
@@ -65,28 +71,47 @@ classdef LLMImageMessage < aisdk.llms.message.LLMMessage
 
 end
 
-function img = resolveToImageArray(source)
+function img = resolveToImageArray(source, downloadFcn)
     if isnumeric(source) || islogical(source)
         mustBeImageArray(source);
         img = source;
     elseif (isstring(source) && isscalar(source)) || ischar(source)
         source = string(source);
         if startsWith(source, ("https://" | "http://"))
-            img = readURL(source);
+            img = readURL(source, downloadFcn);
         else
-            img = imread(source);
+            try
+                img = imread(source);
+            catch e
+                if e.identifier == "MATLAB:imagesci:imread:fileDoesNotExist"
+                    rethrow(e);
+                end
+                error("llms:message:NotAnImage", "%s", ...
+                    aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:message:NotAnImage", source));
+            end
         end
     else
         error("llms:message:InvalidImageSource", ...
-            "Image source must be a file path, URL, or numeric image array.");
+            aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:message:InvalidImageSource"));
     end
 end
 
-function img = readURL(url)
+function img = readURL(url, downloadFcn)
     tempFile = [tempname, '.tmp'];
-    cleanupObj = onCleanup(@() delete(tempFile));
-    websave(tempFile, url);
-    img = imread(tempFile);
+    cleanupObj = onCleanup(@() deleteIfExists(tempFile)); %#ok<NASGU>
+    try
+        downloadFcn(tempFile, url);
+        img = imread(tempFile);
+    catch
+        error("llms:message:NotAnImage", "%s", ...
+            aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:message:NotAnImage", url));
+    end
+end
+
+function deleteIfExists(filePath)
+    if isfile(filePath)
+        delete(filePath);
+    end
 end
 
 function mustBeImageArray(val)
@@ -94,6 +119,6 @@ function mustBeImageArray(val)
     okShape = ismatrix(val) || (ndims(val) == 3 && ismember(size(val,3), [1 3 4]));
     if ~(okType && okShape && ~isempty(val))
         error("llms:message:InvalidImageContent", ...
-            "Content must be a nonempty numeric or logical image array.");
+            aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:message:InvalidImageContent"));
     end
 end

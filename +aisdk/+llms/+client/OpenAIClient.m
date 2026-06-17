@@ -224,7 +224,7 @@ classdef OpenAIClient < aisdk.llms.client.ClientBase
                 if iscell(toolCalls)
                     toolCalls = [toolCalls{:}];
                 end
-                messages = aisdk.llms.message.LLMToolCallMessage.empty(1,0);
+                messages = aisdk.LLMToolCallMessage.empty(1,0);
                 for i = 1:numel(toolCalls)
                     tc = toolCalls(i);
                     if isfield(tc, "id")
@@ -237,10 +237,10 @@ classdef OpenAIClient < aisdk.llms.client.ClientBase
                         error("llms:invalidToolCallArguments", ...
                             aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:invalidToolCallArguments", class(args)));
                     end
-                    messages(end+1) = aisdk.llms.message.LLMToolCallMessage(tc.function.name, args, id); %#ok<AGROW>
+                    messages(end+1) = aisdk.LLMToolCallMessage(tc.function.name, args, ToolCallID=id); %#ok<AGROW>
                 end
             else
-                messages = aisdk.llms.message.LLMTextMessage(messageBody.content, "assistant");
+                messages = aisdk.LLMTextMessage(messageBody.content, Role="assistant");
             end
         end
 
@@ -253,7 +253,7 @@ classdef OpenAIClient < aisdk.llms.client.ClientBase
             for i = 1:numel(messages)
                 msg = messages(i);
                 switch class(msg)
-                    case 'aisdk.llms.message.LLMTextMessage'
+                    case 'aisdk.LLMTextMessage'
                         role = msg.Role;
                         if role == "system"
                             role = "developer";
@@ -261,7 +261,7 @@ classdef OpenAIClient < aisdk.llms.client.ClientBase
                         idx = idx + 1;
                         messagesOut{idx} = struct("role", role, "content", msg.Content);
 
-                    case 'aisdk.llms.message.LLMToolResultMessage'
+                    case 'aisdk.LLMToolResultMessage'
                         idx = idx + 1;
                         messagesOut{idx} = struct( ...
                             "role", "tool", ...
@@ -269,7 +269,7 @@ classdef OpenAIClient < aisdk.llms.client.ClientBase
                             "name", msg.Name, ...
                             "content", msg.Content);
 
-                    case 'aisdk.llms.message.LLMImageMessage'
+                    case 'aisdk.LLMImageMessage'
                         imgData = msg.Content;
                         base64Str = matlab.net.base64encode(aisdk.llms.internal.encodeImageToPNG(imgData));
                         dataURI = "data:image/png;base64," + base64Str;
@@ -278,7 +278,7 @@ classdef OpenAIClient < aisdk.llms.client.ClientBase
                         idx = idx + 1;
                         messagesOut{idx} = struct("role", msg.Role, "content", {{imgPart}});
 
-                    case 'aisdk.llms.message.LLMToolCallMessage'
+                    case 'aisdk.LLMToolCallMessage'
                         toolCall = struct( ...
                             "id", msg.ToolCallID, ...
                             "type", "function", ...

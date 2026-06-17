@@ -96,7 +96,7 @@ classdef tOpenAIClient < hconstructorCommon
             client = makeClientWithFakeHTTP(testCase, makeTextResponse("Hello world"));
             [text, messages] = generate(client, "Hi");
             testCase.verifyEqual(text, "Hello world");
-            testCase.verifyClass(messages, "aisdk.llms.message.LLMTextMessage");
+            testCase.verifyClass(messages, "aisdk.LLMTextMessage");
             testCase.verifyNumElements(messages, 1);
             testCase.verifyEqual(messages.Content, "Hello world");
             testCase.verifyEqual(messages.Role, "assistant");
@@ -183,7 +183,7 @@ classdef tOpenAIClient < hconstructorCommon
             response = makeToolCallResponse({toolCall});
             client = makeClientWithFakeHTTP(testCase, response);
             [~, messages] = generate(client, "What's the weather?");
-            testCase.verifyClass(messages, "aisdk.llms.message.LLMToolCallMessage");
+            testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
             testCase.verifyEqual(messages.Name, "getWeather");
             testCase.verifyEqual(messages.Arguments, struct("city", 'London'));
             testCase.verifyEqual(messages.ToolCallID, "call_123");
@@ -223,15 +223,15 @@ classdef tOpenAIClient < hconstructorCommon
         %% generate — convertMessages (captured via sendRequestFcn)
         function generate_textMessage_producesRoleContent(testCase)
             params = captureGenerateParams(testCase, ...
-                aisdk.llms.message.LLMTextMessage("hello", "user"));
+                aisdk.LLMTextMessage("hello"));
             testCase.verifyEqual(params.messages{1}.role, "user");
             testCase.verifyEqual(params.messages{1}.content, "hello");
         end
 
         function generate_systemMessage_mapsToDeveloperRole(testCase)
             messages = [
-                aisdk.llms.message.LLMTextMessage("Be concise.", "system"), ...
-                aisdk.llms.message.LLMTextMessage("hello", "user")];
+                aisdk.LLMTextMessage("Be concise.", Role="system"), ...
+                aisdk.LLMTextMessage("hello")];
             params = captureGenerateParams(testCase, messages);
             testCase.verifyEqual(params.messages{1}.role, "developer");
             testCase.verifyEqual(params.messages{1}.content, "Be concise.");
@@ -240,9 +240,9 @@ classdef tOpenAIClient < hconstructorCommon
 
         function generate_toolResultMessage_producesToolRole(testCase)
             messages = [
-                aisdk.llms.message.LLMTextMessage("hi", "user"), ...
-                aisdk.llms.message.LLMToolCallMessage("myTool", struct("a",1), "call_1"), ...
-                aisdk.llms.message.LLMToolResultMessage("result text", "myTool", "call_1")];
+                aisdk.LLMTextMessage("hi"), ...
+                aisdk.LLMToolCallMessage("myTool", struct("a",1), ToolCallID="call_1"), ...
+                aisdk.LLMToolResultMessage("result text", ToolCallID="call_1", Name="myTool")];
             params = captureGenerateParams(testCase, messages);
             toolMsg = params.messages{3};
             testCase.verifyEqual(toolMsg.role, "tool");
@@ -253,9 +253,9 @@ classdef tOpenAIClient < hconstructorCommon
 
         function generate_toolCallMessages_mergeIntoAssistant(testCase)
             messages = [
-                aisdk.llms.message.LLMTextMessage("hi", "user"), ...
-                aisdk.llms.message.LLMToolCallMessage("toolA", struct("x",1), "call_1"), ...
-                aisdk.llms.message.LLMToolCallMessage("toolB", struct("y",2), "call_2")];
+                aisdk.LLMTextMessage("hi"), ...
+                aisdk.LLMToolCallMessage("toolA", struct("x",1), ToolCallID="call_1"), ...
+                aisdk.LLMToolCallMessage("toolB", struct("y",2), ToolCallID="call_2")];
             params = captureGenerateParams(testCase, messages);
             assistantMsg = params.messages{2};
             testCase.verifyEqual(assistantMsg.role, "assistant");
@@ -265,8 +265,8 @@ classdef tOpenAIClient < hconstructorCommon
         function generate_imageMessage_producesImageUrl(testCase)
             imgData = uint8(zeros(2, 2, 3));
             messages = [
-                aisdk.llms.message.LLMTextMessage("hi", "user"), ...
-                aisdk.llms.message.LLMImageMessage(imgData, "user", Detail="low")];
+                aisdk.LLMTextMessage("hi"), ...
+                aisdk.LLMImageMessage(imgData, Detail="low")];
             params = captureGenerateParams(testCase, messages);
             imgMsg = params.messages{2};
             testCase.verifyEqual(imgMsg.role, "user");
@@ -298,7 +298,7 @@ classdef tOpenAIClient < hconstructorCommon
             client = makeClientWithFakeHTTP(testCase, response);
             [text, messages] = generate(client, "Call a tool");
             testCase.verifyEqual(text, "Let me calculate that");
-            testCase.verifyClass(messages, "aisdk.llms.message.LLMToolCallMessage");
+            testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
         end
 
         function generate_toolCallsWithStructuredText_returnsDecodedStruct(testCase)
@@ -308,7 +308,7 @@ classdef tOpenAIClient < hconstructorCommon
             [text, messages] = generate(client, "Call a tool", ResponseFormat=proto);
             testCase.verifyEqual(text.name, "Alice");
             testCase.verifyEqual(text.score, 9.5);
-            testCase.verifyClass(messages, "aisdk.llms.message.LLMToolCallMessage");
+            testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
         end
 
     end

@@ -66,4 +66,8 @@ catalog("llms:invalidFunctionCall") = "Unrecognized tool {1}.";
 catalog("llms:message:InvalidToolCallID") = "Tool call ID must be empty or a string scalar.";
 catalog("llms:unsupportedToolType") = "Tools must only contain LocalLLMTool and MCPTool objects.";
 catalog("llms:client:InvalidMessageInput") = "Messages must be a string scalar, character vector, or LLMMessage array.";
+catalog("llms:message:NotAnImage") = "Unable to read image from ''{1}''.";
+catalog("llms:message:InvalidImageSource") = "Image must be a file path, URL, or numeric array.";
+catalog("llms:message:InvalidImageContent") = "Message content must be a nonempty numeric or logical array.";
+catalog("llms:message:InvalidTextContent") = "Message content must be a string scalar or character vector.";
 end

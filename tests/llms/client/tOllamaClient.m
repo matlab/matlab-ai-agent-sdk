@@ -53,7 +53,7 @@ classdef tOllamaClient < hconstructorCommon
             client = testCase.createClient("qwen3:0.6b");
             client.sendRequestFcn = @(varargin) mock.sendRequest(varargin{:});
             [~, msgs] = generate(client, "Call the tool.");
-            testCase.verifyClass(msgs, 'aisdk.llms.message.LLMToolCallMessage');
+            testCase.verifyClass(msgs, 'aisdk.LLMToolCallMessage');
             testCase.verifyEqual(msgs(1).ToolCallID, "0");
         end
 
@@ -84,7 +84,7 @@ classdef tOllamaClient < hconstructorCommon
             client = makeOllamaClientWithFakeHTTP(testCase, makeOllamaTextResponse("Hello"));
             [text, messages] = generate(client, "Hi");
             testCase.verifyEqual(text, "Hello");
-            testCase.verifyClass(messages, "aisdk.llms.message.LLMTextMessage");
+            testCase.verifyClass(messages, "aisdk.LLMTextMessage");
             testCase.verifyNumElements(messages, 1);
             testCase.verifyEqual(messages.Content, "Hello");
         end
@@ -171,9 +171,9 @@ classdef tOllamaClient < hconstructorCommon
         %% generate — convertMessages (Ollama-specific fields)
         function generate_toolResultMessage_usesToolName(testCase)
             messages = [
-                aisdk.llms.message.LLMTextMessage("hi", "user"), ...
-                aisdk.llms.message.LLMToolCallMessage("myTool", struct("a",1), "0"), ...
-                aisdk.llms.message.LLMToolResultMessage("result", "myTool", "0")];
+                aisdk.LLMTextMessage("hi"), ...
+                aisdk.LLMToolCallMessage("myTool", struct("a",1), ToolCallID="0"), ...
+                aisdk.LLMToolResultMessage("result", ToolCallID="0", Name="myTool")];
             params = captureOllamaParams(testCase, messages);
             toolMsg = params.messages{3};
             testCase.verifyEqual(toolMsg.role, "tool");
@@ -183,8 +183,8 @@ classdef tOllamaClient < hconstructorCommon
         function generate_imageMessage_usesImagesField(testCase)
             imgData = uint8(zeros(2, 2, 3));
             messages = [
-                aisdk.llms.message.LLMTextMessage("hi", "user"), ...
-                aisdk.llms.message.LLMImageMessage(imgData, "user")];
+                aisdk.LLMTextMessage("hi"), ...
+                aisdk.LLMImageMessage(imgData)];
             params = captureOllamaParams(testCase, messages);
             imgMsg = params.messages{2};
             testCase.verifyEqual(imgMsg.content, "");
@@ -235,7 +235,7 @@ classdef tOllamaClient < hconstructorCommon
             client = makeOllamaClientWithFakeHTTP(testCase, response);
             [text, messages] = generate(client, "Call a tool");
             testCase.verifyEqual(text, "Let me calculate that");
-            testCase.verifyClass(messages, "aisdk.llms.message.LLMToolCallMessage");
+            testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
         end
 
         function generate_toolCallsWithStructuredText_returnsDecodedStruct(testCase)
@@ -245,7 +245,7 @@ classdef tOllamaClient < hconstructorCommon
             [text, messages] = generate(client, "Call a tool", ResponseFormat=proto);
             testCase.verifyEqual(text.name, "Alice");
             testCase.verifyEqual(text.score, 9.5);
-            testCase.verifyClass(messages, "aisdk.llms.message.LLMToolCallMessage");
+            testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
         end
     end
 

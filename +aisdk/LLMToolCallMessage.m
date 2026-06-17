@@ -1,14 +1,21 @@
 classdef LLMToolCallMessage < aisdk.llms.message.LLMMessage
 %LLMToolCallMessage A request from the AI model to call a tool.
 %
-%   LLMToolCallMessage Properties (inherited):
+%   msg = aisdk.LLMToolCallMessage(NAME) creates a tool call message.
+%
+%   msg = aisdk.LLMToolCallMessage(NAME, ARGUMENTS) creates a tool call
+%   with the specified arguments struct.
+%
+%   msg = aisdk.LLMToolCallMessage(NAME, ARGUMENTS, ToolCallID=ID) creates a
+%   tool call with a provider-assigned identifier.
+%
+%   LLMToolCallMessage Properties:
 %       Role                 - Always "assistant".
 %
 %       Type                 - Always "tool-call".
 %
 %       Content              - Not used for tool call messages.
 %
-%   LLMToolCallMessage Properties:
 %       Name                 - Name of the tool the model wants to call.
 %
 %       ToolCallID           - Unique identifier for this tool call.
@@ -43,19 +50,16 @@ classdef LLMToolCallMessage < aisdk.llms.message.LLMMessage
     end
 
     methods
-        function this = LLMToolCallMessage(name, arguments, toolCallID)
+        function this = LLMToolCallMessage(name, arguments, nvp)
             arguments
                 name(1,1) string {aisdk.llms.internal.mustBeNonzeroLengthTextScalar}
                 arguments(1,1) struct = struct()
-                toolCallID {aisdk.llms.internal.mustBeScalarStringOrEmpty} = []
+                nvp.ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = []
             end
 
             this@aisdk.llms.message.LLMMessage("assistant", "tool-call");
             this.Name = name;
-            if ischar(toolCallID)
-                toolCallID = string(toolCallID);
-            end
-            this.ToolCallID = toolCallID;
+            this.ToolCallID = nvp.ToolCallID;
             this.Arguments = arguments;
         end
     end

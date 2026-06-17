@@ -5,59 +5,59 @@ classdef tLLMMessage < matlab.unittest.TestCase
 
     methods (Test)
         function canCreateHeterogeneousArray(testCase)
-            msg1 = aisdk.llms.message.LLMTextMessage("hello", "user");
-            msg2 = aisdk.llms.message.LLMToolCallMessage("myTool", struct(), "tc1");
+            msg1 = aisdk.LLMTextMessage("hello");
+            msg2 = aisdk.LLMToolCallMessage("myTool", struct(), ToolCallID="tc1");
             arr = [msg1, msg2];
             testCase.verifyLength(arr, 2);
             testCase.verifyClass(arr, 'aisdk.llms.message.LLMMessage');
         end
 
         function canConcatenateAllSubclasses(testCase)
-            user = aisdk.llms.message.LLMTextMessage("hello", "user");
-            assistant = aisdk.llms.message.LLMTextMessage("hi", "assistant");
-            toolCall = aisdk.llms.message.LLMToolCallMessage("myTool", struct("a", 1), "tc1");
-            toolResult = aisdk.llms.message.LLMToolResultMessage("result", "myTool", "tc1");
+            user = aisdk.LLMTextMessage("hello");
+            assistant = aisdk.LLMTextMessage("hi", Role="assistant");
+            toolCall = aisdk.LLMToolCallMessage("myTool", struct("a", 1), ToolCallID="tc1");
+            toolResult = aisdk.LLMToolResultMessage("result", ToolCallID="tc1", Name="myTool");
             arr = [user, assistant, toolCall, toolResult];
             testCase.verifyLength(arr, 4);
         end
 
         function displayDoesNotError(testCase)
-            msg = aisdk.llms.message.LLMTextMessage("hello", "user");
+            msg = aisdk.LLMTextMessage("hello");
             testCase.verifyWarningFree(@() disp(msg));
         end
 
         function displayArrayDoesNotError(testCase)
-            msgs = [aisdk.llms.message.LLMTextMessage("hello", "user"), ...
-                    aisdk.llms.message.LLMTextMessage("world", "assistant")];
+            msgs = [aisdk.LLMTextMessage("hello"), ...
+                    aisdk.LLMTextMessage("world", Role="assistant")];
             testCase.verifyWarningFree(@() disp(msgs));
         end
 
         function roleIsImmutable(testCase)
-            msg = aisdk.llms.message.LLMTextMessage("hello", "user");
+            msg = aisdk.LLMTextMessage("hello");
             testCase.verifyError(...
                 @() iSetRole(msg), "MATLAB:class:SetProhibited");
         end
 
         function typeIsImmutable(testCase)
-            msg = aisdk.llms.message.LLMTextMessage("hello", "user");
+            msg = aisdk.LLMTextMessage("hello");
             testCase.verifyError(...
                 @() iSetType(msg), "MATLAB:class:SetProhibited");
         end
 
         function contentValidation_rejectsNumeric_throwsError(testCase)
-            msg = aisdk.llms.message.LLMTextMessage("hello", "user");
+            msg = aisdk.LLMTextMessage("hello");
             testCase.verifyError( ...
                 @() iSetContent(msg, 42), "llms:message:InvalidContent");
         end
 
         function contentValidation_rejectsEmptyBrackets(testCase)
-            msg = aisdk.llms.message.LLMTextMessage("hello", "user");
+            msg = aisdk.LLMTextMessage("hello");
             testCase.verifyError( ...
                 @() iSetContent(msg, []), "llms:message:InvalidContent");
         end
 
         function displayArray_toolCallShowsName(testCase)
-            toolCall = aisdk.llms.message.LLMToolCallMessage("myTool", struct(), "tc1");
+            toolCall = aisdk.LLMToolCallMessage("myTool", struct(), ToolCallID="tc1");
             msgs = [toolCall, toolCall];
             output = formattedDisplayText(msgs);
             testCase.verifySubstring(output, "myTool");
@@ -65,28 +65,28 @@ classdef tLLMMessage < matlab.unittest.TestCase
 
         function contentPreview_truncatesLongContent(testCase)
             longText = repmat('a', 1, 80);
-            msg = aisdk.llms.message.LLMTextMessage(longText, "user");
+            msg = aisdk.LLMTextMessage(longText);
             msgs = [msg, msg];
             output = formattedDisplayText(msgs);
             testCase.verifySubstring(output, "...");
         end
 
         function contentPreview_multilineContent_showsOnOneLine(testCase)
-            msg = aisdk.llms.message.LLMTextMessage("line1" + newline + "line2", "user");
+            msg = aisdk.LLMTextMessage("line1" + newline + "line2");
             msgs = [msg, msg];
             output = formattedDisplayText(msgs);
             testCase.verifySubstring(output, "line1 line2");
         end
 
         function contentPreview_emptyString_returnsEmptyQuotes(testCase)
-            msg = aisdk.llms.message.LLMTextMessage("", "user");
+            msg = aisdk.LLMTextMessage("");
             msgs = [msg, msg];
             output = formattedDisplayText(msgs);
             testCase.verifySubstring(output, """""");
         end
 
         function displayArray_toolRole_showsToolLabel(testCase)
-            toolResult = aisdk.llms.message.LLMToolResultMessage("res", "myTool", "tc1");
+            toolResult = aisdk.LLMToolResultMessage("res", ToolCallID="tc1", Name="myTool");
             msgs = [toolResult, toolResult];
             output = formattedDisplayText(msgs);
             testCase.verifySubstring(output, "Tool");
@@ -101,7 +101,7 @@ classdef tLLMMessage < matlab.unittest.TestCase
 
         function displayArray_imageType_showsImageLabel(testCase)
             img = uint8(randi(255, 4, 4, 3));
-            imgMsg = aisdk.llms.message.LLMImageMessage(img, "user");
+            imgMsg = aisdk.LLMImageMessage(img);
             msgs = [imgMsg, imgMsg];
             output = formattedDisplayText(msgs);
             testCase.verifySubstring(output, "Image");

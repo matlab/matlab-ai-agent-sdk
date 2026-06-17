@@ -119,8 +119,8 @@ msgContext = [];
 for i = polynomialDegrees(workspace.polynomials.IsCandidateFit)
     imgName = createAndSaveExtrapolatedFitPlot(workspace,i,tempDirectory);
     msgContext = [msgContext, ...
-        aisdk.LLMMessage("Polynomial degree " + i), ...
-        aisdk.LLMMessage(imgName, Type="image")]; %#ok<AGROW>
+        aisdk.LLMTextMessage("Polynomial degree " + i), ...
+        aisdk.LLMImageMessage(imgName)]; %#ok<AGROW>
 end
 
 % Use vision model to assess the plots.

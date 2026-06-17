@@ -68,7 +68,7 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
             if isa(input, 'aisdk.llms.message.LLMMessage')
                 message = input;
             elseif isstring(input) || ischar(input)
-                message = aisdk.llms.message.LLMTextMessage(string(input), "user");
+                message = aisdk.LLMTextMessage(string(input));
             else
                 error("llms:client:InvalidMessageInput", ...
                     aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:client:InvalidMessageInput"));

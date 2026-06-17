@@ -5,15 +5,15 @@ Represents an image message in a conversation.
 ## Syntax
 
 ```matlab
-msg = aisdk.llms.message.LLMImageMessage(content, role)
-msg = aisdk.llms.message.LLMImageMessage(content, role, Detail=detail)
+msg = aisdk.LLMImageMessage(source)
+msg = aisdk.LLMImageMessage(source, Detail=detail)
 ```
 
 ## Description
 
-`aisdk.llms.message.LLMImageMessage(content, role)` creates an image message directly. `content` can be a file path, URL, or MATLAB image array. The image is eagerly resolved and stored as a MATLAB numeric array in `Content`, so it is directly usable with `imshow`, `imwrite`, and other image functions.
+`aisdk.LLMImageMessage(source)` creates a user image message. `source` can be a file path, URL, or MATLAB image array. The image is eagerly resolved and stored as a MATLAB numeric array in `Content`, so it is directly usable with `imshow`, `imwrite`, and other image functions.
 
-`aisdk.llms.message.LLMImageMessage(content, role, Detail=detail)` also sets the image resolution detail level (`"auto"`, `"low"`, `"high"`, or `"original"`). Only consumed by providers that support it (currently OpenAI).
+`aisdk.LLMImageMessage(source, Detail=detail)` also sets the image resolution detail level (`"auto"`, `"low"`, `"high"`, or `"original"`). Only consumed by providers that support it (currently OpenAI).
 
 Text and images are separate messages. A user turn with text and N images becomes N+1 messages: 1 text message + N image messages, all with `Role: "user"`. Array order preserves interleaving.
 
@@ -23,9 +23,9 @@ Text and images are separate messages. A user turn with text and N images become
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `Role` | `string` | — | `"user"`, `"assistant"`, or `"tool"`. |
+| `Role` | `string` | `"user"` | Always `"user"`. |
 | `Type` | `string` | `"image"` | Always `"image"`. |
-| `Content` | numeric or logical array | — | MATLAB image array, usable with `imshow`/`imwrite`. |
+| `Content` | numeric or logical array | | MATLAB image array, usable with `imshow`/`imwrite`. |
 | `Detail` | `string` | `"auto"` | Image resolution detail level: `"auto"`, `"low"`, `"high"`, or `"original"`. Only consumed by providers that support it (currently OpenAI). |
 
 ## Accepted Sources
@@ -43,8 +43,8 @@ Text and images are separate messages. A user turn with text and N images become
 ```matlab
 client = aisdk.LLMClient("openai", "gpt-4.1-mini");
 
-msgs = [aisdk.LLMMessage("What is in this image?"), ...
-        aisdk.LLMMessage("photo.jpg", Type="image")];
+msgs = [aisdk.LLMTextMessage("What is in this image?"), ...
+        aisdk.LLMImageMessage("photo.jpg")];
 
 resp = generate(client, msgs);
 ```
@@ -54,8 +54,8 @@ resp = generate(client, msgs);
 ```matlab
 img = imread("peppers.png");
 
-msgs = [aisdk.LLMMessage("Describe the colors in this image."), ...
-        aisdk.LLMMessage(img)];
+msgs = [aisdk.LLMTextMessage("Describe the colors in this image."), ...
+        aisdk.LLMImageMessage(img)];
 
 resp = generate(client, msgs);
 ```
@@ -63,10 +63,10 @@ resp = generate(client, msgs);
 ### Interleaved text and images
 
 ```matlab
-msgs = [aisdk.LLMMessage("Look at this"), ...
-        aisdk.LLMMessage("a.png", Type="image"), ...
-        aisdk.LLMMessage("Now compare with this"), ...
-        aisdk.LLMMessage("b.png", Type="image")];
+msgs = [aisdk.LLMTextMessage("Look at this"), ...
+        aisdk.LLMImageMessage("a.png"), ...
+        aisdk.LLMTextMessage("Now compare with this"), ...
+        aisdk.LLMImageMessage("b.png")];
 
 resp = generate(client, msgs);
 ```
@@ -74,14 +74,14 @@ resp = generate(client, msgs);
 ### With OpenAI detail control
 
 ```matlab
-msg = aisdk.LLMMessage("photo.jpg", Type="image", Detail="high");
+msg = aisdk.LLMImageMessage("photo.jpg", Detail="high");
 msg.Detail  % "high"
 ```
 
 ### Inspect the stored image
 
 ```matlab
-msg = aisdk.LLMMessage("peppers.png", Type="image");
+msg = aisdk.LLMImageMessage("peppers.png");
 imshow(msg.Content)     % display it
 size(msg.Content)       % e.g. 384×512×3
 class(msg.Content)      % "uint8"
@@ -89,4 +89,4 @@ class(msg.Content)      % "uint8"
 
 ## See Also
 
-[LLMMessage](../LLMMessage.md) | [LLMToolCallMessage](LLMToolCallMessage.md) | [LLMToolResultMessage](LLMToolResultMessage.md)
+[LLMMessage](../../LLMMessage.md) | [LLMToolCallMessage](LLMToolCallMessage.md) | [LLMToolResultMessage](LLMToolResultMessage.md)

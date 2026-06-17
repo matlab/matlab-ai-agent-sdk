@@ -1,64 +1,69 @@
 classdef tLLMTextMessage < matlab.unittest.TestCase
-% Tests for aisdk.llms.message.LLMTextMessage.
+% Tests for aisdk.LLMTextMessage.
 
 %   Copyright 2026 The MathWorks, Inc.
 
     methods (Test)
         function constructorSetsRoleUser(testCase)
-            msg = aisdk.llms.message.LLMTextMessage("hello", "user");
+            msg = aisdk.LLMTextMessage("hello", Role="user");
+            testCase.verifyEqual(msg.Role, "user");
+        end
+
+        function constructorDefaultsToUserRole(testCase)
+            msg = aisdk.LLMTextMessage("hello");
             testCase.verifyEqual(msg.Role, "user");
         end
 
         function constructorSetsRoleAssistant(testCase)
-            msg = aisdk.llms.message.LLMTextMessage("hello", "assistant");
+            msg = aisdk.LLMTextMessage("hello", Role="assistant");
             testCase.verifyEqual(msg.Role, "assistant");
         end
 
         function constructorSetsType(testCase)
-            msg = aisdk.llms.message.LLMTextMessage("hello", "user");
+            msg = aisdk.LLMTextMessage("hello");
             testCase.verifyEqual(msg.Type, "text");
         end
 
         function constructorSetsContent(testCase)
-            msg = aisdk.llms.message.LLMTextMessage("my question", "user");
+            msg = aisdk.LLMTextMessage("my question");
             testCase.verifyEqual(msg.Content, "my question");
         end
 
         function contentCanBeEmpty(testCase)
-            msg = aisdk.llms.message.LLMTextMessage("", "user");
+            msg = aisdk.LLMTextMessage("");
             testCase.verifyEqual(msg.Content, "");
         end
 
         function constructorAcceptsChar_createsMessage(testCase)
-            msg = aisdk.llms.message.LLMTextMessage('hello char', "user");
+            msg = aisdk.LLMTextMessage('hello char');
             testCase.verifyEqual(msg.Content, "hello char");
         end
 
         function constructorRejectsNonScalarStringArray_throwsError(testCase)
             testCase.verifyError( ...
-                @() aisdk.llms.message.LLMTextMessage(["a","b"], "user"), ...
+                @() aisdk.LLMTextMessage(["a","b"]), ...
                 "llms:message:InvalidTextContent");
         end
 
         function constructorRejectsNumericContent_throwsError(testCase)
             testCase.verifyError( ...
-                @() aisdk.llms.message.LLMTextMessage(123, "user"), ...
+                @() aisdk.LLMTextMessage(123), ...
                 "llms:message:InvalidTextContent");
         end
 
         function constructorAcceptsRoleTool_setsRole(testCase)
-            msg = aisdk.llms.message.LLMTextMessage("result", "tool");
+            msg = aisdk.LLMTextMessage("result", Role="tool");
             testCase.verifyEqual(msg.Role, "tool");
         end
 
         function constructorAcceptsRoleSystem_setsRole(testCase)
-            msg = aisdk.llms.message.LLMTextMessage("hello", "system");
+            msg = aisdk.LLMTextMessage("hello", Role="system");
             testCase.verifyEqual(msg.Role, "system");
         end
 
         function constructorRejectsInvalidRole_throwsError(testCase)
             testCase.verifyError( ...
-                @() aisdk.llms.message.LLMTextMessage("hello", "developer"), ...
+                @() aisdk.LLMTextMessage("hello", Role="developer"), ...
                 "MATLAB:validators:mustBeMember");
         end
     end

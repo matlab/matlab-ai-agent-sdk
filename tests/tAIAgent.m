@@ -26,7 +26,7 @@ classdef tAIAgent < matlab.unittest.TestCase
         function tokenCountsAfterSingleRun(testCase)
             client = MockClient();
             client.GenerateOutputs = {
-                {"Hello!", aisdk.llms.message.LLMTextMessage("Hello!", "assistant"), ...
+                {"Hello!", aisdk.LLMTextMessage("Hello!", Role="assistant"), ...
                  struct("Tokens", struct("NumInputTokens", 100, "NumOutputTokens", 20, ...
                         "NumTotalTokens", 120, "NumCachedInputTokens", 10))}
             };
@@ -43,10 +43,10 @@ classdef tAIAgent < matlab.unittest.TestCase
         function tokenCountsCumulativeAcrossRuns(testCase)
             client = MockClient();
             client.GenerateOutputs = {
-                {"Reply 1", aisdk.llms.message.LLMTextMessage("Reply 1", "assistant"), ...
+                {"Reply 1", aisdk.LLMTextMessage("Reply 1", Role="assistant"), ...
                  struct("Tokens", struct("NumInputTokens", 50, "NumOutputTokens", 10, ...
                         "NumTotalTokens", 60, "NumCachedInputTokens", 5))}
-                {"Reply 2", aisdk.llms.message.LLMTextMessage("Reply 2", "assistant"), ...
+                {"Reply 2", aisdk.LLMTextMessage("Reply 2", Role="assistant"), ...
                  struct("Tokens", struct("NumInputTokens", 80, "NumOutputTokens", 30, ...
                         "NumTotalTokens", 110, "NumCachedInputTokens", 15))}
             };
@@ -64,7 +64,7 @@ classdef tAIAgent < matlab.unittest.TestCase
         function responseSingleRoundNoTools(testCase)
             client = MockClient();
             client.GenerateOutputs = {
-                {"Hello!", aisdk.llms.message.LLMTextMessage("Hello!", "assistant"), ...
+                {"Hello!", aisdk.LLMTextMessage("Hello!", Role="assistant"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
@@ -81,15 +81,15 @@ classdef tAIAgent < matlab.unittest.TestCase
             client = MockClient();
             client.GenerateOutputs = {
                 % Round 1: text + tool call
-                {"Let me check.", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), "call_1"), ...
+                {"Let me check.", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), ToolCallID="call_1"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
                 % Round 2: empty text + tool call
-                {"", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 1), "call_2"), ...
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 1), ToolCallID="call_2"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
                 % Round 3: text, no tool call
-                {"The answer is 5.", aisdk.llms.message.LLMTextMessage("The answer is 5.", "assistant"), ...
+                {"The answer is 5.", aisdk.LLMTextMessage("The answer is 5.", Role="assistant"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
@@ -106,11 +106,11 @@ classdef tAIAgent < matlab.unittest.TestCase
             client = MockClient();
             client.GenerateOutputs = {
                 % Round 1: model calls the broken tool
-                {"", aisdk.llms.message.LLMToolCallMessage("alwaysError", struct("x", 42), "call_1"), ...
+                {"", aisdk.LLMToolCallMessage("alwaysError", struct("x", 42), ToolCallID="call_1"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
                 % Round 2: model replies after seeing the error
-                {"I see the error.", aisdk.llms.message.LLMTextMessage("I see the error.", "assistant"), ...
+                {"I see the error.", aisdk.LLMTextMessage("I see the error.", Role="assistant"), ...
                  struct("Tokens", struct("NumInputTokens", 20, "NumOutputTokens", 10, ...
                         "NumTotalTokens", 30, "NumCachedInputTokens", 0))}
             };
@@ -129,7 +129,7 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             client = MockClient();
             client.GenerateOutputs = {
-                {structResult, aisdk.llms.message.LLMTextMessage("", "assistant"), ...
+                {structResult, aisdk.LLMTextMessage("", Role="assistant"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
@@ -150,11 +150,11 @@ classdef tAIAgent < matlab.unittest.TestCase
             client = MockClient();
             client.GenerateOutputs = {
                 % tool call
-                {"", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), "call_1"), ...
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), ToolCallID="call_1"), ...
                  struct("Tokens", struct("NumInputTokens", 60, "NumOutputTokens", 15, ...
                         "NumTotalTokens", 75, "NumCachedInputTokens", 0))}
                 % assistant message
-                {"The answer is 5.", aisdk.llms.message.LLMTextMessage("The answer is 5.", "assistant"), ...
+                {"The answer is 5.", aisdk.LLMTextMessage("The answer is 5.", Role="assistant"), ...
                  struct("Tokens", struct("NumInputTokens", 90, "NumOutputTokens", 25, ...
                         "NumTotalTokens", 115, "NumCachedInputTokens", 8))}
             };
@@ -173,7 +173,7 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             client = MockClient();
             client.GenerateOutputs = {
-                {"No tools used.", aisdk.llms.message.LLMTextMessage("No tools used.", "assistant"), ...
+                {"No tools used.", aisdk.LLMTextMessage("No tools used.", Role="assistant"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
@@ -190,10 +190,10 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             client = MockClient();
             client.GenerateOutputs = {
-                {"", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), "call_1"), ...
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), ToolCallID="call_1"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
-                {"The answer is 5.", aisdk.llms.message.LLMTextMessage("The answer is 5.", "assistant"), ...
+                {"The answer is 5.", aisdk.LLMTextMessage("The answer is 5.", Role="assistant"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
@@ -215,10 +215,10 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             client = MockClient();
             client.GenerateOutputs = {
-                {"", [aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), "call_1"), ...
-                      aisdk.llms.message.LLMToolCallMessage("addWithoutApproval", struct("a", 2, "b", 3), "call_2")], ...
+                {"", [aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), ToolCallID="call_1"), ...
+                      aisdk.LLMToolCallMessage("addWithoutApproval", struct("a", 2, "b", 3), ToolCallID="call_2")], ...
                  tokens}
-                {"Done.", aisdk.llms.message.LLMTextMessage("Done.", "assistant"), tokens}
+                {"Done.", aisdk.LLMTextMessage("Done.", Role="assistant"), tokens}
             };
 
             denyFcn = @(~,~) struct("Approved", false, "Permanent", false, "Reason", "");
@@ -243,8 +243,8 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             client = MockClient();
             client.GenerateOutputs = {
-                {"", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), "call_1"), tokens}
-                {"OK.", aisdk.llms.message.LLMTextMessage("OK.", "assistant"), tokens}
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), ToolCallID="call_1"), tokens}
+                {"OK.", aisdk.LLMTextMessage("OK.", Role="assistant"), tokens}
             };
 
             reason = "I don't trust this tool";
@@ -265,8 +265,8 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             client = MockClient();
             client.GenerateOutputs = {
-                {"", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), "call_1"), tokens}
-                {"5.", aisdk.llms.message.LLMTextMessage("5.", "assistant"), tokens}
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), ToolCallID="call_1"), tokens}
+                {"5.", aisdk.LLMTextMessage("5.", Role="assistant"), tokens}
             };
 
             errorFcn = @(~,~) error("ApprovalFcn should not be called");
@@ -284,9 +284,9 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             client = MockClient();
             client.GenerateOutputs = {
-                {"", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 2), "call_1"), tokens}
-                {"", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 3, "b", 4), "call_2"), tokens}
-                {"Done.", aisdk.llms.message.LLMTextMessage("Done.", "assistant"), tokens}
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 2), ToolCallID="call_1"), tokens}
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 3, "b", 4), ToolCallID="call_2"), tokens}
+                {"Done.", aisdk.LLMTextMessage("Done.", Role="assistant"), tokens}
             };
 
             callCount = containers.Map("callCount", 0);
@@ -305,9 +305,9 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             client = MockClient();
             client.GenerateOutputs = {
-                {"", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 2), "call_1"), tokens}
-                {"", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 3, "b", 4), "call_2"), tokens}
-                {"Done.", aisdk.llms.message.LLMTextMessage("Done.", "assistant"), tokens}
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 2), ToolCallID="call_1"), tokens}
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 3, "b", 4), ToolCallID="call_2"), tokens}
+                {"Done.", aisdk.LLMTextMessage("Done.", Role="assistant"), tokens}
             };
 
             callCount = containers.Map("callCount", 0);
@@ -326,9 +326,9 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             client = MockClient();
             client.GenerateOutputs = {
-                {"", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 2), "call_1"), tokens}
-                {"", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 3, "b", 4), "call_2"), tokens}
-                {"Done.", aisdk.llms.message.LLMTextMessage("Done.", "assistant"), tokens}
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 2), ToolCallID="call_1"), tokens}
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 3, "b", 4), ToolCallID="call_2"), tokens}
+                {"Done.", aisdk.LLMTextMessage("Done.", Role="assistant"), tokens}
             };
 
             callCount = containers.Map("callCount", 0);
@@ -347,8 +347,8 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             client = MockClient();
             client.GenerateOutputs = {
-                {"", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), "call_1"), tokens}
-                {"5.", aisdk.llms.message.LLMTextMessage("5.", "assistant"), tokens}
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), ToolCallID="call_1"), tokens}
+                {"5.", aisdk.LLMTextMessage("5.", Role="assistant"), tokens}
             };
 
             reason = "be careful with this";
@@ -368,11 +368,11 @@ classdef tAIAgent < matlab.unittest.TestCase
             client = MockClient();
             client.GenerateOutputs = {
                 % Round 1: no text, only tool call
-                {"", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 2), "call_1"), ...
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 2), ToolCallID="call_1"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
                 % Round 2: no text, only tool call (hits MaxIterations)
-                {"", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 3, "b", 4), "call_2"), ...
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 3, "b", 4), ToolCallID="call_2"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
@@ -389,7 +389,7 @@ classdef tAIAgent < matlab.unittest.TestCase
         function run_noToolCallsEmptyText_returnsEmptyText(testCase)
             client = MockClient();
             client.GenerateOutputs = {
-                {"", aisdk.llms.message.LLMTextMessage("", "assistant"), ...
+                {"", aisdk.LLMTextMessage("", Role="assistant"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
@@ -405,10 +405,10 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             client = MockClient();
             client.GenerateOutputs = {
-                {"Working...", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 2), "call_1"), ...
+                {"Working...", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 2), ToolCallID="call_1"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
-                {"Still going...", aisdk.llms.message.LLMToolCallMessage("addTwoNumbers", struct("a", 3, "b", 4), "call_2"), ...
+                {"Still going...", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 3, "b", 4), ToolCallID="call_2"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
@@ -430,7 +430,7 @@ classdef tAIAgent < matlab.unittest.TestCase
         function run_withSystemPrompt_prependsSystemMessage(testCase)
             client = MockClient();
             client.GenerateOutputs = {
-                {"Hi!", aisdk.llms.message.LLMTextMessage("Hi!", "assistant"), ...
+                {"Hi!", aisdk.LLMTextMessage("Hi!", Role="assistant"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
@@ -447,7 +447,7 @@ classdef tAIAgent < matlab.unittest.TestCase
         function run_withoutSystemPrompt_doesNotPrependSystemMessage(testCase)
             client = MockClient();
             client.GenerateOutputs = {
-                {"Hi!", aisdk.llms.message.LLMTextMessage("Hi!", "assistant"), ...
+                {"Hi!", aisdk.LLMTextMessage("Hi!", Role="assistant"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
@@ -468,8 +468,8 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             client = MockClient();
             client.GenerateOutputs = {
-                {"", aisdk.llms.message.LLMToolCallMessage("nonExistentTool", struct("a", 1), "call_1"), tokens}
-                {"I couldn't find that tool.", aisdk.llms.message.LLMTextMessage("I couldn't find that tool.", "assistant"), tokens}
+                {"", aisdk.LLMToolCallMessage("nonExistentTool", struct("a", 1), ToolCallID="call_1"), tokens}
+                {"I couldn't find that tool.", aisdk.LLMTextMessage("I couldn't find that tool.", Role="assistant"), tokens}
             };
 
             agent = aisdk.AIAgent(client, "You are helpful.", tool);
@@ -487,11 +487,11 @@ classdef tAIAgent < matlab.unittest.TestCase
             client = MockClient();
             client.GenerateOutputs = {
                 % Round 1: model calls greetUser (forced by ToolChoice="greetUser")
-                {"", aisdk.llms.message.LLMToolCallMessage("greetUser", struct("name", "Alice", "greeting", "Hi"), "call_1"), ...
+                {"", aisdk.LLMToolCallMessage("greetUser", struct("name", "Alice", "greeting", "Hi"), ToolCallID="call_1"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
                 % Round 2: text response (model is free to finish with "auto")
-                {"Hi, Alice!", aisdk.llms.message.LLMTextMessage("Hi, Alice!", "assistant"), ...
+                {"Hi, Alice!", aisdk.LLMTextMessage("Hi, Alice!", Role="assistant"), ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
