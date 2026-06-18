@@ -87,6 +87,17 @@ classdef tSystem < matlab.mock.TestCase
             testCase.verifySubstring(toolResults(1).Content, "25");
         end
 
+        function run_withNamespacedFunctionTool_returnsComputedResult(testCase)
+            tool = aisdk.LLMTool(@some.namespace.testFcn);
+            agent = aisdk.AIAgent(testCase.Client, "Use tools for calculations.", tool, DisplayMode = "off");
+
+            run(agent, "Increment 6 by one.", ToolChoice="required");
+
+            toolResults = agent.Messages([agent.Messages.Role] == "tool");
+            testCase.assertNotEmpty(toolResults, "Tool was not called");
+            testCase.verifySubstring(toolResults(1).Content, "7");
+        end
+
         %% Agents can orchestrate multiple tools
 
         function run_withMultipleTools_returnsResponse(testCase)

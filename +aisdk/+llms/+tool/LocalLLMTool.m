@@ -35,7 +35,7 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
             if strlength(name) > 0
                 this.Name = name;
             else
-                this.Name = funcName;
+                this.Name = replace(funcName, ".", "_");
             end
 
             if isfield(NVPairs, "DisplayTitle")

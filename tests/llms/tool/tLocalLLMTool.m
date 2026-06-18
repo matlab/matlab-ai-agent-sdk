@@ -402,6 +402,11 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             tool = aisdk.llms.tool.LocalLLMTool(@size);
             testCase.verifyEmpty(tool.OutputArguments);
         end
+
+        function constructor_withNamespacedFunction_replacesDotsWithUnderscores(testCase)
+            tool = aisdk.LLMTool(@some.namespace.testFcn);
+            testCase.verifyEqual(tool.Name, "some_namespace_testFcn");
+        end
     end
 
 end
