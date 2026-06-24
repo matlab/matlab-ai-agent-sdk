@@ -19,8 +19,11 @@ function client = LLMClient(api, modelName, varargin)
 
 % Copyright 2026 The MathWorks, Inc.
 
+%#function aisdk.llms.client.openai.createClient
+%#function aisdk.llms.client.ollama.createClient
+
 arguments
-    api       (1,1) string {mustBeMember(api, ["openai", "ollama"])}
+    api       (1,1) string {mustBeProvider(api)}
     modelName (1,1) string
 end
 
@@ -28,10 +31,12 @@ arguments (Repeating)
     varargin
 end
 
-switch api
-    case "openai"
-        client = aisdk.llms.client.OpenAIClient(modelName, varargin{:});
-    case "ollama"
-        client = aisdk.llms.client.OllamaClient(modelName, varargin{:});
+client = feval("aisdk.llms.client." + api + ".createClient", modelName, varargin{:});
 end
+
+function mustBeProvider(api)
+    if ~isempty(which("aisdk.llms.client." + api + ".createClient"))
+        return
+    end
+    mustBeMember(api, ["openai", "ollama"]);
 end
