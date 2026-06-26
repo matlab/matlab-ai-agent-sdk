@@ -68,7 +68,7 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
                 if this.Workspace == "agent" && ~isempty(inputs)
                     inputs = inputs(2:end);
                 end
-                this.InputArguments = aisdk.llms.tool.LocalLLMTool.getParamsFromSignature(inputs);
+                this.InputArguments = aisdk.llms.tool.LocalLLMTool.getParamsFromSignature(inputs, true);
             else
                 this.InputArguments = aisdk.LLMToolArgument.empty(1,0);
             end
@@ -82,7 +82,7 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
                 if this.Workspace == "agent" && ~isempty(outputs)
                     outputs = outputs(1:end-1);
                 end
-                this.OutputArguments = aisdk.llms.tool.LocalLLMTool.getParamsFromSignature(outputs);
+                this.OutputArguments = aisdk.llms.tool.LocalLLMTool.getParamsFromSignature(outputs, false);
             else
                 this.OutputArguments = aisdk.LLMToolArgument.empty(1,0);
             end
@@ -161,7 +161,7 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
             end
         end
 
-        function params = getParamsFromSignature(signature)
+        function params = getParamsFromSignature(signature, requireType)
             if isempty(signature)
                 params = aisdk.LLMToolArgument.empty(1,0);
                 return
@@ -183,6 +183,10 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
                     args{end+1} = "DataType";
                     args{end+1} = aisdk.llms.tool.LocalLLMTool.matlabTypeToJsonSchema( ...
                         param.Validation.Class.Name);
+                elseif requireType
+                    error("llms:missingTypeAnnotation", ...
+                        aisdk.llms.internal.ErrorMessageCatalog.getMessage( ...
+                        "llms:missingTypeAnnotation", param.Identifier.Name));
                 end
                 params(iSig) = aisdk.LLMToolArgument(args{:}); %#ok<AGROW>
             end

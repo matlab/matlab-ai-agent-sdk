@@ -23,6 +23,12 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
                 "MATLAB:validation:UnableToConvert");
         end
 
+        function constructFromFunctionWithUntypedArgument_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.llms.tool.LocalLLMTool(@untypedArgument), ...
+                "llms:missingTypeAnnotation");
+        end
+
         function extractsDescriptionFromMetadata(testCase)
             tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbersUsingNVP);
             testCase.verifySubstring(tool.Description, "Add two numbers together");
@@ -394,8 +400,9 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
         end
 
         function constructor_functionWithVarargin_excludesFromInputArguments(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@normcdf);
+            tool = aisdk.llms.tool.LocalLLMTool(@typedWithVarargin);
             testCase.verifySize(tool.InputArguments, [1 1]);
+            testCase.verifyEqual(tool.InputArguments(1).Name, "x");
         end
 
         function constructor_functionWithVarargout_excludesFromOutputArguments(testCase)

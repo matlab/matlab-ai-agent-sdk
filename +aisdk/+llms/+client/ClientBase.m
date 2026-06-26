@@ -201,7 +201,9 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
             for i = 1:numel(args)
                 thisDescription = struct();
                 thisDescription.type = args(i).DataType;
-                thisDescription.description = args(i).Description;
+                if strlength(args(i).Description) > 0
+                    thisDescription.description = args(i).Description;
+                end
                 params.(args(i).Name) = thisDescription;
                 if args(i).Required
                     requiredParams(end + 1) = args(i).Name; %#ok<AGROW>

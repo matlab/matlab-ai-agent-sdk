@@ -55,6 +55,7 @@ catalog("llms:duplicateArgumentNames") = "Argument names must be unique.";
 catalog("llms:invalidToolCallArguments") = "Unable to convert tool arguments to struct: {1}";
 catalog("llms:arrayPrototypeNotSupported") = "Array prototypes are not supported. Use scalar values in prototypes.";
 catalog("llms:unsupportedMATLABType") = "Unable to convert data type ""{1}"" to JSON schema. Data type must be numeric, logical, string, or char.";
+catalog("llms:missingTypeAnnotation") = "Unable to infer data type of argument ""{1}"". Specify the class in an arguments block or set the DataType name-value argument.";
 catalog("llms:invalidFunctionDefinition") = "First argument must be a function handle or an mcpHTTPClient object.";
 catalog("llms:invalidClientType") = "Client must be an OpenAIClient or OllamaClient object.";
 catalog("llmToolArgument:invalidInput") = "First argument must be a string scalar or a structure array.";
