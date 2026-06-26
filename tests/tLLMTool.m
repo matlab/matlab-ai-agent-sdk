@@ -8,6 +8,8 @@ classdef tLLMTool < matlab.unittest.TestCase
             testCase.applyFixture(matlab.unittest.fixtures.PathFixture( ...
                 fullfile(fileparts(mfilename("fullpath")), ...
                 "resources", "functions")));
+            testCase.applyFixture(matlab.unittest.fixtures.PathFixture( ...
+                fullfile(fileparts(mfilename("fullpath")), "helpers")));
         end
     end
 
@@ -78,6 +80,15 @@ classdef tLLMTool < matlab.unittest.TestCase
 
         function errorWhenNoArgs(testCase)
             testCase.verifyError(@() aisdk.LLMTool(), "MATLAB:minrhs");
+        end
+
+        function mcpHTTPClient_extraArguments_errors(testCase)
+            mockClient = mcpHTTPClientMock({ ...
+                struct("name", "myTool", "description", "desc", "inputSchema", struct())});
+
+            testCase.verifyError( ...
+                @() aisdk.LLMTool(mockClient, "extra"), ...
+                "MATLAB:TooManyInputs");
         end
     end
 

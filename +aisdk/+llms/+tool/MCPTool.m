@@ -16,6 +16,16 @@ classdef MCPTool < aisdk.llms.tool.CallableTool
                 tool = aisdk.llms.tool.MCPTool();
                 tool.Name = td.name;
                 tool.Description = td.description;
+                if isfield(td, "annotations")
+                    tool.Annotations = td.annotations;
+                end
+                if isfield(td, "title")
+                    tool.DisplayTitle = td.title;
+                elseif isfield(td, "annotations") && isfield(td.annotations, "title")
+                    tool.DisplayTitle = td.annotations.title;
+                else
+                    tool.DisplayTitle = td.name;
+                end
                 tool.Function = @(varargin)callMethod(td.name, varargin{:});
                 tool.InputArguments = td.inputSchema;
                 tool.RequiresApproval = aisdk.llms.tool.RequiresApproval.never;
