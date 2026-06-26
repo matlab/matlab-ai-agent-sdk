@@ -262,6 +262,15 @@ classdef tOpenAIClient < hconstructorCommon
             testCase.verifyNumElements(assistantMsg.tool_calls, 2);
         end
 
+        function generate_emptyToolCallID_serializesAsEmptyString(testCase)
+            messages = [
+                aisdk.LLMTextMessage("hi"), ...
+                aisdk.LLMToolCallMessage("myTool", struct("a",1))];
+            params = captureGenerateParams(testCase, messages);
+            assistantMsg = params.messages{2};
+            testCase.verifyEqual(assistantMsg.tool_calls{1}.id, "");
+        end
+
         function generate_imageMessage_producesImageUrl(testCase)
             imgData = uint8(zeros(2, 2, 3));
             messages = [

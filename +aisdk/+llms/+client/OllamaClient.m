@@ -218,6 +218,7 @@ classdef OllamaClient < aisdk.llms.client.ClientBase
                 for i = 1:numel(toolCalls)
                     tc = toolCalls(i).function;
                     if isfield(tc, "index")
+                        % index is always numeric when present
                         id = string(tc.index);
                     else
                         id = "";

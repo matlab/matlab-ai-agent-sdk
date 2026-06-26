@@ -36,7 +36,7 @@ classdef tOllamaClient < hconstructorCommon
     methods (Test)
         function numericToolCallIndexConvertedToString(testCase)
             % Ollama returns tool_call index as a number; generate must
-            % convert it to a string so that ToolCallID is always string|[].
+            % convert it to a string so that ToolCallID is always a string.
             toolCall = struct("function", struct( ...
                 "name", "myTool", ...
                 "index", 0, ...
@@ -178,6 +178,15 @@ classdef tOllamaClient < hconstructorCommon
             toolMsg = params.messages{3};
             testCase.verifyEqual(toolMsg.role, "tool");
             testCase.verifyEqual(toolMsg.tool_name, "myTool");
+        end
+
+        function generate_emptyToolCallID_serializesAsEmptyString(testCase)
+            messages = [
+                aisdk.LLMTextMessage("hi"), ...
+                aisdk.LLMToolCallMessage("myTool", struct("a",1))];
+            params = captureOllamaParams(testCase, messages);
+            assistantMsg = params.messages{2};
+            testCase.verifyEqual(assistantMsg.tool_calls{1}.id, "");
         end
 
         function generate_imageMessage_usesImagesField(testCase)

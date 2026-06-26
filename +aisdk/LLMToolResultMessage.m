@@ -27,15 +27,14 @@ classdef LLMToolResultMessage < aisdk.LLMTextMessage
         Name(1,1) string = ""
 
         %TOOLCALLID   Identifier matching the original tool call.
-        %   May be [] when the provider does not return one.
-        ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = []
+        ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = ""
     end
 
     methods
         function this = LLMToolResultMessage(result, nvp)
             arguments
                 result(1,1) string
-                nvp.ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = []
+                nvp.ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = ""
                 nvp.Name(1,1) string = ""
             end
 

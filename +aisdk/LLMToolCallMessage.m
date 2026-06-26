@@ -29,8 +29,7 @@ classdef LLMToolCallMessage < aisdk.llms.message.LLMMessage
         Name(1,1) string
 
         %TOOLCALLID   Unique identifier for this tool call.
-        %   May be [] when the provider does not return one (e.g. Ollama).
-        ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = []
+        ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = ""
 
         %ARGUMENTS   Arguments the model is passing to the tool.
         Arguments(1,1) struct
@@ -54,7 +53,7 @@ classdef LLMToolCallMessage < aisdk.llms.message.LLMMessage
             arguments
                 name(1,1) string {aisdk.llms.internal.mustBeNonzeroLengthTextScalar}
                 arguments(1,1) struct = struct()
-                nvp.ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = []
+                nvp.ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = ""
             end
 
             this@aisdk.llms.message.LLMMessage("assistant", "tool-call");
