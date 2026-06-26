@@ -360,6 +360,51 @@ classdef tAIAgent < matlab.unittest.TestCase
             userMsgs = msgs([msgs.Role] == "user");
             reasonMsgs = userMsgs(contains([userMsgs.Content], reason));
             testCase.verifyNumElements(reasonMsgs, 1);
+
+            toolResultIdx = find([msgs.Role] == "tool", 1, "last");
+            reasonIdx = find(arrayfun(@(m) m.Role == "user" && contains(m.Content, reason), msgs));
+            testCase.verifyGreaterThan(reasonIdx, toolResultIdx, ...
+                "Approval reason must appear after tool results");
+        end
+
+        function approval_multipleToolswithPartialReasons_emitsOnlyForNonEmpty(testCase)
+            tool1 = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="always");
+            tool2 = aisdk.LLMTool(@(x) x*2, "doubleNumber", ...
+                Description="Double a number", ...
+                InputArguments=struct(x=1), RequiresApproval="always");
+            tool3 = aisdk.LLMTool(@(x) x-1, "decrementNumber", ...
+                Description="Decrement a number", ...
+                InputArguments=struct(x=1), RequiresApproval="always");
+            tools = [tool1, tool2, tool3];
+
+            tokens = struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
+                "NumTotalTokens", 15, "NumCachedInputTokens", 0));
+
+            client = MockClient();
+            client.GenerateOutputs = {
+                {"", [aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 2), ToolCallID="call_1"), ...
+                      aisdk.LLMToolCallMessage("doubleNumber", struct("x", 5), ToolCallID="call_2"), ...
+                      aisdk.LLMToolCallMessage("decrementNumber", struct("x", 10), ToolCallID="call_3")], tokens}
+                {"Done.", aisdk.LLMTextMessage("Done.", Role="assistant"), tokens}
+            };
+
+            callIdx = 0;
+            reasons = ["User approved addition", "", "User approved decrement"];
+            function result = approvalFcn(~, ~)
+                callIdx = callIdx + 1;
+                result.Approved = true;
+                result.Permanent = false;
+                result.Reason = reasons(callIdx);
+            end
+
+            agent = aisdk.AIAgent(client, "You are helpful.", tools, ApprovalFcn=@approvalFcn);
+            agent.run("Do three things.");
+
+            msgs = agent.Messages;
+
+            testCase.verifySubstring(msgs(end-2).Content, "addTwoNumbers");
+            testCase.verifySubstring(msgs(end-1).Content, "decrementNumber");
+            testCase.verifyEqual(msgs(end).Content, "Done.");
         end
 
         function run_maxIterationsWithNoText_returnsEmptyString(testCase)

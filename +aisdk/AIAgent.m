@@ -185,6 +185,7 @@ classdef AIAgent < handle
                     return;
                 end
 
+                approvalReasons = string.empty;
                 for i = 1:numel(toolCalls)
                     tc = toolCalls(i);
                     try
@@ -215,7 +216,7 @@ classdef AIAgent < handle
                         end
                         if strlength(approval.Reason) > 0
                             this.print(displayMode,"[approved] " + approval.Reason);
-                            this.Messages(end+1) = aisdk.LLMTextMessage(approval.Reason);
+                            approvalReasons(end+1) = tc.Name + ": " + approval.Reason; %#ok<AGROW>
                         end
                     end
                     this.print(displayMode,"[call function " + tc.Name + " with inputs " + jsonencode(tc.Arguments) + "]");
@@ -233,6 +234,9 @@ classdef AIAgent < handle
                     end
                     this.Messages(end+1) = aisdk.LLMToolResultMessage(resultStr, ...
                         ToolCallID=tc.ToolCallID, Name=tc.Name);
+                end
+                for j = 1:numel(approvalReasons)
+                    this.Messages(end+1) = aisdk.LLMTextMessage(approvalReasons(j));
                 end
             end
 

@@ -172,6 +172,25 @@ classdef tSystem < matlab.mock.TestCase
                 "Approval function should have been called");
         end
 
+        function run_withApprovalReasonAndRequiredTool_succeeds(testCase)
+            function result = approveWithReason(~, ~)
+                result.Approved = true;
+                result.Permanent = false;
+                result.Reason = "Approved by user.";
+            end
+
+            tool = aisdk.LLMTool(@addTwoNumbers, ...
+                Description="Add two numbers", ...
+                InputArguments=struct(a=1, b=2), ...
+                RequiresApproval="always");
+            agent = aisdk.AIAgent(testCase.Client, "You are a calculator.", tool, ...
+                ApprovalFcn=@approveWithReason);
+
+            response = run(agent, "Add 3 and 4.", ToolChoice="required");
+
+            testCase.verifySubstring(response, "7");
+        end
+
         function run_withApprovalDenied_recordsDenialInHistory(testCase)
             function result = denyApproval(~, ~)
                 result.Approved = false;
