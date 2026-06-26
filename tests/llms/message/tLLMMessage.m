@@ -21,15 +21,18 @@ classdef tLLMMessage < matlab.unittest.TestCase
             testCase.verifyLength(arr, 4);
         end
 
-        function displayDoesNotError(testCase)
+        function displayScalar_showsTextMessage(testCase)
             msg = aisdk.LLMTextMessage("hello");
-            testCase.verifyWarningFree(@() disp(msg));
+            output = formattedDisplayText(msg);
+            testCase.verifySubstring(output, "hello");
         end
 
-        function displayArrayDoesNotError(testCase)
+        function displayArray_showsTextMessages(testCase)
             msgs = [aisdk.LLMTextMessage("hello"), ...
                     aisdk.LLMTextMessage("world", Role="assistant")];
-            testCase.verifyWarningFree(@() disp(msgs));
+            output = formattedDisplayText(msgs);
+            testCase.verifySubstring(output, "hello");
+            testCase.verifySubstring(output, "world");
         end
 
         function roleIsImmutable(testCase)
@@ -128,3 +131,4 @@ end
 function iSetContent(msg, val)
     msg.Content = val; %#ok<NASGU>
 end
+
