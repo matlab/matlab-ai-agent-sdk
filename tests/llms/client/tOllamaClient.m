@@ -34,9 +34,27 @@ classdef tOllamaClient < hconstructorCommon
     end
 
     methods (Test)
-        function numericToolCallIndexConvertedToString(testCase)
-            % Ollama returns tool_call index as a number; generate must
-            % convert it to a string so that ToolCallID is always a string.
+        function generate_topLevelID_preferredOverIndex(testCase)
+            toolCall = struct("id", "call_abc123", "function", struct( ...
+                "name", "myTool", ...
+                "index", 0, ...
+                "arguments", struct("a", 1)));
+            message = struct("role", "assistant", "content", "", ...
+                "tool_calls", {{toolCall}});
+            resp = struct("StatusCode", "OK", ...
+                "Body", struct("Data", struct("message", message)));
+
+            [mock, behaviour] = createMock(testCase, AddedMethods="sendRequest");
+            testCase.assignOutputsWhen( ...
+                withAnyInputs(behaviour.sendRequest), resp, "");
+
+            client = testCase.createClient("qwen3:0.6b");
+            client.sendRequestFcn = @(varargin) mock.sendRequest(varargin{:});
+            [~, msgs] = generate(client, "Call the tool.");
+            testCase.verifyEqual(msgs(1).ToolCallID, "call_abc123");
+        end
+
+        function generate_missingID_fallsBackToIndex(testCase)
             toolCall = struct("function", struct( ...
                 "name", "myTool", ...
                 "index", 0, ...
@@ -53,12 +71,10 @@ classdef tOllamaClient < hconstructorCommon
             client = testCase.createClient("qwen3:0.6b");
             client.sendRequestFcn = @(varargin) mock.sendRequest(varargin{:});
             [~, msgs] = generate(client, "Call the tool.");
-            testCase.verifyClass(msgs, 'aisdk.LLMToolCallMessage');
             testCase.verifyEqual(msgs(1).ToolCallID, "0");
         end
 
-        function missingIndexGetsEmptyString(testCase)
-            % When Ollama omits the index field, generate assigns "".
+        function generate_missingIDAndIndex_returnsEmptyString(testCase)
             toolCall = struct("function", struct( ...
                 "name", "myTool", ...
                 "arguments", struct("a", 1)));

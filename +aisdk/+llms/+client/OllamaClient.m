@@ -217,8 +217,9 @@ classdef OllamaClient < aisdk.llms.client.ClientBase
                 messages = aisdk.LLMToolCallMessage.empty(1,0);
                 for i = 1:numel(toolCalls)
                     tc = toolCalls(i).function;
-                    if isfield(tc, "index")
-                        % index is always numeric when present
+                    if isfield(toolCalls(i), "id")
+                        id = string(toolCalls(i).id);
+                    elseif isfield(tc, "index")
                         id = string(tc.index);
                     else
                         id = "";
