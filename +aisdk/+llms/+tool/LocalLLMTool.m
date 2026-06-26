@@ -53,6 +53,17 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
                 this.Workspace = "none";
             end
 
+            if this.Workspace == "agent"
+                n = nargout(fcnHandle);
+                if n < 0
+                    error("llms:workspaceDoesNotSupportVarargout", ...
+                        aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:workspaceDoesNotSupportVarargout"));
+                elseif n < 2
+                    error("llms:workspaceRequiresMultipleOutputs", ...
+                        aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:workspaceRequiresMultipleOutputs"));
+                end
+            end
+
             if isfield(NVPairs, "Description")
                 this.Description = NVPairs.Description;
             elseif hasMetaData

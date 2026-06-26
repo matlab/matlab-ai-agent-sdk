@@ -382,6 +382,22 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
                 "MATLAB:validators:mustBeMember");
         end
 
+        function construct_workspaceAgent_withNoLLMVisibleOutput_errors(testCase)
+            testCase.verifyError(@() aisdk.llms.tool.LocalLLMTool( ...
+                @singleOutputWorkspace, "myTool", ...
+                Description="Tool with only workspace output", ...
+                Workspace="agent"), ...
+                "llms:workspaceRequiresMultipleOutputs");
+        end
+
+        function construct_workspaceAgent_varargout_errors(testCase)
+            testCase.verifyError(@() aisdk.llms.tool.LocalLLMTool( ...
+                @varargoutWorkspace, "varTool", ...
+                Description="Tool with varargout", ...
+                Workspace="agent"), ...
+                "llms:workspaceDoesNotSupportVarargout");
+        end
+
         function constructor_noMetadata_returnsEmptyInputs(testCase)
             tool = aisdk.llms.tool.LocalLLMTool(@() "hello", "noMeta", ...
                 Description="A function with no metadata");
@@ -426,4 +442,13 @@ end
 function [output, workspace] = contextualAdd(workspace, a, b)
     output = a + b;
     workspace.called = true;
+end
+
+function workspace = singleOutputWorkspace(workspace)
+    workspace.called = true;
+end
+
+function [c, varargout] = varargoutWorkspace(workspace, a, b)
+    c = a + b;
+    varargout{1} = workspace;
 end
