@@ -26,6 +26,13 @@ classdef tClientBase < matlab.unittest.TestCase
             testCase.verifyEqual(schema.properties.b.type, "string");
         end
 
+        function argumentsToSchema_withEmptyDataType_omitsTypeField(testCase)
+            tool = aisdk.LLMTool(@(x) x, "myFcn", Description="A function", ...
+                InputArguments=aisdk.LLMToolArgument("x", DataType="", Description="A param"));
+            schema = captureToolSchema(tool);
+            testCase.verifyFalse(isfield(schema.properties.x, "type"));
+        end
+
         function argumentsToSchema_withEmptyDescription_omitsField(testCase)
             tool = aisdk.LLMTool(@(x) x, "myFcn", Description="A function", ...
                 InputArguments=aisdk.LLMToolArgument("x", DataType="number", Description=""));

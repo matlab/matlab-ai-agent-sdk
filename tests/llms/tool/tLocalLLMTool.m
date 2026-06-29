@@ -23,10 +23,9 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
                 "MATLAB:validation:UnableToConvert");
         end
 
-        function constructFromFunctionWithUntypedArgument_errors(testCase)
-            testCase.verifyError( ...
-                @() aisdk.llms.tool.LocalLLMTool(@untypedArgument), ...
-                "llms:missingTypeAnnotation");
+        function constructFromFunctionWithUntypedArgument_leavesDataTypeEmpty(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool(@untypedArgument);
+            testCase.verifyEqual(tool.InputArguments(1).DataType, "");
         end
 
         function extractsDescriptionFromMetadata(testCase)
