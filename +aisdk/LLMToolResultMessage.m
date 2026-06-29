@@ -1,4 +1,4 @@
-classdef LLMToolResultMessage < aisdk.LLMTextMessage
+classdef LLMToolResultMessage < aisdk.llms.message.LLMMessage
 %LLMToolResultMessage The result of a tool call, returned to the model.
 %
 %   msg = aisdk.LLMToolResultMessage(RESULT) creates a tool result message.
@@ -14,7 +14,7 @@ classdef LLMToolResultMessage < aisdk.LLMTextMessage
 %
 %       Type                 - Always "text".
 %
-%       Content              - The result returned by the tool.
+%       Result               - The result returned by the tool.
 %
 %       Name                 - Name of the tool that produced the result.
 %
@@ -23,6 +23,9 @@ classdef LLMToolResultMessage < aisdk.LLMTextMessage
 %   Copyright 2026 The MathWorks, Inc.
 
     properties
+        %RESULT   The result returned by the tool.
+        Result(1,1) string
+
         %NAME   Name of the tool that produced the result.
         Name(1,1) string = ""
 
@@ -38,9 +41,16 @@ classdef LLMToolResultMessage < aisdk.LLMTextMessage
                 nvp.Name(1,1) string = ""
             end
 
-            this@aisdk.LLMTextMessage(result, Role="tool");
+            this@aisdk.llms.message.LLMMessage("tool", "text");
+            this.Result = result;
             this.Name = nvp.Name;
             this.ToolCallID = nvp.ToolCallID;
+        end
+    end
+
+    methods (Access = protected)
+        function txt = contentPreview(this)
+            txt = this.truncateForDisplay(this.Result);
         end
     end
 

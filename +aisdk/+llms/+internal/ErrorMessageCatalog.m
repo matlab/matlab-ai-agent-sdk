@@ -62,7 +62,6 @@ catalog("llmToolArgument:invalidInput") = "First argument must be a string scala
 catalog("llmToolArgument:requiredNameValue") = "A name-value argument cannot be required. Set Required=false or NameValue=false.";
 catalog("llmToolArgument:nonScalarRequired") = "Required must be a scalar logical when constructing a single LLMToolArgument.";
 catalog("llmToolArgument:nonScalarNameValue") = "NameValue must be a scalar logical when constructing a single LLMToolArgument.";
-catalog("llms:message:InvalidContent") = "Message content must be empty or a string scalar.";
 catalog("llms:invalidFunctionCall") = "Unrecognized tool {1}.";
 catalog("llms:message:InvalidToolCallID") = "Tool call ID must be empty or a string scalar.";
 catalog("llms:unsupportedToolType") = "Tools must only contain LocalLLMTool and MCPTool objects.";

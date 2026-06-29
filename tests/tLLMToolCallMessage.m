@@ -43,11 +43,6 @@ classdef tLLMToolCallMessage < matlab.unittest.TestCase
                 "MATLAB:validators:mustBeNonzeroLengthText");
         end
 
-        function contentDefault_returnsEmpty(testCase)
-            msg = aisdk.LLMToolCallMessage("myTool", struct(), ToolCallID="tc1");
-            testCase.verifyEqual(msg.Content, []);
-        end
-
         function displayScalar_showsToolName(testCase)
             msg = aisdk.LLMToolCallMessage("myTool", struct(), ToolCallID="tc1");
             output = formattedDisplayText(msg);

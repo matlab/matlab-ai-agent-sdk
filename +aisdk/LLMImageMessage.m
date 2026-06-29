@@ -16,12 +16,17 @@ classdef LLMImageMessage < aisdk.llms.message.LLMMessage
 %
 %       Type                 - Always "image".
 %
-%       Content              - MATLAB image array (numeric), usable
+%       Image                - MATLAB image array (numeric), usable
 %                              with imshow/imwrite.
 %
 %       Detail               - Image resolution detail level.
 
 %   Copyright 2026 The MathWorks, Inc.
+
+    properties
+        %IMAGE   MATLAB image array (numeric or logical).
+        Image
+    end
 
     properties (SetAccess = immutable)
         %DETAIL   Image resolution detail level: "auto", "low", "high", or "original".
@@ -43,25 +48,26 @@ classdef LLMImageMessage < aisdk.llms.message.LLMMessage
             this@aisdk.llms.message.LLMMessage("user", "image");
             this.Detail = nvp.Detail;
             this.DownloadFcn = nvp.DownloadFcn;
-            this.Content = resolveToImageArray(content, this.DownloadFcn);
+            this.Image = resolveToImageArray(content, this.DownloadFcn);
+        end
+
+        function this = set.Image(this, val)
+            mustBeImageArray(val);
+            this.Image = val;
         end
     end
 
     methods (Access = protected)
-        function validateContent(~, val)
-            mustBeImageArray(val);
-        end
-
         function txt = contentPreview(this)
-            sz = size(this.Content);
-            txt = "<image " + strjoin(string(sz), "x") + " " + class(this.Content) + ">";
+            sz = size(this.Image);
+            txt = "<image " + strjoin(string(sz), "×") + " " + class(this.Image) + ">";
         end
 
         function groups = getPropertyGroups(obj)
             props = struct( ...
                 "Role", obj.Role, ...
                 "Type", obj.Type, ...
-                "Content", contentPreview(obj));
+                "Image", contentPreview(obj));
             if obj.Detail ~= "auto"
                 props.Detail = obj.Detail;
             end

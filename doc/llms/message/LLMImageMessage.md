@@ -11,30 +11,30 @@ msg = aisdk.LLMImageMessage(source, Detail=detail)
 
 ## Description
 
-`aisdk.LLMImageMessage(source)` creates a user image message. `source` can be a file path, URL, or MATLAB image array. The image is eagerly resolved and stored as a MATLAB numeric array in `Content`, so it is directly usable with `imshow`, `imwrite`, and other image functions.
+`aisdk.LLMImageMessage(source)` creates a user image message. `source` can be a file path, URL, or MATLAB image array. The image is eagerly resolved and stored as a MATLAB numeric array in `Image`, so it is directly usable with `imshow`, `imwrite`, and other image functions.
 
 `aisdk.LLMImageMessage(source, Detail=detail)` also sets the image resolution detail level (`"auto"`, `"low"`, `"high"`, or `"original"`). Only consumed by providers that support it (currently OpenAI).
 
 Text and images are separate messages. A user turn with text and N images becomes N+1 messages: 1 text message + N image messages, all with `Role: "user"`. Array order preserves interleaving.
 
-> The image is encoded to base64 PNG at serialization time by each client's `convertMessages` method. The `Content` property always holds the decoded MATLAB array, not raw bytes.
+> The image is encoded to base64 PNG at serialization time by each client's `convertMessages` method. The `Image` property always holds the decoded MATLAB array, not raw bytes.
 
 ## Properties
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `Role` | `string` | `"user"` | Always `"user"`. |
-| `Type` | `string` | `"image"` | Always `"image"`. |
-| `Content` | numeric or logical array | | MATLAB image array, usable with `imshow`/`imwrite`. |
-| `Detail` | `string` | `"auto"` | Image resolution detail level: `"auto"`, `"low"`, `"high"`, or `"original"`. Only consumed by providers that support it (currently OpenAI). |
+| Property   | Type                     | Default     | Description                                                                                                                                        |
+| ---------- | ------------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Role`   | `string`               | `"user"`  | Always`"user"`.                                                                                                                                  |
+| `Type`   | `string`               | `"image"` | Always`"image"`.                                                                                                                                 |
+| `Image`  | numeric or logical array |             | MATLAB image array, usable with`imshow`/`imwrite`.                                                                                             |
+| `Detail` | `string`               | `"auto"`  | Image resolution detail level:`"auto"`, `"low"`, `"high"`, or `"original"`. Only consumed by providers that support it (currently OpenAI). |
 
 ## Accepted Sources
 
-| Content | Example | Notes |
-|---------|---------|-------|
-| File path | `"peppers.png"` | Read with `imread` at construction time. |
-| URL | `"https://example.com/cat.jpg"` | Downloaded and decoded at construction time. |
-| MATLAB image array | `imread("peppers.png")` | Stored directly. Must be a nonempty numeric or logical array (M×N, M×N×1, M×N×3, or M×N×4). |
+| Source             | Example                           | Notes                                                                                              |
+| ------------------ | --------------------------------- | -------------------------------------------------------------------------------------------------- |
+| File path          | `"peppers.png"`                 | Read with`imread` at construction time.                                                          |
+| URL                | `"https://example.com/cat.jpg"` | Downloaded and decoded at construction time.                                                       |
+| MATLAB image array | `imread("peppers.png")`         | Stored directly. Must be a nonempty numeric or logical array (M×N, M×N×1, M×N×3, or M×N×4). |
 
 ## Examples
 
@@ -82,9 +82,9 @@ msg.Detail  % "high"
 
 ```matlab
 msg = aisdk.LLMImageMessage("peppers.png");
-imshow(msg.Content)     % display it
-size(msg.Content)       % e.g. 384×512×3
-class(msg.Content)      % "uint8"
+imshow(msg.Image)     % display it
+size(msg.Image)       % e.g. [384 512 3]
+class(msg.Image)      % "uint8"
 ```
 
 ## See Also

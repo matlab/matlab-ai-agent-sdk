@@ -98,7 +98,7 @@ classdef tOpenAIClient < hconstructorCommon
             testCase.verifyEqual(text, "Hello world");
             testCase.verifyClass(messages, "aisdk.LLMTextMessage");
             testCase.verifyNumElements(messages, 1);
-            testCase.verifyEqual(messages.Content, "Hello world");
+            testCase.verifyEqual(messages.Text, "Hello world");
             testCase.verifyEqual(messages.Role, "assistant");
         end
 

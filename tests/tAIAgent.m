@@ -121,7 +121,7 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyEqual(response, "I see the error.");
             % The tool result message should contain the error text
             toolResults = agent.Messages([agent.Messages.Role] == "tool");
-            testCase.verifySubstring(toolResults(1).Content, "something went wrong");
+            testCase.verifySubstring(toolResults(1).Result, "something went wrong");
         end
 
         function structuredOutputReturnedDirectly(testCase)
@@ -230,9 +230,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             msgs = agent.Messages;
             toolResults = msgs([msgs.Role] == "tool");
             testCase.verifyNumElements(toolResults, 2);
-            testCase.verifySubstring(toolResults(1).Content, "denied");
+            testCase.verifySubstring(toolResults(1).Result, "denied");
             expectedResult = string(jsonencode(struct("c", 5)));
-            testCase.verifyEqual(toolResults(2).Content, expectedResult);
+            testCase.verifyEqual(toolResults(2).Result, expectedResult);
         end
 
         function approval_withDenialReason_includesReasonInToolResult(testCase)
@@ -254,7 +254,7 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             msgs = agent.Messages;
             toolResults = msgs([msgs.Role] == "tool");
-            testCase.verifySubstring(toolResults(1).Content, reason);
+            testCase.verifySubstring(toolResults(1).Result, reason);
         end
 
         function approval_withNeverMode_neverInvokesApprovalFcn(testCase)
@@ -358,7 +358,7 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             msgs = agent.Messages;
             userMsgs = msgs([msgs.Role] == "user");
-            reasonMsgs = userMsgs(contains([userMsgs.Content], reason));
+            reasonMsgs = userMsgs(contains([userMsgs.Text], reason));
             testCase.verifyNumElements(reasonMsgs, 1);
 
             toolResultIdx = find([msgs.Role] == "tool", 1, "last");
@@ -486,7 +486,7 @@ classdef tAIAgent < matlab.unittest.TestCase
             messagesPassedToGenerate = client.GenerateInputs{1};
             firstMsg = messagesPassedToGenerate(1);
             testCase.verifyEqual(firstMsg.Role, "system");
-            testCase.verifyEqual(firstMsg.Content, "Be concise.");
+            testCase.verifyEqual(firstMsg.Text, "Be concise.");
         end
 
         function run_withoutSystemPrompt_doesNotPrependSystemMessage(testCase)
@@ -522,7 +522,7 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             testCase.verifyEqual(response, "I couldn't find that tool.");
             toolResults = agent.Messages([agent.Messages.Role] == "tool");
-            testCase.verifySubstring(toolResults(1).Content, "Error");
+            testCase.verifySubstring(toolResults(1).Result, "Error");
         end
 
         function displayMode_default_isDetailed(testCase)

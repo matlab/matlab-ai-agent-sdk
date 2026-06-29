@@ -251,7 +251,7 @@ classdef OllamaClient < aisdk.llms.client.ClientBase
                 switch class(msg)
                     case 'aisdk.LLMTextMessage'
                         idx = idx + 1;
-                        messagesOut{idx} = struct("role", msg.Role, "content", msg.Content);
+                        messagesOut{idx} = struct("role", msg.Role, "content", msg.Text);
 
                     case 'aisdk.LLMToolResultMessage'
                         idx = idx + 1;
@@ -259,10 +259,10 @@ classdef OllamaClient < aisdk.llms.client.ClientBase
                             "role", "tool", ...
                             "tool_call_id", msg.ToolCallID, ...
                             "tool_name", msg.Name, ...
-                            "content", msg.Content);
+                            "content", msg.Result);
 
                     case 'aisdk.LLMImageMessage'
-                        imgData = msg.Content;
+                        imgData = msg.Image;
                         base64Str = matlab.net.base64encode(aisdk.llms.internal.encodeImageToPNG(imgData));
                         idx = idx + 1;
                         messagesOut{idx} = struct("role", msg.Role, "content", "", "images", {{base64Str}});

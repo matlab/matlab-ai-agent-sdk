@@ -7,8 +7,6 @@ classdef(Abstract) LLMMessage < matlab.mixin.Heterogeneous & matlab.mixin.Custom
 %
 %       Type                 - The type of message content
 %                              (e.g. "text", "tool-call").
-%
-%       Content              - The content of the message.
 
 %   Copyright 2026 The MathWorks, Inc.
 
@@ -20,16 +18,8 @@ classdef(Abstract) LLMMessage < matlab.mixin.Heterogeneous & matlab.mixin.Custom
         Type(1,1) string
     end
 
-    properties
-        %CONTENT   The content of the message.
-        Content = []
-    end
-
-    methods
-        function this = set.Content(this, val)
-            this.validateContent(val);
-            this.Content = val;
-        end
+    methods (Abstract, Access = protected)
+        txt = contentPreview(this)
     end
 
     methods (Access = protected)
@@ -38,19 +28,7 @@ classdef(Abstract) LLMMessage < matlab.mixin.Heterogeneous & matlab.mixin.Custom
             this.Type = type;
         end
 
-        function validateContent(~, val)
-            if ~(isempty(val) && isequal(val, []) || (isstring(val) && isscalar(val)))
-                error("llms:message:InvalidContent", ...
-                    aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:message:InvalidContent"));
-            end
-        end
-
-        function txt = contentPreview(this)
-            txt = string(this.Content);
-            if ~isscalar(txt) || ismissing(txt)
-                txt = "";
-            end
-            txt = strip(txt, '"');
+        function txt = truncateForDisplay(~, txt)
             txt = replace(txt, newline, " ");
             if strlength(txt) > 60
                 txt = extractBefore(txt, 61) + "...";
@@ -84,11 +62,7 @@ classdef(Abstract) LLMMessage < matlab.mixin.Heterogeneous & matlab.mixin.Custom
             for i = 1:n
                 roles(i) = roleLabel(obj(i).Role);
                 types(i) = typeLabel(obj(i).Type);
-                if obj(i).Type == "tool-call"
-                    texts(i) = obj(i).Name;
-                else
-                    texts(i) = obj(i).contentPreview();
-                end
+                texts(i) = obj(i).contentPreview();
             end
 
             % Column widths

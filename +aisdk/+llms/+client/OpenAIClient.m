@@ -259,7 +259,7 @@ classdef OpenAIClient < aisdk.llms.client.ClientBase
                             role = "developer";
                         end
                         idx = idx + 1;
-                        messagesOut{idx} = struct("role", role, "content", msg.Content);
+                        messagesOut{idx} = struct("role", role, "content", msg.Text);
 
                     case 'aisdk.LLMToolResultMessage'
                         idx = idx + 1;
@@ -267,10 +267,10 @@ classdef OpenAIClient < aisdk.llms.client.ClientBase
                             "role", "tool", ...
                             "tool_call_id", msg.ToolCallID, ...
                             "name", msg.Name, ...
-                            "content", msg.Content);
+                            "content", msg.Result);
 
                     case 'aisdk.LLMImageMessage'
-                        imgData = msg.Content;
+                        imgData = msg.Image;
                         base64Str = matlab.net.base64encode(aisdk.llms.internal.encodeImageToPNG(imgData));
                         dataURI = "data:image/png;base64," + base64Str;
                         imgPart = struct("type", "image_url", ...

@@ -102,7 +102,7 @@ classdef tOllamaClient < hconstructorCommon
             testCase.verifyEqual(text, "Hello");
             testCase.verifyClass(messages, "aisdk.LLMTextMessage");
             testCase.verifyNumElements(messages, 1);
-            testCase.verifyEqual(messages.Content, "Hello");
+            testCase.verifyEqual(messages.Text, "Hello");
         end
 
         function generate_textResponse_unwrapsCellBodyData(testCase)

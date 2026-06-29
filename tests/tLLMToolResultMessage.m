@@ -20,15 +20,21 @@ classdef tLLMToolResultMessage < matlab.unittest.TestCase
             testCase.verifyEqual(msg.Name, "myTool");
         end
 
-        function constructorSetsContent(testCase)
+        function constructorSetsResult(testCase)
             msg = aisdk.LLMToolResultMessage("the result", ToolCallID="tc1", Name="myTool");
-            testCase.verifyEqual(msg.Content, "the result");
+            testCase.verifyEqual(msg.Result, "the result");
         end
 
         function constructorRejectsCharToolCallID(testCase)
             testCase.verifyError( ...
                 @() aisdk.LLMToolResultMessage("result", ToolCallID='someId', Name="myTool"), ...
                 "llms:message:InvalidToolCallID");
+        end
+
+        function settingResult_updatesValue(testCase)
+            msg = aisdk.LLMToolResultMessage("ok", ToolCallID="id", Name="n");
+            msg.Result = "updated";
+            testCase.verifyEqual(msg.Result, "updated");
         end
     end
 

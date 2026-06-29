@@ -47,18 +47,6 @@ classdef tLLMMessage < matlab.unittest.TestCase
                 @() iSetType(msg), "MATLAB:class:SetProhibited");
         end
 
-        function contentValidation_rejectsNumeric_throwsError(testCase)
-            msg = aisdk.LLMTextMessage("hello");
-            testCase.verifyError( ...
-                @() iSetContent(msg, 42), "llms:message:InvalidContent");
-        end
-
-        function contentValidation_rejectsEmptyBrackets(testCase)
-            msg = aisdk.LLMTextMessage("hello");
-            testCase.verifyError( ...
-                @() iSetContent(msg, []), "llms:message:InvalidContent");
-        end
-
         function displayArray_toolCallShowsName(testCase)
             toolCall = aisdk.LLMToolCallMessage("myTool", struct(), ToolCallID="tc1");
             msgs = [toolCall, toolCall];
@@ -126,9 +114,5 @@ end
 
 function iSetType(msg)
     msg = subsasgn(msg, substruct('.','Type'), "tool-call"); %#ok<NASGU>
-end
-
-function iSetContent(msg, val)
-    msg.Content = val; %#ok<NASGU>
 end
 

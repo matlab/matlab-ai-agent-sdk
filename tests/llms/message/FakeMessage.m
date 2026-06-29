@@ -9,4 +9,10 @@ classdef FakeMessage < aisdk.llms.message.LLMMessage
         end
     end
 
+    methods (Access = protected)
+        function txt = contentPreview(~)
+            txt = "";
+        end
+    end
+
 end

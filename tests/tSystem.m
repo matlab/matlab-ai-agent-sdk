@@ -71,7 +71,7 @@ classdef tSystem < matlab.mock.TestCase
 
             toolResults = agent.Messages([agent.Messages.Role] == "tool");
             testCase.assertNotEmpty(toolResults, "Tool was not called");
-            testCase.verifySubstring(toolResults(1).Content, "18");
+            testCase.verifySubstring(toolResults(1).Result, "18");
         end
 
         function run_withAnonymousFunctionTool_returnsComputedResult(testCase)
@@ -84,7 +84,7 @@ classdef tSystem < matlab.mock.TestCase
 
             toolResults = agent.Messages([agent.Messages.Role] == "tool");
             testCase.assertNotEmpty(toolResults, "Tool was not called");
-            testCase.verifySubstring(toolResults(1).Content, "25");
+            testCase.verifySubstring(toolResults(1).Result, "25");
         end
 
         function run_withNamespacedFunctionTool_returnsComputedResult(testCase)
@@ -95,7 +95,7 @@ classdef tSystem < matlab.mock.TestCase
 
             toolResults = agent.Messages([agent.Messages.Role] == "tool");
             testCase.assertNotEmpty(toolResults, "Tool was not called");
-            testCase.verifySubstring(toolResults(1).Content, "7");
+            testCase.verifySubstring(toolResults(1).Result, "7");
         end
 
         %% Agents can orchestrate multiple tools
@@ -149,7 +149,7 @@ classdef tSystem < matlab.mock.TestCase
 
             toolResults = agent.Messages([agent.Messages.Role] == "tool");
             testCase.assertNotEmpty(toolResults, "MCP tool should have been called");
-            testCase.verifySubstring(toolResults(1).Content, "5");
+            testCase.verifySubstring(toolResults(1).Result, "5");
         end
 
         %% Tools support human-in-the-loop approval
@@ -205,7 +205,7 @@ classdef tSystem < matlab.mock.TestCase
 
             toolResultMsgs = agent.Messages([agent.Messages.Role] == "tool");
             testCase.assertNotEmpty(toolResultMsgs, "Expected a tool result");
-            testCase.verifySubstring(toolResultMsgs(1).Content, "User denied this action.");
+            testCase.verifySubstring(toolResultMsgs(1).Result, "User denied this action.");
         end
 
         %% Agents can delegate to subagents
@@ -234,7 +234,7 @@ classdef tSystem < matlab.mock.TestCase
             testCase.assertNotEmpty(toolCalls, "Expected a tool call");
             toolResults = supervisor.Messages([supervisor.Messages.Role] == "tool");
             testCase.assertNotEmpty(toolResults, "Expected a tool result");
-            testCase.verifySubstring(toolResults(1).Content, "30");
+            testCase.verifySubstring(toolResults(1).Result, "30");
         end
 
         %% Tools can share data through the agent workspace
@@ -310,8 +310,8 @@ classdef tSystem < matlab.mock.TestCase
 
             testCase.verifyEqual(imageMessage.Type, "image");
             testCase.verifyEqual(imageMessage.Role, "user");
-            testCase.verifyEqual(size(imageMessage.Content), size(img));
-            testCase.verifyClass(imageMessage.Content, "uint8");
+            testCase.verifyEqual(size(imageMessage.Image), size(img));
+            testCase.verifyClass(imageMessage.Image, "uint8");
 
             messages = [aisdk.LLMTextMessage("What color is this image?"), imageMessage];
 
@@ -361,7 +361,7 @@ classdef tSystem < matlab.mock.TestCase
 
             toolResults = agent.Messages([agent.Messages.Role] == "tool");
             testCase.assertNotEmpty(toolResults, "Expected a tool result");
-            testCase.verifyNotEqual(toolResults(1).Content, "", ...
+            testCase.verifyNotEqual(toolResults(1).Result, "", ...
                 "Tool result should contain the computed output");
         end
     end

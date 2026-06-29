@@ -21,7 +21,7 @@ These messages provide the output of a tool execution back to the model so it ca
 |----------|------|---------|-------------|
 | `Role` | `string` | `"tool"` | Always `"tool"`. |
 | `Type` | `string` | `"text"` | Always `"text"`. |
-| `Content` | `string` | | The result returned by the tool. |
+| `Result` | `string` | | The result returned by the tool. |
 | `Name` | `string` | `""` | The name of the tool that produced the result. |
 | `ToolCallID` | `string` or `[]` | `[]` | The identifier matching the original `LLMToolCallMessage` that triggered this result. |
 
@@ -30,7 +30,7 @@ These messages provide the output of a tool execution back to the model so it ca
 ```matlab
 msg = aisdk.LLMToolResultMessage("Sunny, 22C", ToolCallID="call_01", Name="getWeather");
 msg.ToolCallID  % "call_01"
-msg.Content     % "Sunny, 22C"
+msg.Result      % "Sunny, 22C"
 ```
 
 ## See Also

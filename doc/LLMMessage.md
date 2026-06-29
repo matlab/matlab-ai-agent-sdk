@@ -5,8 +5,8 @@ Create LLM messages for conversations.
 ## Syntax
 
 ```matlab
-msg = aisdk.LLMTextMessage(content)
-msg = aisdk.LLMTextMessage(content, Role=role)
+msg = aisdk.LLMTextMessage(text)
+msg = aisdk.LLMTextMessage(text, Role=role)
 msg = aisdk.LLMImageMessage(source)
 msg = aisdk.LLMImageMessage(source, Detail=detail)
 msg = aisdk.LLMToolCallMessage(name, arguments, ToolCallID=id)
@@ -17,9 +17,9 @@ msg = aisdk.LLMToolResultMessage(result, ToolCallID=id, Name=name)
 
 Messages are created using the concrete message classes directly. Each class represents a specific message type in the conversation.
 
-`aisdk.LLMTextMessage(content)` creates a user text message from a string or char.
+`aisdk.LLMTextMessage(text)` creates a user text message from a string or char.
 
-`aisdk.LLMTextMessage(content, Role=role)` creates a text message with the specified role (`"system"`, `"user"`, `"assistant"`, or `"tool"`).
+`aisdk.LLMTextMessage(text, Role=role)` creates a text message with the specified role (`"system"`, `"user"`, or `"assistant"`).
 
 `aisdk.LLMImageMessage(source)` creates a user image message from a file path, URL, or MATLAB image array.
 

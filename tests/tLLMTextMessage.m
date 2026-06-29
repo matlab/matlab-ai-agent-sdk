@@ -24,19 +24,19 @@ classdef tLLMTextMessage < matlab.unittest.TestCase
             testCase.verifyEqual(msg.Type, "text");
         end
 
-        function constructorSetsContent(testCase)
+        function constructorSetsText(testCase)
             msg = aisdk.LLMTextMessage("my question");
-            testCase.verifyEqual(msg.Content, "my question");
+            testCase.verifyEqual(msg.Text, "my question");
         end
 
-        function contentCanBeEmpty(testCase)
+        function textCanBeEmpty(testCase)
             msg = aisdk.LLMTextMessage("");
-            testCase.verifyEqual(msg.Content, "");
+            testCase.verifyEqual(msg.Text, "");
         end
 
         function constructorAcceptsChar_createsMessage(testCase)
             msg = aisdk.LLMTextMessage('hello char');
-            testCase.verifyEqual(msg.Content, "hello char");
+            testCase.verifyEqual(msg.Text, "hello char");
         end
 
         function constructorRejectsNonScalarStringArray_throwsError(testCase)
@@ -51,9 +51,10 @@ classdef tLLMTextMessage < matlab.unittest.TestCase
                 "llms:message:InvalidTextContent");
         end
 
-        function constructorAcceptsRoleTool_setsRole(testCase)
-            msg = aisdk.LLMTextMessage("result", Role="tool");
-            testCase.verifyEqual(msg.Role, "tool");
+        function constructorRejectsRoleTool_throwsError(testCase)
+            testCase.verifyError( ...
+                @() aisdk.LLMTextMessage("result", Role="tool"), ...
+                "MATLAB:validators:mustBeMember");
         end
 
         function constructorAcceptsRoleSystem_setsRole(testCase)

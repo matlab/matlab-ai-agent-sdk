@@ -76,17 +76,17 @@ resp = generate(client, msgs);
 disp(resp)
 %%
 %[text] ## 7. Inspect the stored image
-%[text] `Content` holds the decoded MATLAB array — use it with any image function.
+%[text] `Image` holds the decoded MATLAB array — use it with any image function.
 msgs = [aisdk.LLMTextMessage("Describe this image."), ...
         aisdk.LLMImageMessage("peppers.png")];
 
 imgMsg = msgs(2);
-disp("Size:  " + strjoin(string(size(imgMsg.Content)), "x"))
-disp("Class: " + class(imgMsg.Content))
+disp("Size:  " + strjoin(string(size(imgMsg.Image)), "×"))
+disp("Class: " + class(imgMsg.Image))
 info = whos("imgMsg");
 disp("Bytes: " + info.bytes)
-imshow(imgMsg.Content)
-title("Stored in msgs(2).Content")
+imshow(imgMsg.Image)
+title("Stored in msgs(2).Image")
 %%
 %[text] ## 8. Grayscale image
 %[text] Grayscale and logical images are also accepted.

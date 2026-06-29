@@ -9,7 +9,7 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
             msg = aisdk.LLMImageMessage(img);
             testCase.verifyEqual(msg.Role, "user");
             testCase.verifyEqual(msg.Type, "image");
-            testCase.verifyEqual(msg.Content, img);
+            testCase.verifyEqual(msg.Image, img);
         end
 
         function constructorFromFilePath(testCase)
@@ -20,8 +20,8 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
 
             msg = aisdk.LLMImageMessage(tempFile);
             testCase.verifyEqual(msg.Type, "image");
-            testCase.verifyEqual(size(msg.Content), size(img));
-            testCase.verifyClass(msg.Content, "uint8");
+            testCase.verifyEqual(size(msg.Image), size(img));
+            testCase.verifyClass(msg.Image, "uint8");
         end
 
         function constructorSetsDetail(testCase)
@@ -39,13 +39,13 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
         function acceptsGrayscale(testCase)
             img = ones(10, 10, 1, "uint8");
             msg = aisdk.LLMImageMessage(img);
-            testCase.verifyEqual(size(msg.Content), [10 10]);
+            testCase.verifyEqual(size(msg.Image), [10 10]);
         end
 
         function acceptsLogical(testCase)
             img = true(10);
             msg = aisdk.LLMImageMessage(img);
-            testCase.verifyClass(msg.Content, "logical");
+            testCase.verifyClass(msg.Image, "logical");
         end
 
         function heterogeneousArrayWithText(testCase)
@@ -86,7 +86,7 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
         function constructorAcceptsFourChannel_storesContent(testCase)
             img = ones(10, 10, 4, "uint8");
             msg = aisdk.LLMImageMessage(img);
-            testCase.verifyEqual(msg.Content, img);
+            testCase.verifyEqual(msg.Image, img);
         end
 
         function displayShowsDetail_whenNonAuto(testCase)

@@ -14,8 +14,6 @@ classdef LLMToolCallMessage < aisdk.llms.message.LLMMessage
 %
 %       Type                 - Always "tool-call".
 %
-%       Content              - Not used for tool call messages.
-%
 %       Name                 - Name of the tool the model wants to call.
 %
 %       ToolCallID           - Unique identifier for this tool call.
@@ -36,11 +34,14 @@ classdef LLMToolCallMessage < aisdk.llms.message.LLMMessage
     end
 
     methods (Access = protected)
+        function txt = contentPreview(this)
+            txt = this.Name;
+        end
+
         function groups = getPropertyGroups(obj)
             props = struct( ...
                 "Role", obj.Role, ...
                 "Type", obj.Type, ...
-                "Content", obj.Content, ...
                 "Name", obj.Name, ...
                 "Arguments", iFormatArgs(obj.Arguments), ...
                 "ToolCallID", obj.ToolCallID);

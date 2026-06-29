@@ -61,7 +61,7 @@ classdef tClientBase < matlab.unittest.TestCase
         function stringWrapsAsTextMessage(testCase)
             msgs = aisdk.llms.client.ClientBase.normalizeMessages("hello");
             testCase.verifyClass(msgs, "aisdk.LLMTextMessage");
-            testCase.verifyEqual(msgs.Content, "hello");
+            testCase.verifyEqual(msgs.Text, "hello");
             testCase.verifyEqual(msgs.Role, "user");
         end
 

@@ -1,38 +1,40 @@
 classdef LLMTextMessage < aisdk.llms.message.LLMMessage
 %LLMTextMessage A plain text message in a conversation.
 %
-%   msg = aisdk.LLMTextMessage(TEXT) creates a user text message.
+%   msg = aisdk.LLMTextMessage(text) creates a user text message.
 %
-%   msg = aisdk.LLMTextMessage(TEXT, Role=ROLE) creates a text message with
-%   the specified role ("system", "user", "assistant", or "tool").
+%   msg = aisdk.LLMTextMessage(text, Role=role) creates a text message with
+%   the specified role ("system", "user", or "assistant").
 %
 %   LLMTextMessage Properties:
-%       Role                 - "system", "user", "assistant", or "tool".
+%       Role                 - "system", "user", or "assistant".
 %
 %       Type                 - Always "text".
 %
-%       Content              - The text of the message.
+%       Text                 - The text of the message.
 
 %   Copyright 2026 The MathWorks, Inc.
 
+    properties
+        %TEXT   The text of the message.
+        Text(1,1) string
+    end
+
     methods
-        function this = LLMTextMessage(content, nvp)
+        function this = LLMTextMessage(text, nvp)
             arguments
-                content {mustBeTextContent}
-                nvp.Role(1,1) string {mustBeMember(nvp.Role, ["system","user","assistant","tool"])} = "user"
+                text {mustBeTextContent}
+                nvp.Role(1,1) string {mustBeMember(nvp.Role, ["system","user","assistant"])} = "user"
             end
 
             this@aisdk.llms.message.LLMMessage(nvp.Role, "text");
-            this.Content = string(content);
+            this.Text = string(text);
         end
     end
 
     methods (Access = protected)
-        function validateContent(~, val)
-            if ~(isstring(val) && isscalar(val))
-                error("llms:message:InvalidContent", ...
-                    aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:message:InvalidContent"));
-            end
+        function txt = contentPreview(this)
+            txt = this.truncateForDisplay(this.Text);
         end
     end
 
