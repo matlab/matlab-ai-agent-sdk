@@ -27,17 +27,19 @@ classdef tClientBase < matlab.unittest.TestCase
         end
 
         function argumentsToSchema_withEmptyDataType_omitsTypeField(testCase)
+            import matlab.unittest.constraints.HasField
             tool = aisdk.LLMTool(@(x) x, "myFcn", Description="A function", ...
                 InputArguments=aisdk.LLMToolArgument("x", DataType="", Description="A param"));
             schema = captureToolSchema(tool);
-            testCase.verifyFalse(isfield(schema.properties.x, "type"));
+            testCase.verifyThat(schema.properties.x, ~HasField("type"));
         end
 
         function argumentsToSchema_withEmptyDescription_omitsField(testCase)
+            import matlab.unittest.constraints.HasField
             tool = aisdk.LLMTool(@(x) x, "myFcn", Description="A function", ...
                 InputArguments=aisdk.LLMToolArgument("x", DataType="number", Description=""));
             schema = captureToolSchema(tool);
-            testCase.verifyFalse(isfield(schema.properties.x, "description"));
+            testCase.verifyThat(schema.properties.x, ~HasField("description"));
         end
 
         function encodeToolOmitsRequiredWhenNoneRequired(testCase)
