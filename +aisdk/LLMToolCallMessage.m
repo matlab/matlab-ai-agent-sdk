@@ -36,6 +36,10 @@ classdef LLMToolCallMessage < aisdk.llms.message.LLMMessage
     methods (Access = protected)
         function txt = contentPreview(this)
             txt = this.Name;
+            if ~isempty(fieldnames(this.Arguments))
+                txt = txt + "(" + jsonencode(this.Arguments) + ")";
+            end
+            txt = this.truncateForDisplay(txt);
         end
 
         function groups = getPropertyGroups(obj)

@@ -54,6 +54,31 @@ classdef tLLMMessage < matlab.unittest.TestCase
             testCase.verifySubstring(output, "myTool");
         end
 
+        function displayArray_toolCallWithArgs_showsArguments(testCase)
+            toolCall = aisdk.LLMToolCallMessage("myTool", struct("city", "Cambridge"), ToolCallID="tc1");
+            msgs = [toolCall, toolCall];
+            output = formattedDisplayText(msgs);
+            testCase.verifySubstring(output, 'myTool({"city":"Cambridge"})');
+        end
+
+        function displayArray_toolCallEmptyArgs_showsNameOnly(testCase)
+            toolCall = aisdk.LLMToolCallMessage("myTool", struct(), ToolCallID="tc1");
+            msgs = [toolCall, toolCall];
+            output = formattedDisplayText(msgs);
+            testCase.verifySubstring(output, """myTool""");
+            testCase.verifyThat(output, ...
+                ~matlab.unittest.constraints.ContainsSubstring("myTool("));
+        end
+
+        function displayArray_toolCallLongArgs_truncates(testCase)
+            longVal = repmat('x', 1, 80);
+            toolCall = aisdk.LLMToolCallMessage("myTool", struct("key", longVal), ToolCallID="tc1");
+            msgs = [toolCall, toolCall];
+            output = formattedDisplayText(msgs);
+            testCase.verifySubstring(output, "myTool(");
+            testCase.verifySubstring(output, "...");
+        end
+
         function contentPreview_truncatesLongContent(testCase)
             longText = repmat('a', 1, 80);
             msg = aisdk.LLMTextMessage(longText);
