@@ -3,7 +3,7 @@ classdef (Abstract) mcpHTTPClient < handle
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    properties (Abstract)
+    properties
         ServerTools
     end
 

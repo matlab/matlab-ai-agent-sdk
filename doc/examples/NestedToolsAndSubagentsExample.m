@@ -55,8 +55,8 @@ end
         error("Context must contain a Tools field");
     end
     llmOpts = aisdk.LLMClient("openai", "gpt-4.1-mini");
-    subAgent = aisdk.AIAgent(llmOpts, systemPrompt, ...
-        workspace.Tools, ...
+    subAgent = aisdk.AIAgent(llmOpts, SystemPrompt=systemPrompt, ...
+        Tools=workspace.Tools, ...
         Workspace=workspace);
     obs = subAgent.run(prompt);
     workspace = subAgent.Workspace;
@@ -79,8 +79,8 @@ topLevelPrompt = "You are an assistant who has two sets of tools available for e
 %%
 %[text] ## Run Agent
 topLevelClient = aisdk.LLMClient("openai", "gpt-4.1-mini");
-topLevelAgent = aisdk.AIAgent(topLevelClient, topLevelPrompt, ...
-    topLevelTools);
+topLevelAgent = aisdk.AIAgent(topLevelClient, SystemPrompt=topLevelPrompt, ...
+    Tools=topLevelTools);
 prompt = "Create two random integers between 1 and 10, tell me what they are and compute their sum?";
 output = topLevelAgent.run(prompt) %[output:542cc9f9] %[output:654a7ec5]
 %%
@@ -95,13 +95,13 @@ output2 = topLevelAgent.run(prompt2) %[output:9c544e7d] %[output:99c8073d]
 %   data: {"layout":"inline","rightPanelPercent":40}
 %---
 %[output:542cc9f9]
-%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function toolProvider with inputs {\"ToolType\":\"number\"}]\n[function return] \"Added tools :sumOfTwoNumbers, getRandomInteger\"\n[think]\n[call function subAgent with inputs {\"SystemPrompt\":\"You can use these two tools: getRandomInteger(min, max) to get a random integer between min and max, inclusive; sumOfTwoNumbers(a, b) to get the sum of two numbers.\",\"Query\":\"Generate two random integers between 1 and 10.\"}]\n[think]\n[call function getRandomInteger with inputs {}]\n[function return] 2\n[call function getRandomInteger with inputs {}]\n[function return] 3\n[think]\nThe two random integers generated between 1 and 10 are 2 and 3.\n[function return] \"The two random integers generated between 1 and 10 are 2 and 3.\"\n[call function subAgent with inputs {\"SystemPrompt\":\"You can use these two tools: getRandomInteger(min, max) to get a random integer between min and max, inclusive; sumOfTwoNumbers(a, b) to get the sum of two numbers.\",\"Query\":\"Generate two random integers between 1 and 10.\"}]\n[think]\n[call function getRandomInteger with inputs {}]\n[function return] 5\n[call function getRandomInteger with inputs {}]\n[function return] 6\n[think]\nThe two random integers generated between 1 and 10 are 5 and 6.\n[function return] \"The two random integers generated between 1 and 10 are 5 and 6.\"\n[think]\n[call function subAgent with inputs {\"SystemPrompt\":\"You can use these two tools: getRandomInteger(min, max) to get a random integer between min and max, inclusive; sumOfTwoNumbers(a, b) to get the sum of two numbers.\",\"Query\":\"The two random integers to use are 2 and 3. Compute their sum.\"}]\n[think]\n[call function sumOfTwoNumbers with inputs {\"a\":2,\"b\":3}]\n[function return] 5\n[think]\nThe sum of the two integers 2 and 3 is 5.\n[function return] \"The sum of the two integers 2 and 3 is 5.\"\n[think]\nI generated two random pairs of integers between 1 and 10: 2 and 3, and 5 and 6. For the pair 2 and 3, their sum is 5. Would you like me to also calculate the sum for the pair 5 and 6?\n","truncated":false}}
+%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function toolProvider with inputs {\"ToolType\":\"number\"}]\n[function return] \"Added tools :sumOfTwoNumbers, getRandomInteger\"\n[think]\n[call function subAgent with inputs {\"SystemPrompt\":\"You have tools for generating random integers and for summing two numbers.\",\"Prompt\":\"Generate a random integer between 1 and 10.\"}]\n[think]\n[call function getRandomInteger with inputs {}]\n[function return] 7\n[think]\nThe random integer between 1 and 10 that I generated is 7. Would you like me to generate another one?\n[function return] \"The random integer between 1 and 10 that I generated is 7. Would you like me to generate another one?\"\n[call function subAgent with inputs {\"SystemPrompt\":\"You have tools for generating random integers and for summing two numbers.\",\"Prompt\":\"Generate a random integer between 1 and 10.\"}]\n[think]\n[call function getRandomInteger with inputs {}]\n[function return] 8\n[think]\nThe random integer generated between 1 and 10 is 8.\n[function return] \"The random integer generated between 1 and 10 is 8.\"\n[think]\n[call function subAgent with inputs {\"SystemPrompt\":\"You have tools for generating random integers and for summing two numbers.\",\"Prompt\":\"Given the two integers 7 and 8, compute their sum.\"}]\n[think]\n[call function sumOfTwoNumbers with inputs {\"a\":7,\"b\":8}]\n[function return] 15\n[think]\nThe sum of the integers 7 and 8 is 15.\n[function return] \"The sum of the integers 7 and 8 is 15.\"\n[think]\nThe two random integers I generated are 7 and 8. Their sum is 15.\n","truncated":false}}
 %---
 %[output:654a7ec5]
-%   data: {"dataType":"textualVariable","outputData":{"name":"output","value":"\"I generated two random pairs of integers between 1 and 10: 2 and 3, and 5 and 6. For the pair 2 and 3, their sum is 5. Would you like me to also calculate the sum for the pair 5 and 6?\""}}
+%   data: {"dataType":"textualVariable","outputData":{"name":"output","value":"\"The two random integers I generated are 7 and 8. Their sum is 15.\""}}
 %---
 %[output:9c544e7d]
-%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function toolProvider with inputs {\"ToolType\":\"string\"}]\n[function return] \"Added tools :concatenateStrings\"\n[think]\n[call function subAgent with inputs {\"SystemPrompt\":\"You have access to the tool concatenateStrings(a, b) which concatenates two strings a and b.\",\"Query\":\"Concatenate the strings 'acdc' and 'abba'.\"}]\n[think]\n[call function concatenateStrings with inputs {\"a\":\"acdc\",\"b\":\"abba\"}]\n[function return] \"acdcabba\"\n[think]\nThe concatenated string of 'acdc' and 'abba' is 'acdcabba'.\n[function return] \"The concatenated string of 'acdc' and 'abba' is 'acdcabba'.\"\n[think]\nThe concatenation of the strings 'acdc' and 'abba' is 'acdcabba'.\n","truncated":false}}
+%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function toolProvider with inputs {\"ToolType\":\"string\"}]\n[function return] \"Added tools :concatenateStrings\"\n[think]\n[call function subAgent with inputs {\"SystemPrompt\":\"You have the tool to concatenate strings.\",\"Prompt\":\"Concatenate the strings 'acdc' and 'abba'.\"}]\n[think]\n[call function concatenateStrings with inputs {\"a\":\"acdc\",\"b\":\"abba\"}]\n[function return] \"acdcabba\"\n[think]\nThe concatenated string of 'acdc' and 'abba' is 'acdcabba'.\n[function return] \"The concatenated string of 'acdc' and 'abba' is 'acdcabba'.\"\n[think]\nThe concatenation of the strings 'acdc' and 'abba' is 'acdcabba'.\n","truncated":false}}
 %---
 %[output:99c8073d]
 %   data: {"dataType":"textualVariable","outputData":{"name":"output2","value":"\"The concatenation of the strings 'acdc' and 'abba' is 'acdcabba'.\""}}

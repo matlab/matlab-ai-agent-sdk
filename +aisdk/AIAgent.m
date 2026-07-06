@@ -1,13 +1,15 @@
 classdef AIAgent < handle
 %AIAgent Agent for AI chat completions with agentic tool-calling loop.
 %
-%   AGENT = AIAgent(CLIENT, SYSTEMPROMPT) creates an AIAgent with the
-%   specified client (aisdk.llms.client.OpenAIClient or aisdk.llms.client.OllamaClient)
-%   and system prompt.
+%   AGENT = AIAgent(CLIENT) creates an AIAgent with the specified client
+%   (aisdk.llms.client.OpenAIClient or aisdk.llms.client.OllamaClient).
 %
-%   AGENT = AIAgent(CLIENT, SYSTEMPROMPT, TOOLS) specifies tools to use.
+%   AGENT = AIAgent(CLIENT, SystemPrompt=SP) specifies a system prompt.
 %
-%   AGENT = AIAgent(CLIENT, SYSTEMPROMPT, Messages=msgs) uses existing messages.
+%   AGENT = AIAgent(CLIENT, Tools=T) specifies tools to use.
+%
+%   AGENT = AIAgent(CLIENT, SystemPrompt=SP, Tools=T, Messages=msgs)
+%   specifies system prompt, tools, and existing messages.
 %
 %   AIAgent Properties:
 %       Client           - The LLM client used for API calls
@@ -78,11 +80,11 @@ classdef AIAgent < handle
     end
 
     methods
-        function this = AIAgent(client, systemPrompt, tools, nvp)
+        function this = AIAgent(client, nvp)
             arguments
                 client                       (1,1) {mustBeClient}
-                systemPrompt                       {aisdk.llms.internal.mustBeTextOrEmpty} = []
-                tools                        (1,:) aisdk.llms.tool.LLMTool = aisdk.llms.tool.LLMTool.empty(1,0)
+                nvp.SystemPrompt                   {aisdk.llms.internal.mustBeTextOrEmpty} = []
+                nvp.Tools                    (1,:) aisdk.llms.tool.LLMTool = aisdk.llms.tool.LLMTool.empty(1,0)
                 nvp.Messages                 (1,:) aisdk.llms.message.LLMMessage = aisdk.llms.message.LLMMessage.empty(1,0)
                 nvp.ResponseFormat                 {aisdk.llms.internal.mustBeResponseFormat} = "text"
                 nvp.Workspace                (1,1) struct = struct()
@@ -99,14 +101,14 @@ classdef AIAgent < handle
             this.MaxIterations = nvp.MaxIterations;
             this.ApprovalFcn = nvp.ApprovalFcn;
 
-            if isempty(tools)
+            if isempty(nvp.Tools)
                 this.Tools = aisdk.llms.tool.LLMTool.empty(1,0);
             else
-                this.Tools = tools;
+                this.Tools = nvp.Tools;
             end
 
-            if ~isempty(systemPrompt)
-                systemPrompt = string(systemPrompt);
+            if ~isempty(nvp.SystemPrompt)
+                systemPrompt = string(nvp.SystemPrompt);
                 if systemPrompt ~= ""
                    this.SystemPrompt = systemPrompt;
                 end

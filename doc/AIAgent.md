@@ -5,18 +5,15 @@ Agent for AI chat completions with an agentic tool-calling loop.
 ## Syntax
 
 ```matlab
-agent = aisdk.AIAgent(client, systemPrompt)
-agent = aisdk.AIAgent(client, systemPrompt, tools)
-agent = aisdk.AIAgent(client, systemPrompt, tools, Name=Value)
+agent = aisdk.AIAgent(client)
+agent = aisdk.AIAgent(client, Name=Value)
 ```
 
 ## Description
 
-`AIAgent(client, systemPrompt)` creates an agent that uses the specified LLM client and system prompt. The agent manages conversation history and can run a multi-turn tool-calling loop.
+`AIAgent(client)` creates an agent that uses the specified LLM client. The agent manages conversation history and can run a multi-turn tool-calling loop.
 
-`AIAgent(client, systemPrompt, tools)` specifies tools the model may invoke during the loop.
-
-`AIAgent(client, systemPrompt, tools, Name=Value)` specifies additional options using name-value arguments. You can specify any of the properties below as name-value arguments.
+`AIAgent(client, Name=Value)` specifies additional options using name-value arguments. You can specify any of the properties below as name-value arguments, including `SystemPrompt` and `Tools`.
 
 The `client` argument is any object created by [`LLMClient`](../+aisdk/LLMClient.m).
 
@@ -77,7 +74,7 @@ Run the agentic loop: send `prompt` to the model, execute any tool calls the mod
 
 ```matlab
 client = aisdk.LLMClient("openai", "gpt-4.1-mini");
-agent = aisdk.AIAgent(client, "You are a helpful assistant.");
+agent = aisdk.AIAgent(client);
 response = run(agent, "Reply with the word hello.");
 disp(response)
 ```
@@ -93,7 +90,7 @@ tool = aisdk.LLMTool("addNumbers", ...
     ]);
 
 client = aisdk.LLMClient("openai", "gpt-4.1-mini");
-agent = aisdk.AIAgent(client, "You are a calculator assistant.", tool);
+agent = aisdk.AIAgent(client, Tools=tool);
 response = run(agent, "What is 2 + 3?");
 disp(response)
 ```
@@ -105,7 +102,7 @@ addTool  = aisdk.LLMTool("addNumbers",      Description="Add two numbers",      
 multTool = aisdk.LLMTool("multiplyNumbers", Description="Multiply two numbers", InputArguments=struct("a", 0, "b", 0));
 
 client = aisdk.LLMClient("openai", "gpt-4.1-mini");
-agent = aisdk.AIAgent(client, "You are a calculator.", [addTool, multTool]);
+agent = aisdk.AIAgent(client, Tools=[addTool, multTool]);
 
 run(agent, "What is 2+3?");                            % "auto": model picks a tool or replies directly
 run(agent, "Compute 4 and 5", ToolChoice="required");  % must call a tool
@@ -133,8 +130,8 @@ storeTool = aisdk.LLMTool(@storeNumber, ...
 
 workspace = struct();
 client = aisdk.LLMClient("openai", "gpt-4.1-mini");
-agent = aisdk.AIAgent(client, "Store the number the user gives you.", ...
-    storeTool, Workspace=workspace);
+agent = aisdk.AIAgent(client, SystemPrompt="Store all the numbers the user gives you.", ...
+    Tools=storeTool, Workspace=workspace);
 run(agent, "The number is 42.");
 
 agent.Workspace.storedValue   % 42
@@ -151,7 +148,7 @@ tool = aisdk.LLMTool(@web_search, ...
     RequiresApproval="always");
 
 client = aisdk.LLMClient("openai", "gpt-4.1-mini");
-agent = aisdk.AIAgent(client, "You are a helpful researcher.", tool);
+agent = aisdk.AIAgent(client, Tools=tool);
 run(agent, "Search for the population of France.");
 ```
 

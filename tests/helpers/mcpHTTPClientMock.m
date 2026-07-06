@@ -3,10 +3,6 @@ classdef mcpHTTPClientMock < mcpHTTPClient
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    properties
-        ServerTools
-    end
-
     properties (Access = private)
         CallToolFcn
     end

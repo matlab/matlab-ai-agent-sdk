@@ -1,4 +1,4 @@
-classdef tSystem < matlab.mock.TestCase
+classdef tSystem < matlab.unittest.TestCase
 % tSystem - Tests verifying the high-level requirements of the SDK.
 
 %   Copyright 2026 The MathWorks, Inc.
@@ -29,7 +29,7 @@ classdef tSystem < matlab.mock.TestCase
         %% Agents can call LLMs and manage conversation history
 
         function run_withSingleQuery_returnsResponseAndUpdatesHistory(testCase)
-            agent = aisdk.AIAgent(testCase.Client, "Provide clear and concise answers.", DisplayMode = "off");
+            agent = aisdk.AIAgent(testCase.Client, DisplayMode = "off");
 
             response = run(agent, "Say hello.");
 
@@ -40,7 +40,7 @@ classdef tSystem < matlab.mock.TestCase
 
         function run_withToolCall_returnsResponseAfterToolExecution(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers);
-            agent = aisdk.AIAgent(testCase.Client, "Use tools for calculations.", tool, DisplayMode = "off");
+            agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
 
             response = run(agent, "What is 2 + 3?", ToolChoice="required");
 
@@ -65,7 +65,7 @@ classdef tSystem < matlab.mock.TestCase
 
         function run_withNamedFunctionTool_returnsComputedResult(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers);
-            agent = aisdk.AIAgent(testCase.Client, "Use tools for calculations.", tool, DisplayMode = "off");
+            agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
 
             run(agent, "Compute 7 + 11.", ToolChoice="required");
 
@@ -78,7 +78,7 @@ classdef tSystem < matlab.mock.TestCase
             tool = aisdk.LLMTool(@(x) x^2, "squareNumber", ...
                 Description="Square a number", ...
                 InputArguments=struct(x=2));
-            agent = aisdk.AIAgent(testCase.Client, "Use tools for calculations.", tool, DisplayMode = "off");
+            agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
 
             run(agent, "What is 5 squared?", ToolChoice="required");
 
@@ -89,7 +89,7 @@ classdef tSystem < matlab.mock.TestCase
 
         function run_withNamespacedFunctionTool_returnsComputedResult(testCase)
             tool = aisdk.LLMTool(@some.namespace.testFcn);
-            agent = aisdk.AIAgent(testCase.Client, "Use tools for calculations.", tool, DisplayMode = "off");
+            agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
 
             run(agent, "Increment 6 by one.", ToolChoice="required");
 
@@ -105,8 +105,8 @@ classdef tSystem < matlab.mock.TestCase
             multiplyTool = aisdk.LLMTool(@(a,b) a*b, "multiplyNumbers", ...
                 Description="Multiply two numbers", ...
                 InputArguments=struct(a=1, b=2));
-            agent = aisdk.AIAgent(testCase.Client, "Use tools for calculations. Use tools.", ...
-                [addTool, multiplyTool], DisplayMode = "off");
+            agent = aisdk.AIAgent(testCase.Client, ...
+                Tools=[addTool, multiplyTool], DisplayMode = "off");
 
             response = run(agent, "Multiply 4 by 5.");
 
@@ -118,7 +118,6 @@ classdef tSystem < matlab.mock.TestCase
         %% Tools can be loaded from MCP servers
 
         function run_withMCPTools_callsToolAndReturnsResult(testCase)
-            [mcpClient, behaviour] = createMock(testCase, ?mcpHTTPClient);
             addDef = struct( ...
                 "name", "add", ...
                 "description", "Add two numbers", ...
@@ -133,8 +132,8 @@ classdef tSystem < matlab.mock.TestCase
                     "properties", struct("a", struct("type","integer"), "b", struct("type","integer")), ...
                     "required", {{"a","b"}}, ...
                     "type", "object"));
-            testCase.assignOutputsWhen(get(behaviour.ServerTools), {addDef, multiplyDef});
-            testCase.assignOutputsWhen(withAnyInputs(behaviour.callTool), "5");
+
+            mcpClient = mcpHTTPClientMock({addDef, multiplyDef}, @(~,varargin) "5");
 
             tools = aisdk.LLMTool(mcpClient);
 
@@ -143,7 +142,7 @@ classdef tSystem < matlab.mock.TestCase
             testCase.verifyEqual(tools(1).Name, "add");
             testCase.verifyEqual(tools(2).Name, "multiply");
 
-            agent = aisdk.AIAgent(testCase.Client, "Use tools for calculations.", tools, DisplayMode = "off");
+            agent = aisdk.AIAgent(testCase.Client, Tools=tools, DisplayMode = "off");
 
             run(agent, "Add 2 and 3.", ToolChoice="required");
 
@@ -163,7 +162,7 @@ classdef tSystem < matlab.mock.TestCase
                 result.Reason = "";
             end
             tool = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="always");
-            agent = aisdk.AIAgent(testCase.Client, "Use tools for calculations.", tool, ...
+            agent = aisdk.AIAgent(testCase.Client, Tools=tool, ...
                 ApprovalFcn=@approve, DisplayMode = "off");
 
             run(agent, "Add 3 and 4.", ToolChoice="required");
@@ -183,7 +182,7 @@ classdef tSystem < matlab.mock.TestCase
                 Description="Add two numbers", ...
                 InputArguments=struct(a=1, b=2), ...
                 RequiresApproval="always");
-            agent = aisdk.AIAgent(testCase.Client, "You are a calculator.", tool, ...
+            agent = aisdk.AIAgent(testCase.Client, Tools=tool, ...
                 ApprovalFcn=@approveWithReason, DisplayMode="off");
 
             response = run(agent, "Add 3 and 4.", ToolChoice="required");
@@ -198,7 +197,7 @@ classdef tSystem < matlab.mock.TestCase
                 result.Reason = "User denied this action.";
             end
             tool = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="always");
-            agent = aisdk.AIAgent(testCase.Client, "Use tools for calculations.", tool, ...
+            agent = aisdk.AIAgent(testCase.Client, Tools=tool, ...
                 ApprovalFcn=@denyApproval, DisplayMode = "off");
 
             run(agent, "Add 3 and 4.", ToolChoice="required");
@@ -214,7 +213,7 @@ classdef tSystem < matlab.mock.TestCase
 
             function [obs, workspace] = runMathSubagent(workspace, prompt)
                 mathTool = aisdk.LLMTool(@addTwoNumbers);
-                sub = aisdk.AIAgent(testCase.Client, "You are a math expert. Use tools.", mathTool);
+                sub = aisdk.AIAgent(testCase.Client, Tools=mathTool);
                 obs = run(sub, prompt, ToolChoice="required", DisplayMode = "off");
             end
 
@@ -225,8 +224,8 @@ classdef tSystem < matlab.mock.TestCase
                 Workspace="agent");
             
             supervisor = aisdk.AIAgent(testCase.Client, ...
-                "You are a supervisor. Delegate math questions using the runMathSubagent tool.", ...
-                delegateTool, DisplayMode = "off");
+                SystemPrompt="You are a supervisor. Delegate math questions using the runMathSubagent tool.", ...
+                Tools=delegateTool, DisplayMode = "off");
 
             run(supervisor, "What is 10 + 20?", ToolChoice="required");
 
@@ -253,8 +252,7 @@ classdef tSystem < matlab.mock.TestCase
                 Workspace="agent");
 
             agent = aisdk.AIAgent(testCase.Client, ...
-                "Store the number the user gives you.", ...
-                storeTool, Workspace=struct(), DisplayMode = "off");
+                Tools=storeTool, Workspace=struct(), DisplayMode = "off");
 
             run(agent, "Store the number 42.", ToolChoice="required");
 
@@ -265,7 +263,7 @@ classdef tSystem < matlab.mock.TestCase
 
         function run_withToolChoiceRequired_callsToolRegardlessly(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers);
-            agent = aisdk.AIAgent(testCase.Client, "Use tools for calculations.", tool, DisplayMode = "off");
+            agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
 
             run(agent, "Hello, how are you?", ToolChoice="required");
 
@@ -276,7 +274,7 @@ classdef tSystem < matlab.mock.TestCase
 
         function run_withToolChoiceNone_doesNotCallAnyTool(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers);
-            agent = aisdk.AIAgent(testCase.Client, "Use tools for calculations.", tool, DisplayMode = "off");
+            agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
 
             run(agent, "What is 2 + 3?", ToolChoice="none");
 
@@ -288,7 +286,7 @@ classdef tSystem < matlab.mock.TestCase
         function run_withMaxIterationsReached_warnsAndPreservesHistory(testCase)
             tool = aisdk.LLMTool(@()"Page loaded. More pages available.", "fetchNextPage");
             agent = aisdk.AIAgent(testCase.Client, ...
-                "Always fetch the next page.", tool, ...
+                SystemPrompt="Always fetch the next page.", Tools=tool, ...
                 MaxIterations=3, DisplayMode = "off");
 
             testCase.verifyWarning( ...
@@ -323,7 +321,7 @@ classdef tSystem < matlab.mock.TestCase
         %% SDK tracks token usage
 
         function run_afterCall_updatesTokenCounts(testCase)
-            agent = aisdk.AIAgent(testCase.Client, "Provide clear and concise answers.", DisplayMode = "off");
+            agent = aisdk.AIAgent(testCase.Client, DisplayMode = "off");
 
             run(agent, "Say hello.");
 
@@ -347,7 +345,7 @@ classdef tSystem < matlab.mock.TestCase
 
         function run_afterToolUse_tracksCallAndArguments(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers);
-            agent = aisdk.AIAgent(testCase.Client, "Use tools for calculations.", tool, DisplayMode = "off");
+            agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
 
             run(agent, "Add 5 and 9.", ToolChoice="required");
 
