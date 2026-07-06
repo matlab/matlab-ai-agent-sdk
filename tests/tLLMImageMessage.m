@@ -61,7 +61,7 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
             img = ones(10, 15, 3, "uint8");
             msg = aisdk.LLMImageMessage(img);
             output = formattedDisplayText(msg);
-            testCase.verifySubstring(output, "10x15x3");
+            testCase.verifySubstring(output, "10×15×3");
         end
 
         function constructorRejectsEmptyArray_throwsError(testCase)
