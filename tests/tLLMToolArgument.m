@@ -19,12 +19,12 @@ classdef tLLMToolArgument < matlab.unittest.TestCase
             testCase.verifyEqual(arg.DataType, "");
         end
 
-        function defaultRequired(testCase)
+        function positional_defaultsToRequiredTrue(testCase)
             arg = aisdk.LLMToolArgument("x");
             testCase.verifyTrue(arg.Required);
         end
 
-        function defaultNameValue(testCase)
+        function noExplicitNameValue_defaultsToFalse(testCase)
             arg = aisdk.LLMToolArgument("x");
             testCase.verifyFalse(arg.NameValue);
         end
@@ -157,13 +157,15 @@ classdef tLLMToolArgument < matlab.unittest.TestCase
         end
 
         function nameValue_explicitRequiredTrue_succeeds(testCase)
-            % MATLAB-required: must be provided to call the function without
-            % error. For name-values, this is always false (they have defaults).
-            % Schema-required: the LLM must provide this in its tool call.
-            % LLMToolArgument.Required controls the latter, not the former.
             arg = aisdk.LLMToolArgument("x", Required=true, NameValue=true);
             testCase.verifyTrue(arg.Required);
             testCase.verifyTrue(arg.NameValue);
+        end
+
+        function positional_explicitRequiredFalse_succeeds(testCase)
+            arg = aisdk.LLMToolArgument("x", Required=false);
+            testCase.verifyFalse(arg.Required);
+            testCase.verifyFalse(arg.NameValue);
         end
 
         function errorOnComplexNumericInPrototype(testCase)
