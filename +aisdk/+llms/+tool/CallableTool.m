@@ -4,12 +4,6 @@ classdef CallableTool < aisdk.llms.tool.LLMTool
 % Copyright 2026 The MathWorks, Inc.
 
     properties
-        %InputArguments   Description of the tool inputs.
-        InputArguments
-
-        %OutputArguments   Description of the tool outputs.
-        OutputArguments
-
         %RequiresApproval   Approval mode for user confirmation before calling.
         RequiresApproval(1,1) aisdk.llms.tool.RequiresApproval
     end

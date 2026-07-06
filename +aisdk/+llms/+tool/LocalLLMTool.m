@@ -4,6 +4,12 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
 % Copyright 2026 The MathWorks, Inc.
 
     properties
+        %InputArguments   Description of the tool inputs.
+        InputArguments
+
+        %OutputArguments   Description of the tool outputs.
+        OutputArguments
+
         %Workspace   Whether the function accepts and returns a workspace argument.
         Workspace(1,1) string {mustBeMember(Workspace, ["none","agent"])} = "none"
     end

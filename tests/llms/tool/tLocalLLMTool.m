@@ -429,6 +429,19 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             tool = aisdk.LLMTool(@some.namespace.testFcn);
             testCase.verifyEqual(tool.Name, "some_namespace_testFcn");
         end
+
+        function display_showsCorrectProperties(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool(@sin, Description="Sine");
+            output = formattedDisplayText(tool);
+            testCase.verifySubstring(output, "Name");
+            testCase.verifySubstring(output, "Description");
+            testCase.verifySubstring(output, "InputArguments");
+            testCase.verifySubstring(output, "OutputArguments");
+            testCase.verifySubstring(output, "Workspace");
+            testCase.verifySubstring(output, "RequiresApproval");
+            testCase.verifySubstring(output, "DisplayTitle");
+            testCase.verifySubstring(output, "Annotations");
+        end
     end
 
 end

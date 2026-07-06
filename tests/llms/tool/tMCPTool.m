@@ -53,7 +53,39 @@ classdef tMCPTool < matlab.unittest.TestCase
                 struct("name", "myTool", "description", "desc", "inputSchema", schema)});
 
             tools = aisdk.llms.tool.MCPTool(mockClient);
-            testCase.verifyEqual(tools.InputArguments, schema);
+            testCase.verifyEqual(tools.InputSchema, schema);
+        end
+
+        function constructor_setsOutputSchema_whenPresent(testCase)
+            outSchema = struct("type", "object", ...
+                "properties", struct("result", struct("type", "string")));
+            mockClient = makeMockClient({ ...
+                struct("name", "myTool", "description", "desc", ...
+                    "inputSchema", struct(), "outputSchema", outSchema)});
+
+            tools = aisdk.llms.tool.MCPTool(mockClient);
+            testCase.verifyEqual(tools.OutputSchema, outSchema);
+        end
+
+        function constructor_noOutputSchema_leavesEmpty(testCase)
+            mockClient = makeMockClient({ ...
+                struct("name", "myTool", "description", "desc", "inputSchema", struct())});
+
+            tools = aisdk.llms.tool.MCPTool(mockClient);
+            testCase.verifyEmpty(tools.OutputSchema);
+        end
+
+        function outputSchema_isReadOnly(testCase)
+            mockClient = makeMockClient({ ...
+                struct("name", "myTool", "description", "desc", "inputSchema", struct())});
+            tools = aisdk.llms.tool.MCPTool(mockClient);
+            testCase.verifyError( ...
+                @() setOutputSchema(tools), ...
+                "MATLAB:class:SetProhibited");
+
+            function setOutputSchema(t)
+                t.OutputSchema = struct("type", "object"); %#ok<NASGU>
+            end
         end
 
         function constructor_default_setsRequiresApprovalNever(testCase)
@@ -129,6 +161,33 @@ classdef tMCPTool < matlab.unittest.TestCase
             testCase.verifyError( ...
                 @() aisdk.llms.tool.MCPTool(mockClient, "extra"), ...
                 "MATLAB:TooManyInputs");
+        end
+
+        function display_showsCorrectProperties(testCase)
+            tool = aisdk.llms.tool.MCPTool();
+            tool.Name = "mcpTool";
+            tool.Description = "An MCP tool";
+            output = formattedDisplayText(tool);
+            testCase.verifySubstring(output, "Name");
+            testCase.verifySubstring(output, "Description");
+            testCase.verifySubstring(output, "InputSchema");
+            testCase.verifySubstring(output, "OutputSchema");
+            testCase.verifySubstring(output, "RequiresApproval");
+            testCase.verifySubstring(output, "DisplayTitle");
+            testCase.verifySubstring(output, "Annotations");
+        end
+
+        function inputSchema_isReadOnly(testCase)
+            mockClient = makeMockClient({ ...
+                struct("name", "myTool", "description", "desc", "inputSchema", struct())});
+            tools = aisdk.llms.tool.MCPTool(mockClient);
+            testCase.verifyError( ...
+                @() setInputSchema(tools), ...
+                "MATLAB:class:SetProhibited");
+
+            function setInputSchema(t)
+                t.InputSchema = struct("type", "object"); %#ok<NASGU>
+            end
         end
     end
 end

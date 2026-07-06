@@ -3,6 +3,14 @@ classdef MCPTool < aisdk.llms.tool.CallableTool
 
 % Copyright 2026 The MathWorks, Inc.
 
+    properties (SetAccess = private)
+        %InputSchema   JSON schema describing the tool inputs.
+        InputSchema
+
+        %OutputSchema   JSON schema describing the tool outputs (optional).
+        OutputSchema
+    end
+
     methods
         function this = MCPTool(mcpClient)
             if nargin == 0
@@ -27,7 +35,10 @@ classdef MCPTool < aisdk.llms.tool.CallableTool
                     tool.DisplayTitle = td.name;
                 end
                 tool.Function = @(varargin)callMethod(td.name, varargin{:});
-                tool.InputArguments = td.inputSchema;
+                tool.InputSchema = td.inputSchema;
+                if isfield(td, "outputSchema")
+                    tool.OutputSchema = td.outputSchema;
+                end
                 tool.RequiresApproval = aisdk.llms.tool.RequiresApproval.never;
                 tools{i} = tool;
             end

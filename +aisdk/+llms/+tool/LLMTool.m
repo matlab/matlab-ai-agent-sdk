@@ -39,6 +39,12 @@ classdef LLMTool < matlab.mixin.Heterogeneous & matlab.mixin.CustomDisplay
             if isprop(obj, "OutputArguments")
                 props = [props; "OutputArguments"];
             end
+            if isprop(obj, "InputSchema")
+                props = [props; "InputSchema"];
+            end
+            if isprop(obj, "OutputSchema")
+                props = [props; "OutputSchema"];
+            end
             if isprop(obj, "Workspace")
                 props = [props; "Workspace"];
             end

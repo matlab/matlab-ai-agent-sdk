@@ -67,26 +67,23 @@ classdef tLLMTool < matlab.unittest.TestCase
             testCase.verifySubstring(output, "MCPTool");
         end
 
-        function display_scalarLocalLLMTool_showsNameAndDescription(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@sin, Description="Sine");
-            output = formattedDisplayText(tool);
-            testCase.verifySubstring(output, "sin");
-            testCase.verifySubstring(output, "Sine");
-        end
-
-        function display_localLLMTool_showsWorkspaceField(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@sin, Description="Sine");
-            output = formattedDisplayText(tool);
-            testCase.verifySubstring(output, "Workspace");
-        end
-
-        function display_scalarMCPTool_showsNameAndDescription(testCase)
-            tool = aisdk.llms.tool.MCPTool();
-            tool.Name = "mcpTool";
-            tool.Description = "An MCP tool";
-            output = formattedDisplayText(tool);
-            testCase.verifySubstring(output, "mcpTool");
-            testCase.verifySubstring(output, "An MCP tool");
+        function display_heterogeneousArray_showsCommonPropertiesOnly(testCase)
+            tool1 = aisdk.llms.tool.LocalLLMTool(@sin, Description="Sine");
+            tool2 = aisdk.llms.tool.MCPTool();
+            tool2.Name = "mcpTool";
+            tools = [tool1, tool2];
+            output = formattedDisplayText(tools);
+            testCase.verifySubstring(output, "Name");
+            testCase.verifySubstring(output, "Description");
+            testCase.verifySubstring(output, "RequiresApproval");
+            testCase.verifySubstring(output, "DisplayTitle");
+            testCase.verifySubstring(output, "Annotations");
+            cs = @matlab.unittest.constraints.ContainsSubstring;
+            testCase.verifyThat(output, ~cs("InputArguments"));
+            testCase.verifyThat(output, ~cs("OutputArguments"));
+            testCase.verifyThat(output, ~cs("Workspace"));
+            testCase.verifyThat(output, ~cs("InputSchema"));
+            testCase.verifyThat(output, ~cs("OutputSchema"));
         end
     end
 
