@@ -320,6 +320,14 @@ classdef tOpenAIClient < hconstructorCommon
             testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
         end
 
+        function generate_httpsProxyIsHonored(testCase)
+            import matlab.unittest.fixtures.EnvironmentVariableFixture
+            testCase.applyFixture(EnvironmentVariableFixture("HTTPS_PROXY", "http://nosuchhost.example.com:1234"));
+            client = aisdk.llms.client.OpenAIClient("gpt-4o", APIKey="fake-key");
+            testCase.verifyError(@() generate(client, "Hello"), ...
+                "MATLAB:webservices:UnknownHost");
+        end
+
     end
 
 end

@@ -31,6 +31,7 @@ request = matlab.net.http.RequestMessage('post',headers,parameters);
 httpOpts = matlab.net.http.HTTPOptions;
 httpOpts.ConnectTimeout = timeout;
 httpOpts.ResponseTimeout = timeout;
+httpOpts.ProxyURI = getenv("HTTPS_PROXY");
 
 % Send the request and store the response
 if isempty(streamFcn)
