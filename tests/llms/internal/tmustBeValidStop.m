@@ -11,7 +11,7 @@ classdef tmustBeValidStop < matlab.unittest.TestCase
             'fourSequences', {["a","b","c","d"]})
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function acceptsValidInput(testCase, validInput)
             testCase.verifyWarningFree( ...
                 @() aisdk.llms.internal.mustBeValidStop(validInput));

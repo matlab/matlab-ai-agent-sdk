@@ -11,7 +11,7 @@ classdef tmustBeMessagesInput < matlab.unittest.TestCase
             'charColumnVector', {['a';'b']})
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function acceptsScalarString(testCase)
             testCase.verifyWarningFree( ...
                 @() aisdk.llms.internal.mustBeMessagesInput("hello"));

@@ -11,7 +11,7 @@ classdef tmustBeValidProbability < matlab.unittest.TestCase
             'one', {1})
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function acceptsValidInput(testCase, validInput)
             testCase.verifyWarningFree( ...
                 @() aisdk.llms.internal.mustBeValidProbability(validInput));

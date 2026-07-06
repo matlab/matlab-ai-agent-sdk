@@ -3,7 +3,7 @@ classdef tCallOllamaChatAPI < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function buildParams_modelAndMessages_set(testCase)
             params = captureParams();
             testCase.verifyEqual(params.model, "qwen3:0.6b");

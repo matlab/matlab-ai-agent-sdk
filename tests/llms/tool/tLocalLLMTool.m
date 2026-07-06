@@ -11,7 +11,7 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
         end
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function constructFromFunctionHandle(testCase)
             tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
             testCase.verifyEqual(tool.Name, "addTwoNumbers");

@@ -3,7 +3,7 @@ classdef tLLMTool < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function selectTool_existingName_returnsTool(testCase)
             tool1 = aisdk.llms.tool.LocalLLMTool(@sin);
             tool2 = aisdk.llms.tool.LocalLLMTool(@cos);

@@ -3,7 +3,7 @@ classdef tLLMTextMessage < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function constructorSetsRoleUser(testCase)
             msg = aisdk.LLMTextMessage("hello", Role="user");
             testCase.verifyEqual(msg.Role, "user");

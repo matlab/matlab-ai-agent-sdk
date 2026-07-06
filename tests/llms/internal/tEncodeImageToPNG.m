@@ -3,7 +3,7 @@ classdef tEncodeImageToPNG < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function returnsUint8Bytes(testCase)
             img = uint8(randi(255, 8, 8, 3));
             bytes = aisdk.llms.internal.encodeImageToPNG(img);

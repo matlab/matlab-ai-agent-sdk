@@ -3,7 +3,7 @@ classdef tVerbatimJSON < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function encodesRawString(testCase)
             rawSchema = '{"type":"object","properties":{"x":{"type":"number"}}}';
             obj = aisdk.llms.client.internal.VerbatimJSON(rawSchema);

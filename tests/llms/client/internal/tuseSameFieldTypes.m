@@ -3,7 +3,7 @@ classdef tuseSameFieldTypes < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function convertsToString(testCase)
             data = struct("name", 'Alice');
             proto = struct("name", "");

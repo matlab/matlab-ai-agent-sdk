@@ -7,7 +7,7 @@ classdef tmustBeVerbosity < matlab.unittest.TestCase
         validValue = {"auto", "low", "medium", "high"}
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function acceptsValidValue(testCase, validValue)
             testCase.verifyWarningFree( ...
                 @() aisdk.llms.internal.mustBeVerbosity(validValue));

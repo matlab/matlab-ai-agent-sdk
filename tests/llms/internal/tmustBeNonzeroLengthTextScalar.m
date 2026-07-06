@@ -13,7 +13,7 @@ classdef tmustBeNonzeroLengthTextScalar < matlab.unittest.TestCase
             'cellstrArray', {{'a','b'}})
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function acceptsValidInput(testCase, validInput)
             testCase.verifyWarningFree( ...
                 @() aisdk.llms.internal.mustBeNonzeroLengthTextScalar(validInput));

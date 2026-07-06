@@ -4,3 +4,4 @@ CLAUDE.md
 *.asv
 .claude/
 .env
+artifacts/

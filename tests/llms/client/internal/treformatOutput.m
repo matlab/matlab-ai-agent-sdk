@@ -3,7 +3,7 @@ classdef treformatOutput < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function textFormatPassesThrough(testCase)
             result = aisdk.llms.client.internal.reformatOutput("hello", "text");
             testCase.verifyEqual(result, "hello");

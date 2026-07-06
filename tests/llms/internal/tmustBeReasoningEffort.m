@@ -7,7 +7,7 @@ classdef tmustBeReasoningEffort < matlab.unittest.TestCase
         validValue = {"auto", "none", "minimal", "low", "medium", "high", "xhigh"}
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function acceptsValidValue(testCase, validValue)
             testCase.verifyWarningFree( ...
                 @() aisdk.llms.internal.mustBeReasoningEffort(validValue));

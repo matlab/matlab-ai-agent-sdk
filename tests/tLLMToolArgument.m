@@ -3,7 +3,7 @@ classdef tLLMToolArgument < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function constructorSetsName(testCase)
             arg = aisdk.LLMToolArgument("x");
             testCase.verifyEqual(arg.Name, "x");

@@ -5,14 +5,15 @@ classdef tAIAgent < matlab.unittest.TestCase
 
     methods (TestClassSetup)
         function addResourcesToPath(testCase)
+            testsRoot = fileparts(mfilename("fullpath"));
             testCase.applyFixture(matlab.unittest.fixtures.PathFixture( ...
-                fullfile(fileparts(mfilename("fullpath")), "helpers")));
+                fullfile(testsRoot, "helpers")));
             testCase.applyFixture(matlab.unittest.fixtures.PathFixture( ...
-                fullfile(fileparts(mfilename("fullpath")), "resources", "functions")));
+                fullfile(testsRoot, "resources", "functions")));
         end
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function tokenCountsZeroOnConstruction(testCase)
             client = MockClient();
             agent = aisdk.AIAgent(client, "You are helpful.", DisplayMode="off");

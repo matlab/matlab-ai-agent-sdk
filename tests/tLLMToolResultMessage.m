@@ -3,7 +3,7 @@ classdef tLLMToolResultMessage < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function constructorSetsRole(testCase)
             msg = aisdk.LLMToolResultMessage("result", ToolCallID="tc1", Name="myTool");
             testCase.verifyEqual(msg.Role, "tool");

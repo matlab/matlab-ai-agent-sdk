@@ -21,7 +21,7 @@ classdef tOllamaClient < hconstructorCommon
         end
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function customBaseURL(testCase)
             client = testCase.createClient("qwen3:0.6b", BaseURL="http://myserver:11434");
             testCase.verifyEqual(client.BaseURL, "http://myserver:11434/api/chat");
@@ -31,9 +31,6 @@ classdef tOllamaClient < hconstructorCommon
             client = testCase.createClient("qwen3:0.6b");
             testCase.verifyEqual(client.BaseURL, "http://127.0.0.1:11434/api/chat");
         end
-    end
-
-    methods (Test)
         function generate_topLevelID_preferredOverIndex(testCase)
             toolCall = struct("id", "call_abc123", "function", struct( ...
                 "name", "myTool", ...
@@ -92,9 +89,7 @@ classdef tOllamaClient < hconstructorCommon
             [~, msgs] = generate(client, "Call the tool.");
             testCase.verifyEqual(msgs(1).ToolCallID, "");
         end
-    end
 
-    methods (Test)
         %% generate — text response
         function generate_textResponse_returnsTextAndMessage(testCase)
             client = makeOllamaClientWithFakeHTTP(testCase, makeOllamaTextResponse("Hello"));
@@ -274,7 +269,7 @@ classdef tOllamaClient < hconstructorCommon
         end
     end
 
-    methods (Test, ParameterCombination="sequential")
+    methods (Test, TestTags = {'Unit'}, ParameterCombination="sequential")
         function hasCorrectOllamaDefault(testCase, OllamaDefault)
             client = testCase.createClient("qwen3:0.6b");
             testCase.verifyEqual(client.(OllamaDefault.prop), OllamaDefault.expected);

@@ -3,7 +3,7 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function constructorFromArray(testCase)
             img = ones(10, 10, 3, "uint8");
             msg = aisdk.LLMImageMessage(img);

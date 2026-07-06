@@ -9,7 +9,7 @@ classdef tLLMClient < matlab.unittest.TestCase
             "ollama", struct("api", "ollama", "model", "llama2", "class", "aisdk.llms.client.OllamaClient"));
     end
 
-    methods (Test, ParameterCombination="sequential")
+    methods (Test, TestTags = {'Unit'}, ParameterCombination="sequential")
         function createsCorrectClientType(testCase, ApiConfig)
             client = aisdk.LLMClient(ApiConfig.api, ApiConfig.model);
             testCase.verifyClass(client, ApiConfig.class);
@@ -17,7 +17,7 @@ classdef tLLMClient < matlab.unittest.TestCase
         end
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function invalidApiErrors(testCase)
             testCase.verifyError(...
                 @() aisdk.LLMClient("someAPIThatDoesNotExist", "gpt-4o"), ...

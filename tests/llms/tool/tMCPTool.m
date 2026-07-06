@@ -24,7 +24,7 @@ classdef tMCPTool < matlab.unittest.TestCase
                 "expected", "myTool"));
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function constructor_singleTool_createsOneMCPTool(testCase)
             mockClient = makeMockClient({ ...
                 struct("name", "myTool", "description", "Does stuff", ...

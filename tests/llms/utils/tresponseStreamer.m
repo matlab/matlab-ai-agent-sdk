@@ -3,7 +3,7 @@ classdef tresponseStreamer < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function textDelta_appendsToResponseText(testCase)
             streamer = aisdk.llms.utils.ResponseStreamer(@(~) []);
             chunk = iMakeChunk('{"choices":[{"delta":{"content":"Hello"}}]}');

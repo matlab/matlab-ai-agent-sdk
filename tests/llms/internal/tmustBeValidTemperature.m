@@ -11,7 +11,7 @@ classdef tmustBeValidTemperature < matlab.unittest.TestCase
             'upperBound', {2})
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function acceptsValidInput(testCase, validInput)
             testCase.verifyWarningFree( ...
                 @() aisdk.llms.internal.mustBeValidTemperature(validInput));

@@ -3,7 +3,7 @@ classdef tjsonSchemaFromPrototype < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function scalarStructProducesObjectSchema(testCase)
             proto = struct("name", "", "age", int32(0));
             schema = aisdk.llms.client.internal.jsonSchemaFromPrototype(proto);

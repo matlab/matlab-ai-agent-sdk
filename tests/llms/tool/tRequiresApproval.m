@@ -3,7 +3,7 @@ classdef tRequiresApproval < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function enumValues_neverAndAlways_areDistinct(testCase)
             testCase.verifyNotEqual(aisdk.llms.tool.RequiresApproval.never, aisdk.llms.tool.RequiresApproval.always);
         end

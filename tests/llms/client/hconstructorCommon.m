@@ -26,7 +26,7 @@ classdef (Abstract) hconstructorCommon < matlab.mock.TestCase
         client = createClient(testCase, modelName, nvp)
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function setsModelName(testCase)
             client = testCase.createClient("test-model");
             testCase.verifyEqual(client.ModelName, "test-model");
@@ -43,7 +43,7 @@ classdef (Abstract) hconstructorCommon < matlab.mock.TestCase
         end
     end
 
-    methods (Test, ParameterCombination="sequential")
+    methods (Test, TestTags = {'Unit'}, ParameterCombination="sequential")
         function hasCorrectDefault(testCase, DefaultProperty)
             client = testCase.createClient("test-model");
             testCase.verifyEqual(client.(DefaultProperty.prop), DefaultProperty.expected);

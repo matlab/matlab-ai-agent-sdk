@@ -11,7 +11,7 @@ classdef tmustBeValidTailFreeSamplingZ < matlab.unittest.TestCase
             'positiveValue', {100})
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function acceptsValidInput(testCase, validInput)
             testCase.verifyWarningFree( ...
                 @() aisdk.llms.internal.mustBeValidTailFreeSamplingZ(validInput));

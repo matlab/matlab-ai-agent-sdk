@@ -12,7 +12,7 @@ classdef tmustBeTextOrEmpty < matlab.unittest.TestCase
             'emptyString', {""})
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function acceptsValidInput(testCase, validInput)
             testCase.verifyWarningFree( ...
                 @() aisdk.llms.internal.mustBeTextOrEmpty(validInput));

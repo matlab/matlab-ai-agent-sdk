@@ -3,7 +3,7 @@ classdef tLLMMessage < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function canCreateHeterogeneousArray(testCase)
             msg1 = aisdk.LLMTextMessage("hello");
             msg2 = aisdk.LLMToolCallMessage("myTool", struct(), ToolCallID="tc1");

@@ -3,7 +3,7 @@ classdef tmustBeResponseFormat < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function acceptsText(testCase)
             testCase.verifyWarningFree( ...
                 @() aisdk.llms.internal.mustBeResponseFormat("text"));

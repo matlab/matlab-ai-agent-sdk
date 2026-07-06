@@ -3,7 +3,7 @@ classdef tDecodeResponseBody < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function structInput_passesThrough(testCase)
             input = struct("foo", "bar");
             result = aisdk.llms.client.internal.decodeResponseBody(input);

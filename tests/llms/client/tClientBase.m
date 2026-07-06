@@ -3,7 +3,7 @@ classdef tClientBase < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function encodeToolSingleRequired(testCase)
             tool = aisdk.LLMTool(@(x) x, "myFcn", Description="A function", ...
                 InputArguments=aisdk.LLMToolArgument("x", DataType="number", Description="Value"));

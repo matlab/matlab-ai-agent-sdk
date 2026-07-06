@@ -11,7 +11,7 @@ classdef tmustBeValidTopK < matlab.unittest.TestCase
             'positiveFraction', {0.5})
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function acceptsValidInput(testCase, validInput)
             testCase.verifyWarningFree( ...
                 @() aisdk.llms.internal.mustBeValidTopK(validInput));

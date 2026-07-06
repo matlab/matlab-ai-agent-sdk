@@ -44,7 +44,7 @@ classdef tOpenAIClient < hconstructorCommon
         end
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function customBaseURL(testCase)
             client = testCase.createClient("gpt-4o", BaseURL="https://custom.endpoint");
             testCase.verifyEqual(client.BaseURL, "https://custom.endpoint/chat/completions");
@@ -56,7 +56,7 @@ classdef tOpenAIClient < hconstructorCommon
         end
     end
 
-    methods (Test, ParameterCombination="sequential")
+    methods (Test, TestTags = {'Unit'}, ParameterCombination="sequential")
         function hasCorrectOpenAIDefault(testCase, OpenAIDefault)
             client = testCase.createClient("gpt-4o");
             testCase.verifyEqual(client.(OpenAIDefault.prop), OpenAIDefault.expected);
@@ -90,7 +90,7 @@ classdef tOpenAIClient < hconstructorCommon
         end
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         %% generate — text response
         function generate_textResponse_returnsTextAndMessage(testCase)
             client = makeClientWithFakeHTTP(testCase, makeTextResponse("Hello world"));

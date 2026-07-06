@@ -3,7 +3,7 @@ classdef tCallOpenAIChatAPI < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         %% Basic parameter structure
         function buildParams_includesModelAndMessages(testCase)
             params = captureParams();

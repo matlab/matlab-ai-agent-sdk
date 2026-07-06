@@ -25,7 +25,7 @@ classdef tSystem < matlab.mock.TestCase
         end
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'System'})
         %% Agents can call LLMs and manage conversation history
 
         function run_withSingleQuery_returnsResponseAndUpdatesHistory(testCase)

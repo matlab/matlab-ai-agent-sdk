@@ -15,7 +15,7 @@ classdef tmustBeValidToolCallID < matlab.unittest.TestCase
             'stringArray', {["a","b"]})
     end
 
-    methods (Test)
+    methods (Test, TestTags = {'Unit'})
         function acceptsValidInput(testCase, validInput)
             testCase.verifyWarningFree( ...
                 @() aisdk.llms.internal.mustBeValidToolCallID(validInput));
