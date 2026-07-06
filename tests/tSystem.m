@@ -184,7 +184,7 @@ classdef tSystem < matlab.mock.TestCase
                 InputArguments=struct(a=1, b=2), ...
                 RequiresApproval="always");
             agent = aisdk.AIAgent(testCase.Client, "You are a calculator.", tool, ...
-                ApprovalFcn=@approveWithReason);
+                ApprovalFcn=@approveWithReason, DisplayMode="off");
 
             response = run(agent, "Add 3 and 4.", ToolChoice="required");
 

@@ -397,7 +397,8 @@ classdef tAIAgent < matlab.unittest.TestCase
                 result.Reason = reasons(callIdx);
             end
 
-            agent = aisdk.AIAgent(client, "You are helpful.", tools, ApprovalFcn=@approvalFcn);
+            agent = aisdk.AIAgent(client, "You are helpful.", tools, ApprovalFcn=@approvalFcn, ...
+                DisplayMode="off");
             agent.run("Do three things.");
 
             msgs = agent.Messages;
@@ -422,7 +423,8 @@ classdef tAIAgent < matlab.unittest.TestCase
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
 
-            agent = aisdk.AIAgent(client, "You are helpful.", tool, DisplayMode="off");
+            agent = aisdk.AIAgent(client, "You are helpful.", tool, ...
+                DisplayMode="off");
             response = testCase.verifyWarning( ...
                 @() agent.run("Compute", MaxIterations=2), ...
                 "aiAgent:MaxIterationsReached");
@@ -540,7 +542,7 @@ classdef tAIAgent < matlab.unittest.TestCase
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
 
-            agent = aisdk.AIAgent(client, "You are helpful.", DisplayMode="detailed");
+            agent = aisdk.AIAgent(client, "You are helpful.", DisplayMode="detailed"); %#ok<NASGU>
             output = evalc('agent.run("Hi");');
 
             testCase.verifyNotEmpty(output);
@@ -555,7 +557,7 @@ classdef tAIAgent < matlab.unittest.TestCase
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
 
-            agent = aisdk.AIAgent(client, "You are helpful.", DisplayMode="off");
+            agent = aisdk.AIAgent(client, "You are helpful.", DisplayMode="off"); %#ok<NASGU>
             output = evalc('agent.run("Hi");');
 
             testCase.verifyEmpty(output);
@@ -580,7 +582,7 @@ classdef tAIAgent < matlab.unittest.TestCase
                 {"5.", aisdk.LLMTextMessage("5.", Role="assistant"), tokens}
             };
 
-            agent = aisdk.AIAgent(client, "You are helpful.", tool, DisplayMode="detailed");
+            agent = aisdk.AIAgent(client, "You are helpful.", tool, DisplayMode="detailed"); %#ok<NASGU>
             output = evalc('agent.run("Add 2+3.");');
 
             testCase.verifySubstring(output, "addTwoNumbers");
@@ -594,7 +596,7 @@ classdef tAIAgent < matlab.unittest.TestCase
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
 
-            agent = aisdk.AIAgent(client, "You are helpful.", DisplayMode="off");
+            agent = aisdk.AIAgent(client, "You are helpful.", DisplayMode="off"); %#ok<NASGU>
             output = evalc('agent.run("Hi", DisplayMode="detailed");');
 
             testCase.verifySubstring(output, "Hello!");
@@ -608,7 +610,7 @@ classdef tAIAgent < matlab.unittest.TestCase
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
             };
 
-            agent = aisdk.AIAgent(client, "You are helpful.", DisplayMode="detailed");
+            agent = aisdk.AIAgent(client, "You are helpful.", DisplayMode="detailed"); %#ok<NASGU>
             output = evalc('agent.run("Hi", DisplayMode="off");');
 
             testCase.verifyEmpty(output);
