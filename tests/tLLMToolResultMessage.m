@@ -36,6 +36,17 @@ classdef tLLMToolResultMessage < matlab.unittest.TestCase
             msg.Result = "updated";
             testCase.verifyEqual(msg.Result, "updated");
         end
+
+        function settingName_toNumeric_throwsError(testCase)
+            msg = aisdk.LLMToolResultMessage("ok", ToolCallID="id", Name="myTool");
+            testCase.verifyError( ...
+                @() iSetName(msg, 42), ...
+                "MATLAB:validators:mustBeTextScalar");
+        end
     end
 
+end
+
+function iSetName(msg, val)
+    msg.Name = val; %#ok<NASGU>
 end

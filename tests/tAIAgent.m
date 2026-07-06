@@ -362,7 +362,7 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyNumElements(reasonMsgs, 1);
 
             toolResultIdx = find([msgs.Role] == "tool", 1, "last");
-            reasonIdx = find(arrayfun(@(m) m.Role == "user" && contains(m.Content, reason), msgs));
+            reasonIdx = find(arrayfun(@(m) m.Role == "user" && contains(m.Text, reason), msgs));
             testCase.verifyGreaterThan(reasonIdx, toolResultIdx, ...
                 "Approval reason must appear after tool results");
         end
@@ -402,9 +402,9 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             msgs = agent.Messages;
 
-            testCase.verifySubstring(msgs(end-2).Content, "addTwoNumbers");
-            testCase.verifySubstring(msgs(end-1).Content, "decrementNumber");
-            testCase.verifyEqual(msgs(end).Content, "Done.");
+            testCase.verifySubstring(msgs(end-2).Text, "addTwoNumbers");
+            testCase.verifySubstring(msgs(end-1).Text, "decrementNumber");
+            testCase.verifyEqual(msgs(end).Text, "Done.");
         end
 
         function run_maxIterationsWithNoText_returnsEmptyString(testCase)

@@ -61,6 +61,17 @@ classdef tLLMToolCallMessage < matlab.unittest.TestCase
             output = formattedDisplayText(msg);
             testCase.verifySubstring(output, """x"":1");
         end
+
+        function settingName_toNumeric_throwsError(testCase)
+            msg = aisdk.LLMToolCallMessage("myTool", struct(), ToolCallID="tc1");
+            testCase.verifyError( ...
+                @() iSetName(msg, 42), ...
+                "MATLAB:validators:mustBeNonzeroLengthText");
+        end
     end
 
+end
+
+function iSetName(msg, val)
+    msg.Name = val; %#ok<NASGU>
 end

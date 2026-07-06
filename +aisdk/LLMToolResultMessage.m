@@ -27,7 +27,7 @@ classdef LLMToolResultMessage < aisdk.llms.message.LLMMessage
         Result(1,1) string
 
         %NAME   Name of the tool that produced the result.
-        Name(1,1) string = ""
+        Name = ""
 
         %TOOLCALLID   Identifier matching the original tool call.
         ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = ""
@@ -45,6 +45,11 @@ classdef LLMToolResultMessage < aisdk.llms.message.LLMMessage
             this.Result = result;
             this.Name = nvp.Name;
             this.ToolCallID = nvp.ToolCallID;
+        end
+
+        function this = set.Name(this, val)
+            mustBeTextScalar(val);
+            this.Name = string(val);
         end
     end
 

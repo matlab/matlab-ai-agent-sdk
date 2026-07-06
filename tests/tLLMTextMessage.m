@@ -67,6 +67,24 @@ classdef tLLMTextMessage < matlab.unittest.TestCase
                 @() aisdk.LLMTextMessage("hello", Role="developer"), ...
                 "MATLAB:validators:mustBeMember");
         end
+
+        function settingText_toNumeric_throwsError(testCase)
+            msg = aisdk.LLMTextMessage("hello");
+            testCase.verifyError( ...
+                @() iSetText(msg, 42), ...
+                "llms:message:InvalidTextContent");
+        end
+
+        function settingText_toStringArray_throwsError(testCase)
+            msg = aisdk.LLMTextMessage("hello");
+            testCase.verifyError( ...
+                @() iSetText(msg, ["a","b"]), ...
+                "llms:message:InvalidTextContent");
+        end
     end
 
+end
+
+function iSetText(msg, val)
+    msg.Text = val; %#ok<NASGU>
 end

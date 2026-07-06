@@ -17,7 +17,7 @@ classdef LLMTextMessage < aisdk.llms.message.LLMMessage
 
     properties
         %TEXT   The text of the message.
-        Text(1,1) string
+        Text
     end
 
     methods
@@ -29,6 +29,11 @@ classdef LLMTextMessage < aisdk.llms.message.LLMMessage
 
             this@aisdk.llms.message.LLMMessage(nvp.Role, "text");
             this.Text = string(text);
+        end
+
+        function this = set.Text(this, val)
+            mustBeTextContent(val);
+            this.Text = string(val);
         end
     end
 

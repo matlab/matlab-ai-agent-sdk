@@ -24,7 +24,7 @@ classdef LLMToolCallMessage < aisdk.llms.message.LLMMessage
 
     properties
         %NAME   Name of the tool the model wants to call.
-        Name(1,1) string
+        Name
 
         %TOOLCALLID   Unique identifier for this tool call.
         ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = ""
@@ -61,6 +61,11 @@ classdef LLMToolCallMessage < aisdk.llms.message.LLMMessage
             this.Name = name;
             this.ToolCallID = nvp.ToolCallID;
             this.Arguments = arguments;
+        end
+
+        function this = set.Name(this, val)
+            aisdk.llms.internal.mustBeNonzeroLengthTextScalar(val);
+            this.Name = string(val);
         end
     end
 
