@@ -45,11 +45,11 @@ function x = getRandomInteger()
     x = randi(10,1);
 end
 
-function [obs, workspace] = subAgent(workspace, systemPrompt, query)
+function [obs, workspace] = subAgent(workspace, systemPrompt, prompt)
 arguments
     workspace(1,1) struct
     systemPrompt
-    query
+    prompt
 end
     if ~isfield(workspace, "Tools")
         error("Context must contain a Tools field");
@@ -58,7 +58,7 @@ end
     subAgent = aisdk.AIAgent(llmOpts, systemPrompt, ...
         workspace.Tools, ...
         Workspace=workspace);
-    obs = subAgent.run(query);
+    obs = subAgent.run(prompt);
     workspace = subAgent.Workspace;
 end
 %%
@@ -69,7 +69,7 @@ topLevelTools = aisdk.LLMTool(@toolProvider, ...
     Workspace="agent");
 topLevelTools(end+1) = aisdk.LLMTool(@subAgent, ...
     Description="Tool for delegating jobs to a sub-process with a set of tools", ...
-    InputArguments=struct("SystemPrompt", "abc", "Query", "abc"), ...
+    InputArguments=struct("SystemPrompt", "abc", "Prompt", "abc"), ...
     Workspace="agent");
 topLevelPrompt = "You are an assistant who has two sets of tools available for either string manipulations or arithmetic operations." + ...
         "You can acquire these tools using the toolProvider tool. " + ...
@@ -81,12 +81,12 @@ topLevelPrompt = "You are an assistant who has two sets of tools available for e
 topLevelClient = aisdk.LLMClient("openai", "gpt-4.1-mini");
 topLevelAgent = aisdk.AIAgent(topLevelClient, topLevelPrompt, ...
     topLevelTools);
-query = "Create two random integers between 1 and 10, tell me what they are and compute their sum?";
-output = topLevelAgent.run(query) %[output:542cc9f9] %[output:654a7ec5]
+prompt = "Create two random integers between 1 and 10, tell me what they are and compute their sum?";
+output = topLevelAgent.run(prompt) %[output:542cc9f9] %[output:654a7ec5]
 %%
-%[text] Run a different query to trigger the string manipulation tool.
-query2 = "Concatenate the strings 'acdc' and 'abba'";
-output2 = topLevelAgent.run(query2) %[output:9c544e7d] %[output:99c8073d]
+%[text] Run a different prompt to trigger the string manipulation tool.
+prompt2 = "Concatenate the strings 'acdc' and 'abba'";
+output2 = topLevelAgent.run(prompt2) %[output:9c544e7d] %[output:99c8073d]
 %[text] *Copyright 2026 The MathWorks, Inc.*
 
 %[appendix]{"version":"1.0"}

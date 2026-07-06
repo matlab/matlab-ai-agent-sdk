@@ -54,10 +54,10 @@ agent = aisdk.AIAgent(client, systemPrompt, [quadraticTool, smallestTool]);
 %%
 %[text] ## Run Agent
 %[text] Ask the agent to find the smallest root. The agent will automatically reason through the steps.
-userQuery = "What is the smallest root of x^2+2x-3=0?";
-disp("User: " + userQuery) %[output:734686e1]
+userPrompt = "What is the smallest root of x^2+2x-3=0?";
+disp("User: " + userPrompt) %[output:734686e1]
 
-response = run(agent, userQuery, MaxIterations=10);
+response = run(agent, userPrompt, MaxIterations=10);
 disp("Agent: " + response) %[output:7087b699]
 %[text] *Copyright 2026 The MathWorks, Inc.*
 

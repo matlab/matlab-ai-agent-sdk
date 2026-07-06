@@ -19,15 +19,15 @@ session = aisdk.AIAgent(client, sysPrompt);
 %[text] Start the chat and keep it going until it sees the word in `stopWord` (or until you hit **Ctrl+C**).
 stopWord = "end";
 while true %[output:group:7ff8d64f]
-    query = input("User: ", "s");
-    query = string(query);
-    disp("User: " + query) %[output:41401c71] %[output:9e5e5f67] %[output:8d24b85b]
+    prompt = input("User: ", "s");
+    prompt = string(prompt);
+    disp("User: " + prompt) %[output:41401c71] %[output:9e5e5f67] %[output:8d24b85b]
 %[text] If you input the stop word, display a farewell message and exit the loop.
-    if query == stopWord
+    if prompt == stopWord
         disp("AI: Closing the chat. Have a great day!") %[output:5869b4a4]
         break;
     end
-    text = run(session, query);    
+    text = run(session, prompt);    
     disp("AI: " + text) %[output:32ab2fe7] %[output:76bc4f07]
 end %[output:group:7ff8d64f]
 %[text] *Copyright 2026 The MathWorks, Inc.*

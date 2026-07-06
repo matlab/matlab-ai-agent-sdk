@@ -212,15 +212,15 @@ classdef tSystem < matlab.mock.TestCase
 
         function run_withSubagentTool_delegatesAndReturnsResult(testCase)
 
-            function [obs, workspace] = runMathSubagent(workspace, query)
+            function [obs, workspace] = runMathSubagent(workspace, prompt)
                 mathTool = aisdk.LLMTool(@addTwoNumbers);
                 sub = aisdk.AIAgent(testCase.Client, "You are a math expert. Use tools.", mathTool);
-                obs = run(sub, query, ToolChoice="required", DisplayMode = "off");
+                obs = run(sub, prompt, ToolChoice="required", DisplayMode = "off");
             end
 
             delegateTool = aisdk.LLMTool(@runMathSubagent, "runMathSubagent", ...
                 Description="Delegate a math question to a math expert subagent", ...
-                InputArguments=aisdk.LLMToolArgument("query", DataType="string", ...
+                InputArguments=aisdk.LLMToolArgument("prompt", DataType="string", ...
                     Description="The math question"), ...
                 Workspace="agent");
             

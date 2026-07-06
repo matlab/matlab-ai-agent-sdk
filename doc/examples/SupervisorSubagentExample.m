@@ -35,7 +35,7 @@ end
 function [observation, workspace] = runMathAgent(workspace, NVP)
     arguments
         workspace 
-        NVP.Query
+        NVP.Prompt
     end
     % "math"
     mathTools = aisdk.LLMTool(@add, Description="add two numbers together", InputArguments=struct("a", 1, "b", 2));
@@ -48,14 +48,14 @@ function [observation, workspace] = runMathAgent(workspace, NVP)
     subAgent = aisdk.AIAgent(llmOpts, "You are a math expert. Always use one tool at a time.", ...
        mathTools, ...
        Workspace=workspace);
-    observation = subAgent.run(NVP.Query);
+    observation = subAgent.run(NVP.Prompt);
     workspace = subAgent.Workspace;
 end
 
 function [observation, workspace] = runSearchAgent(workspace, NVP)
     arguments
         workspace 
-        NVP.Query
+        NVP.Prompt
     end
     searchTools = aisdk.LLMTool(@web_search, ...
         Description="Search the web for information.", ...
@@ -69,7 +69,7 @@ function [observation, workspace] = runSearchAgent(workspace, NVP)
     subAgent = aisdk.AIAgent(llmOpts, "You are a world class researcher with access to web search. Do not do any math. Just answer each query, briefly and to the point. ", ...
        searchTools, ...
        Workspace=workspace);
-    observation = subAgent.run(NVP.Query);
+    observation = subAgent.run(NVP.Prompt);
     workspace = subAgent.Workspace;
 end
 
@@ -79,12 +79,12 @@ systemPrompt =  "You are a team supervisor managing a research expert and a math
       "Think step by step. DO NOT DO MATHS YOURSELF";
 topLevelTools = aisdk.LLMTool(@runMathAgent, ...
     Description="Use this tool to do basic arithmetic", ...
-    InputArguments=aisdk.LLMToolArgument("Query", DataType="string", NameValue=true, Description="Arithmetic operation in natural language"), ...
+    InputArguments=aisdk.LLMToolArgument("Prompt", DataType="string", NameValue=true, Description="Arithmetic operation in natural language"), ...
     RequiresApproval="never", ...
     Workspace="agent");
 topLevelTools(end+1) = aisdk.LLMTool(@runSearchAgent, ...
     Description="Use this tool to perform web searches", ...
-    InputArguments=aisdk.LLMToolArgument("Query", DataType="string", NameValue=true), ...
+    InputArguments=aisdk.LLMToolArgument("Prompt", DataType="string", NameValue=true), ...
     RequiresApproval="never", ...
     Workspace="agent");
 
@@ -97,8 +97,8 @@ topLevelAgent = aisdk.AIAgent(client, systemPrompt, ...
     topLevelTools);
 %%
 %[text] Run a task. You should see several queries to the "research" agent to get the FAANG headcounts, then some calls to the maths agent for the arithmetic.
-query = "What's the total headcount of FAANG companies using 2024 data? Use whatever information you have available.";
-obs = topLevelAgent.run(query); %[output:25f21bc6]
+prompt = "What's the total headcount of FAANG companies using 2024 data? Use whatever information you have available.";
+obs = topLevelAgent.run(prompt); %[output:25f21bc6]
 %%
 disp(obs) %[output:0373281e]
 %[text] *Copyright 2026 The MathWorks, Inc.*

@@ -113,15 +113,15 @@ classdef AIAgent < handle
             end
         end
 
-        function response = run(this, query, nvp)
+        function response = run(this, prompt, nvp)
             %run   Run agentic loop with tool calling until completion.
             %
-            %   RESPONSE = run(AGENT, QUERY) runs the agentic loop for the
-            %   specified QUERY string and returns the final text response.
+            %   RESPONSE = run(AGENT, PROMPT) runs the agentic loop for the
+            %   specified PROMPT string and returns the final text response.
 
             arguments
                 this (1,1) aisdk.AIAgent
-                query {aisdk.llms.internal.mustBeMessagesInput}
+                prompt {aisdk.llms.internal.mustBeMessagesInput}
                 nvp.Tools(1, :) aisdk.llms.tool.LLMTool = this.Tools
                 nvp.ToolChoice (1,:) {mustBeTextScalar} = "auto"
                 nvp.ResponseFormat      {aisdk.llms.internal.mustBeResponseFormat} = this.ResponseFormat
@@ -131,7 +131,7 @@ classdef AIAgent < handle
 
             displayMode = nvp.DisplayMode;
 
-            newMessages = aisdk.llms.client.ClientBase.normalizeMessages(query);
+            newMessages = aisdk.llms.client.ClientBase.normalizeMessages(prompt);
             this.Messages = [this.Messages, newMessages];
 
             allTexts = string.empty(1,0);

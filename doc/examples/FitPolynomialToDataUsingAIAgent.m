@@ -186,8 +186,8 @@ agent = aisdk.AIAgent(client, systemPrompt, ...
     Workspace=workspace, ...
     DisplayMode="detailed"); %[control:dropdown:758e]{"position":[17,27]}
 %[text] Call agent:
-userQuery = "Fit a polynomial to the data. Try up to ninth degree, then choose the best one using the tools provided.";
-answer = agent.run(userQuery) %[output:2d367020] %[output:387717d3]
+userPrompt = "Fit a polynomial to the data. Try up to ninth degree, then choose the best one using the tools provided.";
+answer = agent.run(userPrompt) %[output:2d367020] %[output:387717d3]
 agent.Workspace.polynomials %[output:51df7eeb]
 %%
 %[text] The rest of this example demonstrates how the agent outputs and workspace can be used for further analysis, and implements some helper functions that were used by the tools fed into the agent.

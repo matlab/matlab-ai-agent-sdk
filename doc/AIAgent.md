@@ -43,17 +43,17 @@ The `client` argument is any object created by [`LLMClient`](../+aisdk/LLMClient
 ### run
 
 ```matlab
-response = run(agent, query)
-response = run(agent, query, Name=Value)
+response = run(agent, prompt)
+response = run(agent, prompt, Name=Value)
 ```
 
-Run the agentic loop: send `query` to the model, execute any tool calls the model requests, feed results back, and repeat until the model returns a text response or `MaxIterations` is reached.
+Run the agentic loop: send `prompt` to the model, execute any tool calls the model requests, feed results back, and repeat until the model returns a text response or `MaxIterations` is reached.
 
 **Inputs:**
 
 | Argument | Description |
 |----------|-------------|
-| `query` | A string containing the user's question or instruction. |
+| `prompt` | A string containing the user's question or instruction. |
 
 **Name-Value Arguments:**
 
