@@ -207,19 +207,19 @@ agentWithWorkspace.Workspace.matrix = A;
 
 | Function | Description |
 |----|----|
-| [aisdk.AIAgent](doc/AIAgent.md) | Build AI agent | 
-|[aisdk.LLMClient](doc/LLMClient.md) | Connect to third-party LLM API |
-| [aisdk.LLMTool](doc/LLMTool.md) | Tool for AI agent |
-| [aisdk.LLMToolArgument](doc/LLMToolArgument.md) | Argument for LLM tool |
-| [aisdk.LLMMessage](doc/LLMMessage.md) | Create LLM message |
-| [OpenAIClient](doc/llms/client/OpenAIClient.md) | Client for OpenAI API |
-| [OllamaClient](doc/llms/client/OllamaClient.md) | Client for Ollama API |
-| [LocalLLMTool](doc/llms/tool/LocalLLMTool.md) | Tool for AI agent from local function |
-| [MCPTool](doc/llms/tool/MCPTool.md) | Tool for AI agent from MCP server |
-| [LLMTextMessage](doc/llms/message/LLMTextMessage.md) | LLM message containing text |
-| [LLMImageMessage](doc/llms/message/LLMImageMessage.md) | LLM message containing image |
-| [LLMToolCallMessage](doc/llms/message/LLMToolCallMessage.md) | LLM message containing tool call |
-| [LLMToolResultMessage](doc/llms/message/LLMToolResultMessage.md) | LLM message containing tool result |
+| [aisdk.AIAgent](doc/functions/aisdk.AIAgent.md) | Build AI agent | 
+| [run](doc/functions/run.md) | Run AI agent | 
+| [aisdk.LLMClient](doc/functions/aisdk.LLMClient.md) | Connect to third-party LLM API | 
+| [OpenAIClient](doc/functions/OpenAIClient.md) | Client for OpenAI API | 
+| [OllamaClient](doc/functions/OllamaClient.md) | Client for Ollama API | 
+| [generate](doc/functions/generate.md) | Generate output from LLMs | 
+| [aisdk.LLMTool](doc/functions/aisdk.LLMTool.md) | Tool for AI agent | 
+| [LocalLLMTool](doc/functions/LocalLLMTool.md) | AI agent tool from MATLAB function | 
+| [MCPTool](doc/functions/MCPTool.md) | AI agent tool from MCP server | 
+| [selectTool](doc/functions/selectTool.md) | Select LLM tool from tool array | 
+| [evaluate](doc/functions/evaluate.md) | Evaluate LLM tool | 
+| [aisdk.LLMToolArgument](doc/functions/aisdk.LLMToolArgument.md) | Argument for LLM tool | 
+
 
 ## Examples
 
