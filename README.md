@@ -224,11 +224,14 @@ agentWithWorkspace.Workspace.matrix = A;
 
 | Example                                                                              | Description                                                                                                                                                                                                                 |
 | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [CreateSimpleChatBotUsingAIAgent.m](doc/examples/CreateSimpleChatBotUsingAIAgent.m)     | Create interactive chatbot in Command Window                                                                                                                                                                                   |
-| [AnalyzeTextUsingParallelToolCalls.m](doc/examples/AnalyzeTextUsingParallelToolCalls.m) | Extract structured data from text                                                                                                                                                                 |
+| [SimpleMathAgent.m](doc/examples/SimpleMathAgent.m)                                     | Simple math agent example                                                      |
+| [CreateSimpleChatBotUsingAIAgent.m](doc/examples/CreateSimpleChatBotUsingAIAgent.m)     | Create interactive chatbot in Command Window                                   |
+| [AnalyzeTextUsingParallelToolCalls.m](doc/examples/AnalyzeTextUsingParallelToolCalls.m) | Extract structured data from text                                              |
 | [FitPolynomialToDataUsingAIAgent.m](doc/examples/FitPolynomialToDataUsingAIAgent.m)     | Build AI agent that fits polynomials to data (requires Curve Fitting Toolbox™) |
-| [NestedToolsAndSubagentsExample.m](doc/examples/NestedToolsAndSubagentsExample.m)       | Create tools that provide other tools                                                                                                                                                                             |
-| [MCPClientAndAgentTools.m](doc/examples/MCPClientAndAgentTools.m)                       | Connect agent to Model Context Protocol (MCP) server                                                                                                                                                                   |
+| [NestedToolsAndSubagentsExample.m](doc/examples/NestedToolsAndSubagentsExample.m)       | Create tools that provide other tools                                          |
+| [SupervisorSubagentExample.m](doc/examples/SupervisorSubagentExample.m)                 | Supervisor pattern with sub-agents                                             |
+| [MCPClientAndAgentTools.m](doc/examples/MCPClientAndAgentTools.m)                       | Connect agent to Model Context Protocol (MCP) server                           |
+| [SendImageMessagesToVisionModels.m](doc/examples/SendImageMessagesToVisionModels.m)     | Send image messages to vision models                                           |
 
 ## License
 
