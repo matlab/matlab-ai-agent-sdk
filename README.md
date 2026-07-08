@@ -93,7 +93,7 @@ Create the agent from an LLM client `client` by using the `aisdk.AIAgent` functi
 
 ```matlab
 systemPrompt = "Reply as if you are writing telegrams.";
-agent = aisdk.AIAgent(client,systemPrompt);
+agent = aisdk.AIAgent(client,SystemPrompt=systemPrompt);
 ```
 Run the agent by using the `run` function. Provide a prompt.
 
@@ -153,11 +153,10 @@ tool.InputArguments(2) = aisdk.LLMToolArgument("letter",DataType="string");
 tool.OutputArguments = aisdk.LLMToolArgument("numLetter",DataType="number");
 ```
 
-Create the agent from an LLM client `client` by using the `aisdk.AIAgent` function. Leave the system prompt empty.
+Create the agent from an LLM client `client` by using the `aisdk.AIAgent` function.
 
 ```matlab
-systemPrompt = "";
-agent = aisdk.AIAgent(client,systemPrompt,tool);
+agent = aisdk.AIAgent(client,Tools=tool);
 ```
 
 Run the agent by using the `run` function.
