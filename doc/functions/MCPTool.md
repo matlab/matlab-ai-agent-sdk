@@ -34,10 +34,10 @@ Read-only: structure
 
 This property is read-only.
 
-Input argument schema, specified as a structure.
+Output argument schema, specified as a structure.
 
-The software derives the input argument structure from the input schema provided by
-the MCP server.
+The software derives the output argument structure from the output schema provided
+by the MCP server.
 
 Data Types: `struct`
 ### `ApprovalRequest` — Option to request human approval
@@ -113,14 +113,14 @@ Tool annotations, specified as a structure.
 By default, the software uses the tool annotations provided by the MCP
 server.
 
-Specify tool annotations to configure the tool behavior within a custom or external
+Specify tool annotations to configure the tool behavior in a custom or external
 application or API.
 
 For example, display a warning message to the end user when the agent calls a tool
 that is able to overwrite or delete data. First, add an annotation to the tool:
 `tool.Annotations.destructiveHint = true`. Then, in your application,
-check if the `Annotations` property of a called tool has a field
-`destructiveHint` with value `false`. If it does
+verify whether the `Annotations` property of a called tool has a
+field `destructiveHint` with value `false`. If it does
 not, then display a warning.
 
 Data Types: `struct`
@@ -151,7 +151,7 @@ array of `MCPTool` objects.
 ## See Also
 <a id="see-also"></a>
 
-[`aisdk.LLMTool`](aisdk.LLMTool.md) | [`LocalLLMTool`](LocalLLMTool.md) | [`aisdk.AIAgent`](aisdk.AIAgent.md) | [`selectTool`](selectTool.md) | [`aisdk.LLMClient`](aisdk.LLMClient.md)
+[`aisdk.LLMTool`](aisdk.LLMTool.md) | [`LocalLLMTool`](LocalLLMTool.md) | [`aisdk.AIAgent`](aisdk.AIAgent.md) | [`select`](select.md) | [`aisdk.LLMClient`](aisdk.LLMClient.md)
 
 *Copyright 2026 The MathWorks, Inc.*
 

@@ -121,7 +121,7 @@ be convertible to a JSON data type:
 
 To use other data types, for example complex numbers or specialized objects
 including custom objects, return the data as part of the [`newData`](#newdata)
-output argument for subsequent analysis.
+output argument for later analysis.
 
 To let an LLM analyze data that cannot be converted to JSON data types, for example:
 
@@ -131,8 +131,8 @@ complex-valued matrix."`.
 
 - Analyze the data as part of the tool evaluation and return the result of the
 analysis. For example, if a tool computes the eigenvalues of a large matrix, but
-the subsequent analysis only requires the three largest eigenvalues, then return
-the three largest eigenvalues as separate real-valued scalar output arguments and
+the later analysis only requires the three largest eigenvalues, then return the
+three largest eigenvalues as separate real-valued scalar output arguments and
 provide those to the LLM.
 ### `newData` — Updated data
 <a id="newdata"></a>

@@ -196,7 +196,7 @@ Data Types: `function_handle`
 
 Connection timeout in seconds, specified as a nonnegative numeric scalar.
 
-If the model does not respond within the timeout, then the function returns an
+If the model does not respond in the timeout, then the function returns an
 error.
 
 Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8` | `uint16` | `uint32` | `uint64` | `char` | `string`
@@ -210,8 +210,8 @@ Response format, specified as a string scalar or structure array.
 
 Use the `ResponseFormat` name-value argument to specify the
 output format of the generated text. You can request unformatted output, JSON mode, or
-structured output. To find out which of these output formats your model supports,
-check the model documentation.
+structured output. To find out which of these output formats your model supports, see
+the model documentation.
 
 If the response format is set to `"text"`, then the generated
 output is an unformatted string.
@@ -221,8 +221,8 @@ output is a formatted string containing JSON encoded data. To configure the form
 the generated JSON file, describe the format using natural language and provide it to
 the model either in the system prompt or as a user message.
 
-To ensure that the model output adheres to the required format, use structured
-output, To do this, set `ResponseFormat` to:
+To make sure that the model output adheres to the required format, use structured
+output. To do this, set `ResponseFormat` to:
 
 - A string scalar containing a valid JSON schema.
 
@@ -251,10 +251,10 @@ Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8`
 
 Random seed, specified as `[]` or as an integer.
 
-Specify a random seed to ensure deterministic model outputs.
+Specify a random seed to enable deterministic model outputs.
 
-For some models, this option has no effect. To learn if a given model supports
-deterministic outputs, check the model documentation.
+For some models, this option has no effect. To learn whether a given model
+supports deterministic outputs, see the model documentation.
 
 Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8` | `uint16` | `uint32` | `uint64` | `char` | `string`
 ### `Verbosity` — Verbosity of generated output
@@ -440,13 +440,13 @@ Information about output generation, returned as a structure with these fields:
 structure with these fields:
 
   - `NumInputTokens` — Number of input tokens, returned as
-a positive integer.
+a nonnegative integer.
   - `NumOutputTokens` — Number of output tokens, returned
-as a positive integer.
+as a nonnegative integer.
   - `NumTotalTokens` — Total number of tokens, returned as
-a positive integer.
+a nonnegative integer.
   - `NumCachedInputTokens` — Number of cached input tokens,
-returned as a positive integer.
+returned as a nonnegative integer.
 ## Algorithms
 <a id="algorithms"></a>
 ### Valid Argument Combinations

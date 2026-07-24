@@ -43,13 +43,11 @@ pairs does not matter.
 
 Example: `aisdk.AIAgent(client,MaxIterations=10)` limits the maximum number
 of iterations to 10.
-### 
-<a id=""></a>
 
 #### Agent Properties
 <a id="agent-properties"></a>
 
-These properties support setting with name-value arguments.
+These properties can be set using name-value arguments.
 
 [`SystemPrompt`](#systemprompt) | [`Tools`](#tools) | [`Messages`](#messages) | [`Workspace`](#workspace) | [`DisplayMode`](#displaymode) | [`MaxIterations`](#maxiterations)
 ## Properties
@@ -57,7 +55,7 @@ These properties support setting with name-value arguments.
 ### `Client` — LLM client
 <a id="client-1"></a>
 
-`OpenAIClient` object | `OllamaClient` object object
+`OpenAIClient` | `OllamaClient`
 
 LLM client, specified as an [`OpenAIClient`](OpenAIClient.md) or [`OllamaClient`](OllamaClient.md) object.
 
@@ -71,7 +69,7 @@ System prompt, specified as a string scalar.
 
 The system prompt is a natural language description that provides the framework in
 which a large language model generates its responses. The system prompt can include
-instructions about tone, communications style, language, etc.
+instructions about tone, communications style, language, and so on.
 
 Data Types: `string`
 ### `Tools` — LLM tools
@@ -151,7 +149,7 @@ Ensure that any workspace field names that the underlying function uses are
 defined in the `Workspace` property of the agent before the agent calls the
 tool.
 
-For example, configure the underlying function like this:
+For example, configure the underlying function as follows:
 
 ```
 function [out1,...,outM,agentWorkspace] = myFunction(agentWorkspace,in1,...,inN)
@@ -205,6 +203,61 @@ For example, agents can attempt more than one tool call. If a tool is misconfigu
 then an agent can get stuck trying and failing to call the same tool repeatedly.
 
 For more information on the agentic loop, see [`Algorithms`](#algorithms).
+
+Data Types: `double`
+### `NumInputTokens` — Cumulative number of input tokens
+<a id="numinputtokens"></a>
+
+Read-only: 0 (default) | nonnegative integer
+
+This property is read-only.
+
+Cumulative number of input tokens, returned as a nonnegative integer.
+
+Each time you run the agent by using the `run` function, the
+software adds the number of input tokens used during the run to
+`NumInputTokens`.
+
+Data Types: `double`
+### `NumCachedInputTokens` — Cumulative number of cached input tokens
+<a id="numcachedinputtokens"></a>
+
+Read-only: 0 (default) | nonnegative integer
+
+This property is read-only.
+
+Cumulative number of cached input tokens, returned as a nonnegative integer.
+
+Data Types: `double`
+### `NumOutputTokens` — Cumulative number of output tokens
+<a id="numoutputtokens"></a>
+
+Read-only: 0 (default) | nonnegative integer
+
+This property is read-only.
+
+Cumulative number of output tokens, returned as a nonnegative integer.
+
+Each time you run the agent by using the `run` function, the
+software adds the number of output tokens generated during the run to
+`NumOutputTokens`.
+
+Data Types: `double`
+### `NumTotalTokens` — Cumulative number of tokens
+<a id="numtotaltokens"></a>
+
+Read-only: 0 (default) | nonnegative integer
+
+This property is read-only.
+
+Cumulative number of tokens, returned as a nonnegative integer.
+
+Each time you run the agent by using the `run` function, the
+software adds the number of input tokens used and output tokens generated during the run
+to `NumTotalTokens`.
+
+`NumTotalTokens` is equal to the sum of
+`NumInputTokens` and `NumOutputTokens`.
 
 Data Types: `double`
 ## Object Functions
@@ -336,9 +389,9 @@ This example shows how to configure an LLM tool to use data from the
 agent workspace as input or output data.
 
 The `eig` function calculates the eigenvectors and eigenvalues of
-matrices. Vectors and matrices can contain a lot of numerical data. Instead of sending all
-this data to an LLM, which would cost tokens, keep the data in the agent workspace and
-configure your tools to work on that workspace.
+matrices. Vectors and matrices can contain large amounts of numerical data. Instead of
+sending all this data to an LLM, which costs tokens, keep the data in the agent workspace
+and configure your tools to work on that workspace.
 
 Create a function called `eigTool`.
 
@@ -378,7 +431,7 @@ argument to `tool`.
 agent = aisdk.AIAgent(client,SystemPrompt=systemPrompt,Tools=tool);
 ```
 
-The `eigTool` functions expects the agent workspace to have a
+The `eigTool` function expects the agent workspace to have a
 variable called `matrix`. To allow an agent to use the tool
 `tool`, add the matrix to the agent workspace.
 

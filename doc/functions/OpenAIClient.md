@@ -108,7 +108,7 @@ Data Types: `function_handle`
 
 Connection timeout in seconds, specified as a nonnegative numeric scalar.
 
-If the model does not respond within the timeout, then the function returns an
+If the model does not respond in the timeout, then the function returns an
 error.
 
 Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8` | `uint16` | `uint32` | `uint64`
@@ -121,7 +121,7 @@ Response format, specified as a string scalar or structure array.
 
 Use the `ResponseFormat` property to specify the output format of
 the generated text. You can request unformatted output, JSON mode, or structured output.
-To find out which of these output formats your model supports, check the model
+To find out which of these output formats your model supports, see the model
 documentation.
 
 If the response format is set to `"text"`, then the generated
@@ -132,7 +132,7 @@ output is a formatted string containing JSON encoded data. To configure the form
 the generated JSON file, describe the format using natural language and provide it to
 the model either in the system prompt or as a user message.
 
-To ensure that the model output adheres to the required format, use structured
+To make sure that the model output adheres to the required format, use structured
 output. To do this, set `ResponseFormat` to:
 
 - A structure array containing an example that adheres to the required format,
@@ -149,7 +149,7 @@ Data Types: `string` | `struct`
 
 `"auto"` (default) | `"low"` | `"medium"` | `"high"`
 
-Verbosity of generate output, specified as a string scalar or character
+Verbosity of generated output, specified as a string scalar or character
 vector.
 
 If `Verbosity` is set to `"auto"`, then the

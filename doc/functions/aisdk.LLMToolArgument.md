@@ -65,13 +65,11 @@ pairs does not matter.
 
 Example: `aisdk.LLMToolArgument("x",Description="Input value")`sets the
 argument description to `"Input value"`.
-### 
-<a id=""></a>
 
 #### Argument Properties
 <a id="argument-properties"></a>
 
-These properties support setting with name-value arguments.
+These properties can be set using name-value arguments.
 
 [`Description`](#description) | [`DataType`](#datatype) | [`Required`](#required) | [`NameValue`](#namevalue)
 ## Properties
@@ -117,7 +115,7 @@ Data Types: `string`
 
 `true` | `false`
 
-Indicates if the argument is required, specified as `true` or
+Indicates whether the argument is required, specified as `true` or
 `false`.
 
 By default:
@@ -134,7 +132,7 @@ Data Types: `logical`
 
 `false` (default) | `true`
 
-Indicates if the argument is a name-value argument, specified as
+Indicates whether the argument is a name-value argument, specified as
 `true` or `false`.
 
 Data Types: `logical`
@@ -165,7 +163,7 @@ x =
 ### Create LLM Tool Argument from Example Argument
 <a id="create-llm-tool-argument-from-example-argument"></a>
 
-Create an LLM tool argument from an example argument specified as a struct with
+Create an LLM tool argument from an example argument specified as a structure with
 field `x` and value `pi`.
 
 ```

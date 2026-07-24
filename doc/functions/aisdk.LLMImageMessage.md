@@ -73,7 +73,7 @@ of these forms.
 | URL | If the file is located by an internet URL, then `filename` must contain the protocol type, such as `http://`. Example: `"http://my_hostname/my_path/my_image.jpg"` |
 | Remote location | If the file is stored at a remote location, then `filename` must contain the full path of the file specified as a URL of the form: `scheme_name://path_to_file/my_file.ext` Based on the remote location, `scheme_name` can be one of the values in this table. Amazon S3&#x2122;: `s3`; Windows Azure&#xAE; Blob Storage: `wasb`, `wasbs`; HDFS&#x2122;: `hdfs` Example:`"s3://my_bucket/my_path/my_image.heif"` |
 
-The function loads the image and store it in the `Image`
+The function loads the image and stores it in the `Image`
 property.
 
 Data Types: `string` | `char`

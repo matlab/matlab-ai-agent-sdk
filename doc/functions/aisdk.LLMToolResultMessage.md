@@ -60,7 +60,7 @@ pairs does not matter.
 #### Message Properties
 <a id="message-properties"></a>
 
-These properties support setting with name-value arguments.
+These properties can be set using name-value arguments.
 
 [`Name`](#name) | [`ToolCallID`](#toolcallid)
 ## Properties
@@ -107,7 +107,7 @@ Data Types: `string`
 
 `""` (default) | string scalar
 
-Toll call ID, specified as a string scalar.
+Tool call ID, specified as a string scalar.
 
 Use tool call IDs to associate tool call message with tool result messages.
 
@@ -171,10 +171,10 @@ ans =
     3    Tool         Text         "{"numLetter":3}"
     4    Assistant    Text         "The letter "r" appears 3 times in the word "strawberry."
 ```
-### Check Whether Agent Called Tool
-<a id="check-whether-agent-called-tool"></a>
+### Determine Whether Agent Called Tool
+<a id="determine-whether-agent-called-tool"></a>
 
-This example shows how to check whether an AI agent called a
+This example shows how to determine whether an AI agent called a
 tool.
 
 Check whether the `Type` property of any of the messages in the

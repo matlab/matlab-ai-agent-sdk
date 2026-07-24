@@ -187,7 +187,7 @@ set to `"system"`.
 
 - Add three sample prompts with `Role` set to
 `"user"`, each followed by a sample response with
-`Role` set to `"assistant"`
+`Role` set to `"assistant"`.
 
 - Add a final prompt with `Role` set to
 `"user"`.

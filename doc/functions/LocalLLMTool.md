@@ -68,7 +68,7 @@ By default, the tool name is the name of the function used to create the
 `LocalLLMTool`.
 
 If you specify the function as an anonymous function handle, then you must specify
-the `name` argument when you create the tool.
+the `Name` name-value argument when you create the tool.
 
 Data Types: `string`
 ### `Description` — Tool description
@@ -109,14 +109,14 @@ structure
 
 Tool annotations, specified as a structure.
 
-Specify tool annotations to configure the tool behavior within a custom or external
+Specify tool annotations to configure the tool behavior in a custom or external
 application or API.
 
 For example, display a warning message to the end user when the agent calls a tool
 that is able to overwrite or delete data. First, add an annotation to the tool:
 `tool.Annotations.destructiveHint = true`. Then, in your application,
-check if the `Annotations` property of a called tool has a field
-`destructiveHint` with value `false`. If it does
+verify whether the `Annotations` property of a called tool has a
+field `destructiveHint` with value `false`. If it does
 not, then display a warning.
 
 Data Types: `struct`
@@ -196,10 +196,9 @@ tool =
 The software automatically extracts information about the arguments, function name,
 and function description.
 
-If the arguments contains `varargin` or
-`varargout`, then specify a syntax by specifying the
-`InputArguments` or `OutputArguments`
-name-value arguments, respectively.
+If the arguments contain `varargin` or `varargout`,
+then specify a syntax by specifying the `InputArguments` or
+`OutputArguments` name-value arguments, respectively.
 ### Create Tool From Custom Function
 <a id="create-tool-from-custom-function"></a>
 
@@ -257,9 +256,9 @@ This example shows how to configure an LLM tool to use data from the
 agent workspace as input or output data.
 
 The `eig` function calculates the eigenvectors and eigenvalues of
-matrices. Vectors and matrices can contain a lot of numerical data. Instead of sending all
-this data to an LLM, which would cost tokens, keep the data in the agent workspace and
-configure your tools to work on that workspace.
+matrices. Vectors and matrices can contain large amounts of numerical data. Instead of
+sending all this data to an LLM, which costs tokens, keep the data in the agent workspace
+and configure your tools to work on that workspace.
 
 Create a function called `eigTool`.
 
@@ -299,7 +298,7 @@ argument to `tool`.
 agent = aisdk.AIAgent(client,SystemPrompt=systemPrompt,Tools=tool);
 ```
 
-The `eigTool` functions expects the agent workspace to have a
+The `eigTool` function expects the agent workspace to have a
 variable called `matrix`. To allow an agent to use the tool
 `tool`, add the matrix to the agent workspace.
 
@@ -309,7 +308,7 @@ agent.Workspace.matrix = randn(10);
 ## See Also
 <a id="see-also"></a>
 
-[`aisdk.LLMTool`](aisdk.LLMTool.md) | [`MCPTool`](MCPTool.md) | [`aisdk.AIAgent`](aisdk.AIAgent.md) | `evaluate` | [`selectTool`](selectTool.md) | [`aisdk.LLMClient`](aisdk.LLMClient.md)
+[`aisdk.LLMTool`](aisdk.LLMTool.md) | [`MCPTool`](MCPTool.md) | [`aisdk.AIAgent`](aisdk.AIAgent.md) | [`evaluate`](evaluate.md) | [`select`](select.md) | [`aisdk.LLMClient`](aisdk.LLMClient.md)
 
 *Copyright 2026 The MathWorks, Inc.*
 
