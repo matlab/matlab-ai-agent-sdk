@@ -182,17 +182,17 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             testCase.verifyInstanceOf(tool, "aisdk.llms.tool.CallableTool");
         end
 
-        function selectTool_existingName_returnsTool(testCase)
+        function select_existingName_returnsTool(testCase)
             tool1 = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
             tool2 = aisdk.llms.tool.LocalLLMTool(@addTwoNumbersUsingNVP);
             tools = [tool1, tool2];
-            found = tools.selectTool("addTwoNumbersUsingNVP");
+            found = tools.select("addTwoNumbersUsingNVP");
             testCase.verifyEqual(found.Name, "addTwoNumbersUsingNVP");
         end
 
-        function selectTool_unknownName_throwsError(testCase)
+        function select_unknownName_throwsError(testCase)
             tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
-            testCase.verifyError(@() tool.selectTool("nonexistent"), ...
+            testCase.verifyError(@() tool.select("nonexistent"), ...
                 "llms:invalidFunctionCall");
         end
 

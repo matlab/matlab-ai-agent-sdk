@@ -191,7 +191,7 @@ classdef AIAgent < handle
                 for i = 1:numel(toolCalls)
                     tc = toolCalls(i);
                     try
-                        tool = nvp.Tools.selectTool(tc.Name);
+                        tool = nvp.Tools.select(tc.Name);
                     catch ME
                         output = "Error: " + ME.message;
                         this.print(displayMode,"[function return] " + string(jsonencode(output)));

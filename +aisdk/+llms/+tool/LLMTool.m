@@ -57,7 +57,7 @@ classdef LLMTool < matlab.mixin.Heterogeneous & matlab.mixin.CustomDisplay
     end
 
     methods (Sealed)
-        function tools = selectTool(these, name)
+        function tools = select(these, name)
             arguments
                 these(1,:) aisdk.llms.tool.LLMTool
                 name(1,1) string

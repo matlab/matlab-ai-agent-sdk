@@ -4,25 +4,25 @@ classdef tLLMTool < matlab.unittest.TestCase
 %   Copyright 2026 The MathWorks, Inc.
 
     methods (Test, TestTags = {'Unit'})
-        function selectTool_existingName_returnsTool(testCase)
+        function select_existingName_returnsTool(testCase)
             tool1 = aisdk.llms.tool.LocalLLMTool(@sin);
             tool2 = aisdk.llms.tool.LocalLLMTool(@cos);
             tools = [tool1, tool2];
-            found = tools.selectTool("sin");
+            found = tools.select("sin");
             testCase.verifyEqual(found.Name, "sin");
         end
 
-        function selectTool_duplicateNames_returnsFirstMatch(testCase)
+        function select_duplicateNames_returnsFirstMatch(testCase)
             tool1 = aisdk.llms.tool.LocalLLMTool(@sin, Description="First");
             tool2 = aisdk.llms.tool.LocalLLMTool(@sin, "sin", Description="Second");
             tools = [tool1, tool2];
-            found = tools.selectTool("sin");
+            found = tools.select("sin");
             testCase.verifyEqual(found.Description, "First");
         end
 
-        function selectTool_unknownName_throwsError(testCase)
+        function select_unknownName_throwsError(testCase)
             tool = aisdk.llms.tool.LocalLLMTool(@sin);
-            testCase.verifyError(@() tool.selectTool("nonexistent"), ...
+            testCase.verifyError(@() tool.select("nonexistent"), ...
                 "llms:invalidFunctionCall");
         end
 
@@ -35,12 +35,12 @@ classdef tLLMTool < matlab.unittest.TestCase
             testCase.verifyInstanceOf(tools, "aisdk.llms.tool.LLMTool");
         end
 
-        function selectTool_heterogeneousArray_returnsCorrectSubclass(testCase)
+        function select_heterogeneousArray_returnsCorrectSubclass(testCase)
             tool1 = aisdk.llms.tool.LocalLLMTool(@sin);
             tool2 = aisdk.llms.tool.MCPTool();
             tool2.Name = "myTool";
             tools = [tool1, tool2];
-            found = tools.selectTool("myTool");
+            found = tools.select("myTool");
             testCase.verifyEqual(found.Name, "myTool");
             testCase.verifyClass(found, "aisdk.llms.tool.MCPTool");
         end
