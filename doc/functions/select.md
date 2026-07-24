@@ -1,15 +1,15 @@
-# selectTool
-<a id="selecttool"></a>
+# select
+<a id="select"></a>
 
 Select LLM tool from tool array
 ## Syntax
 <a id="syntax"></a>
 
-`tool = selectTool(tools,name)`
+`tool = select(tools,name)`
 ## Description
 <a id="description"></a>
 
-`tool = selectTool(tools,name)`
+`tool = select(tools,name)`
 selects the tool with name `name` from the array of LLM tools
 `tools`.
 ## Examples
@@ -28,10 +28,10 @@ toolArray = [aisdk.LLMTool(@extractFileText),aisdk.LLMTool(@splitTextChunks)];
 ```
 
 Select the tool corresponding to `splitTextChunks` from the tool
-array by using the `selectTool` function.
+array by using the `select` function.
 
 ```
-tool = selectTool(toolArray,"splitTextChunks");
+tool = select(toolArray,"splitTextChunks");
 ```
 
 ```

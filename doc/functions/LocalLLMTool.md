@@ -195,6 +195,11 @@ tool =
 
 The software automatically extracts information about the arguments, function name,
 and function description.
+
+If the arguments contains `varargin` or
+`varargout`, then specify a syntax by specifying the
+`InputArguments` or `OutputArguments`
+name-value arguments, respectively.
 ### Create Tool From Custom Function
 <a id="create-tool-from-custom-function"></a>
 
@@ -273,7 +278,7 @@ language description of the outcome of the tool call.
 function [observation,agentWorkspace] = eigTool(agentWorkspace)
 % Compute the eigenvalues of a matrix
 agentWorkspace.eigenvalues = eig(agentWorkspace.matrix);
-observation = "Eigenvalues were computed and added to the agent workspace."
+observation = "Eigenvalues were computed and added to the agent workspace.";
 end
 
 ```

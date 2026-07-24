@@ -16,7 +16,7 @@ MATLAB&#x00AE;.
 creates an `aisdk.AIAgent` object with the specified LLM client
 `client`.
 
-`agent = aisdk.AIAgent(___,Name=Value)`
+`agent = aisdk.AIAgent(client,Name=Value)`
 specifies additional options using one or more name-value arguments. For example, to limit
 the maximum number of tool calling iterations to 10, set
 `MaxIterations` to `10`.
@@ -291,11 +291,10 @@ tool.OutputArguments = aisdk.LLMToolArgument("numLetter",DataType="number");
 ```
 
 Create the agent from an LLM client `client` by using the
-[`aisdk.AIAgent`](aisdk.AIAgent.md) function. Leave the system prompt empty.
+[`aisdk.AIAgent`](aisdk.AIAgent.md) function.
 
 ```
-systemPrompt = "";
-agent = aisdk.AIAgent(client,SystemPrompt=systemPrompt,Tools=tool);
+agent = aisdk.AIAgent(client,Tools=tool);
 ```
 
 Run the agent by using the [`run`](run.md)
@@ -306,6 +305,11 @@ run(agent,"How many times is the letter r in the word strawberry?")
 ```
 
 ```
+[think]
+[call function count with inputs {"word":"strawberry","letter":"r"}]
+[function return] {"numLetter":3}
+[think]
+The letter "r" appears 3 times in the word "strawberry."
 ans = "The letter "r" appears 3 times in the word "strawberry.""
 ```
 
@@ -321,7 +325,7 @@ ans =
   1×4 LLMMessage array with messages:
 
     1    User         Text         "How many times is the letter r in the word strawberry?"
-    2    Assistant    Tool Call    countLetters
+    2    Assistant    Tool Call    countLetters({"word":"strawberry","letter":"r"})
     3    Tool         Text         "{"numLetter":3}"
     4    Assistant    Text         "The letter "r" appears 3 times in the word "strawberry."
 ```
@@ -353,7 +357,7 @@ language description of the outcome of the tool call.
 function [observation,agentWorkspace] = eigTool(agentWorkspace)
 % Compute the eigenvalues of a matrix
 agentWorkspace.eigenvalues = eig(agentWorkspace.matrix);
-observation = "Eigenvalues were computed and added to the agent workspace."
+observation = "Eigenvalues were computed and added to the agent workspace.";
 end
 
 ```

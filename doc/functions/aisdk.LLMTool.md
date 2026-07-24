@@ -63,6 +63,11 @@ tool =
 
 The software automatically extracts information about the arguments, function name,
 and function description.
+
+If the arguments contains `varargin` or
+`varargout`, then specify a syntax by specifying the
+`InputArguments` or `OutputArguments`
+name-value arguments, respectively.
 ### Create Tool From Custom Function
 <a id="create-tool-from-custom-function"></a>
 
@@ -163,7 +168,7 @@ language description of the outcome of the tool call.
 function [observation,agentWorkspace] = eigTool(agentWorkspace)
 % Compute the eigenvalues of a matrix
 agentWorkspace.eigenvalues = eig(agentWorkspace.matrix);
-observation = "Eigenvalues were computed and added to the agent workspace."
+observation = "Eigenvalues were computed and added to the agent workspace.";
 end
 
 ```
@@ -289,7 +294,9 @@ specify `InputArguments` as
 `struct(x=3.14,str="test")`.
 
 If your function contains an argument block, then by default, the software uses
-that information to derive the input arguments.
+that information to derive the input arguments. If the arguments contains
+`varargin`, then specify a syntax by specifying the
+`InputArguments` name-value argument.
 
 Data Types: `aisdk.LLMToolArgument` | `struct`
 ### `OutputArguments` — Output arguments
@@ -311,7 +318,9 @@ specify `OutputArguments` as
 `struct(x=3.14,str="test")`.T
 
 By default, the software tries to extract information about the output arguments
-from the function definition.
+from the function definition. If the arguments contains `varargout`,
+then specify a syntax by specifying the `OutputArguments`
+name-value argument.
 
 Data Types: `aisdk.LLMToolArgument` | `struct`
 ### `Annotations` — Tool annotations
