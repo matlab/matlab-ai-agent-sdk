@@ -3,6 +3,7 @@
 %%
 %[text] Create tools for addition, multiplication and a "web search" (not to be confused with Responses API server-side tools).
 function x = add(a, b)
+% Add two numbers together
 arguments
     a (1,1) double
     b (1,1) double
@@ -11,14 +12,16 @@ end
 end
 
 function x = multiply(a,b)
+% Multiply two numbers together
 arguments
-    a
-    b
+    a(1,1) double
+    b(1,1) double
 end
     x = a * b;
 end
 
 function txt = web_search(query)
+% Search the internet
 arguments
     query(1,1) string % fake input for a fake web search
 end
@@ -31,15 +34,16 @@ txt = "Here are the headcounts for each of the FAANG companies in 2024:\n" + ...
 end
 
 %%
-%[text] Create two subagents: one for maths, the other for "research" (i.e. web searches).
+%[text] Create two sub-agents: one for math, the other for "research" (i.e. web searches).
 function [observation, workspace] = runMathAgent(workspace, NVP)
+% Sub-agent for mathematical tasks
     arguments
         workspace 
         NVP.Prompt
     end
     % "math"
-    mathTools = aisdk.LLMTool(@add, Description="add two numbers together", InputArguments=struct("a", 1, "b", 2));
-    mathTools(end+1) = aisdk.LLMTool(@multiply, Description="multiply two numbers together", InputArguments=struct("a", 1, "b", 2));
+    mathTools = aisdk.LLMTool(@add);
+    mathTools(end+1) = aisdk.LLMTool(@multiply);
 
     api = "openai"; %[control:dropdown:159e]{"position":[11,19]}
     model = "gpt-4.1-mini"; %[control:dropdown:3e32]{"position":[13,27]}
@@ -53,20 +57,20 @@ function [observation, workspace] = runMathAgent(workspace, NVP)
 end
 
 function [observation, workspace] = runSearchAgent(workspace, NVP)
+% Sub-agent for economic and financial research
     arguments
         workspace 
-        NVP.Prompt
+        NVP.Prompt(1,1) string
     end
     searchTools = aisdk.LLMTool(@web_search, ...
-        Description="Search the web for information.", ...
-        InputArguments= struct("Query", "What's the population of UK?"), ...
         RequiresApproval="always"); %[control:dropdown:6c3a]{"position":[26,34]}
 
-     api = "openai"; %[control:dropdown:524c]{"position":[12,20]}
+    api = "openai"; %[control:dropdown:524c]{"position":[11,19]}
     model = "gpt-4.1-mini"; %[control:dropdown:3923]{"position":[13,27]}
 
     llmOpts = aisdk.LLMClient(api,  model);
-    subAgent = aisdk.AIAgent(llmOpts, SystemPrompt="You are a world class researcher with access to web search. Do not do any math. Just answer each query, briefly and to the point. ", ...
+    subAgent = aisdk.AIAgent(llmOpts, ...
+       SystemPrompt="You are a world class researcher with access to web search. Do not do any math. Just answer each query, briefly and to the point. ", ...
        Tools=searchTools, ...
        Workspace=workspace);
     observation = subAgent.run(NVP.Prompt);
@@ -78,12 +82,10 @@ end
 systemPrompt =  "You are a team supervisor managing a research expert and a math expert. " + ...
       "Think step by step. DO NOT DO MATHS YOURSELF";
 topLevelTools = aisdk.LLMTool(@runMathAgent, ...
-    Description="Use this tool to do basic arithmetic", ...
     InputArguments=aisdk.LLMToolArgument("Prompt", DataType="string", NameValue=true, Description="Arithmetic operation in natural language"), ...
     RequiresApproval="never", ...
     Workspace="agent");
 topLevelTools(end+1) = aisdk.LLMTool(@runSearchAgent, ...
-    Description="Use this tool to perform web searches", ...
     InputArguments=aisdk.LLMToolArgument("Prompt", DataType="string", NameValue=true), ...
     RequiresApproval="never", ...
     Workspace="agent");
@@ -98,9 +100,9 @@ topLevelAgent = aisdk.AIAgent(client, SystemPrompt=systemPrompt, ...
 %%
 %[text] Run a task. You should see several queries to the "research" agent to get the FAANG headcounts, then some calls to the maths agent for the arithmetic.
 prompt = "What's the total headcount of FAANG companies using 2024 data? Use whatever information you have available.";
-obs = topLevelAgent.run(prompt); %[output:25f21bc6]
+observation = topLevelAgent.run(prompt); %[output:25f21bc6]
 %%
-disp(obs) %[output:0373281e]
+disp(observation) %[output:907b667c]
 %[text] *Copyright 2026 The MathWorks, Inc.*
 
 %[appendix]{"version":"1.0"}
@@ -130,8 +132,8 @@ disp(obs) %[output:0373281e]
 %   data: {"defaultValue":"\"gpt-4.1-mini\"","itemLabels":["gpt-4.1-mini","qwen3"],"items":["\"gpt-4.1-mini\"","\"qwen3\""],"label":"model","run":"AllSections"}
 %---
 %[output:25f21bc6]
-%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function runSearchAgent with inputs {\"Prompt\":\"latest headcount of Facebook (Meta) as of 2024\"}]\n[think]\n[call function web_search with inputs {\"Query\":\"latest headcount of Facebook Meta 2024\"}]\n[function return] \"Here are the headcounts for each of the FAANG companies in 2024:\\\\n1. **Facebook (Meta)**: 100000 employees.\\\\n2. **Apple**: 200000 employees.\\\\n3. **Amazon**: 1500000 employees.\\\\n4. **Netflix**: 10,000 employees.\\\\n5. **Google (Alphabet)**: 180,000 employees.\"\n[think]\nAs of 2024, Facebook (Meta) has approximately 100,000 employees.\n[function return] \"As of 2024, Facebook (Meta) has approximately 100,000 employees.\"\n[call function runSearchAgent with inputs {\"Prompt\":\"latest headcount of Amazon as of 2024\"}]\n[think]\n[call function web_search with inputs {\"Query\":\"Amazon headcount 2024\"}]\n[function return] \"Here are the headcounts for each of the FAANG companies in 2024:\\\\n1. **Facebook (Meta)**: 100000 employees.\\\\n2. **Apple**: 200000 employees.\\\\n3. **Amazon**: 1500000 employees.\\\\n4. **Netflix**: 10,000 employees.\\\\n5. **Google (Alphabet)**: 180,000 employees.\"\n[think]\nAs of 2024, Amazon has approximately 1,500,000 employees.\n[function return] \"As of 2024, Amazon has approximately 1,500,000 employees.\"\n[call function runSearchAgent with inputs {\"Prompt\":\"latest headcount of Apple as of 2024\"}]\n[think]\n[call function web_search with inputs {\"Query\":\"Apple employee headcount 2024\"}]\n[function return] \"Here are the headcounts for each of the FAANG companies in 2024:\\\\n1. **Facebook (Meta)**: 100000 employees.\\\\n2. **Apple**: 200000 employees.\\\\n3. **Amazon**: 1500000 employees.\\\\n4. **Netflix**: 10,000 employees.\\\\n5. **Google (Alphabet)**: 180,000 employees.\"\n[think]\nAs of 2024, Apple has approximately 200,000 employees.\n[function return] \"As of 2024, Apple has approximately 200,000 employees.\"\n[call function runSearchAgent with inputs {\"Prompt\":\"latest headcount of Netflix as of 2024\"}]\n[think]\n[call function web_search with inputs {\"Query\":\"Netflix latest headcount 2024\"}]\n[function return] \"Here are the headcounts for each of the FAANG companies in 2024:\\\\n1. **Facebook (Meta)**: 100000 employees.\\\\n2. **Apple**: 200000 employees.\\\\n3. **Amazon**: 1500000 employees.\\\\n4. **Netflix**: 10,000 employees.\\\\n5. **Google (Alphabet)**: 180,000 employees.\"\n[think]\nAs of 2024, Netflix has approximately 10,000 employees.\n[function return] \"As of 2024, Netflix has approximately 10,000 employees.\"\n[call function runSearchAgent with inputs {\"Prompt\":\"latest headcount of Google (Alphabet) as of 2024\"}]\n[think]\n[call function web_search with inputs {\"Query\":\"Google Alphabet latest headcount 2024\"}]\n[function return] \"Here are the headcounts for each of the FAANG companies in 2024:\\\\n1. **Facebook (Meta)**: 100000 employees.\\\\n2. **Apple**: 200000 employees.\\\\n3. **Amazon**: 1500000 employees.\\\\n4. **Netflix**: 10,000 employees.\\\\n5. **Google (Alphabet)**: 180,000 employees.\"\n[think]\nAs of 2024, Google (Alphabet) has a headcount of approximately 180,000 employees.\n[function return] \"As of 2024, Google (Alphabet) has a headcount of approximately 180,000 employees.\"\n[think]\n[call function runMathAgent with inputs {\"Prompt\":\"Sum of headcounts: Meta 100,000, Amazon 1,500,000, Apple 200,000, Netflix 10,000, Google 180,000\"}]\n[think]\n[call function add with inputs {\"a\":100000,\"b\":1.5E+6}]\n[function return] 1.6E+6\n[call function add with inputs {\"a\":200000,\"b\":10000}]\n[function return] 210000\n[think]\n[call function add with inputs {\"a\":1.6E+6,\"b\":210000}]\n[function return] 1.81E+6\n[think]\n[call function add with inputs {\"a\":1.81E+6,\"b\":180000}]\n[function return] 1.99E+6\n[think]\nThe total sum of the headcounts for Meta, Amazon, Apple, Netflix, and Google is 1,990,000.\n[function return] \"The total sum of the headcounts for Meta, Amazon, Apple, Netflix, and Google is 1,990,000.\"\n[think]\nThe total headcount of FAANG companies in 2024 is approximately 1,990,000 employees.\n","truncated":false}}
+%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function runSearchAgent with inputs {\"Prompt\":\"Current total headcount of Facebook (Meta) in 2024\"}]\n[think]\n[call function web_search with inputs {\"query\":\"Meta (Facebook) total headcount 2024\"}]\n[function return] {\"txt\":\"Here are the headcounts for each of the FAANG companies in 2024:\\\\n1. **Facebook (Meta)**: 100000 employees.\\\\n2. **Apple**: 200000 employees.\\\\n3. **Amazon**: 1500000 employees.\\\\n4. **Netflix**: 10,000 employees.\\\\n5. **Google (Alphabet)**: 180,000 employees.\"}\n[think]\nThe current total headcount of Facebook (Meta) in 2024 is approximately 100,000 employees.\n[function return] {\"observation\":\"The current total headcount of Facebook (Meta) in 2024 is approximately 100,000 employees.\"}\n[call function runSearchAgent with inputs {\"Prompt\":\"Current total headcount of Amazon in 2024\"}]\n[think]\n[call function web_search with inputs {\"query\":\"Amazon total headcount 2024\"}]\n[function return] {\"txt\":\"Here are the headcounts for each of the FAANG companies in 2024:\\\\n1. **Facebook (Meta)**: 100000 employees.\\\\n2. **Apple**: 200000 employees.\\\\n3. **Amazon**: 1500000 employees.\\\\n4. **Netflix**: 10,000 employees.\\\\n5. **Google (Alphabet)**: 180,000 employees.\"}\n[think]\nAs of 2024, Amazon's total headcount is approximately 1,500,000 employees.\n[function return] {\"observation\":\"As of 2024, Amazon's total headcount is approximately 1,500,000 employees.\"}\n[call function runSearchAgent with inputs {\"Prompt\":\"Current total headcount of Apple in 2024\"}]\n[think]\n[call function web_search with inputs {\"query\":\"Apple total headcount 2024\"}]\n[function return] {\"txt\":\"Here are the headcounts for each of the FAANG companies in 2024:\\\\n1. **Facebook (Meta)**: 100000 employees.\\\\n2. **Apple**: 200000 employees.\\\\n3. **Amazon**: 1500000 employees.\\\\n4. **Netflix**: 10,000 employees.\\\\n5. **Google (Alphabet)**: 180,000 employees.\"}\n[think]\nThe current total headcount of Apple in 2024 is approximately 200,000 employees.\n[function return] {\"observation\":\"The current total headcount of Apple in 2024 is approximately 200,000 employees.\"}\n[call function runSearchAgent with inputs {\"Prompt\":\"Current total headcount of Netflix in 2024\"}]\n[think]\n[call function web_search with inputs {\"query\":\"Netflix total headcount 2024\"}]\n[function return] {\"txt\":\"Here are the headcounts for each of the FAANG companies in 2024:\\\\n1. **Facebook (Meta)**: 100000 employees.\\\\n2. **Apple**: 200000 employees.\\\\n3. **Amazon**: 1500000 employees.\\\\n4. **Netflix**: 10,000 employees.\\\\n5. **Google (Alphabet)**: 180,000 employees.\"}\n[think]\nAs of 2024, Netflix has approximately 10,000 employees.\n[function return] {\"observation\":\"As of 2024, Netflix has approximately 10,000 employees.\"}\n[call function runSearchAgent with inputs {\"Prompt\":\"Current total headcount of Google (Alphabet) in 2024\"}]\n[think]\n[call function web_search with inputs {\"query\":\"Google Alphabet total headcount 2024\"}]\n[function return] {\"txt\":\"Here are the headcounts for each of the FAANG companies in 2024:\\\\n1. **Facebook (Meta)**: 100000 employees.\\\\n2. **Apple**: 200000 employees.\\\\n3. **Amazon**: 1500000 employees.\\\\n4. **Netflix**: 10,000 employees.\\\\n5. **Google (Alphabet)**: 180,000 employees.\"}\n[think]\nThe current total headcount of Google (Alphabet) in 2024 is approximately 180,000 employees.\n[function return] {\"observation\":\"The current total headcount of Google (Alphabet) in 2024 is approximately 180,000 employees.\"}\n[think]\n[call function runMathAgent with inputs {\"Prompt\":\"Add the total headcount of Facebook (Meta) 100,000, Amazon 1,500,000, Apple 200,000, Netflix 10,000, and Google (Alphabet) 180,000.\"}]\n[think]\n[call function add with inputs {\"a\":100000,\"b\":1.5E+6}]\n[function return] {\"x\":1.6E+6}\n[call function add with inputs {\"a\":200000,\"b\":10000}]\n[function return] {\"x\":210000}\n[call function add with inputs {\"a\":180000,\"b\":0}]\n[function return] {\"x\":180000}\n[think]\n[call function add with inputs {\"a\":1.6E+6,\"b\":210000}]\n[function return] {\"x\":1.81E+6}\n[think]\n[call function add with inputs {\"a\":1.81E+6,\"b\":180000}]\n[function return] {\"x\":1.99E+6}\n[think]\nThe total headcount of Facebook (Meta), Amazon, Apple, Netflix, and Google (Alphabet) combined is approximately 1,990,000 employees.\n[function return] {\"observation\":\"The total headcount of Facebook (Meta), Amazon, Apple, Netflix, and Google (Alphabet) combined is approximately 1,990,000 employees.\"}\n[think]\nThe total headcount of the FAANG companies in 2024 is approximately 1,990,000 employees. This includes about 100,000 employees at Facebook (Meta), 1,500,000 at Amazon, 200,000 at Apple, 10,000 at Netflix, and 180,000 at Google (Alphabet).\n","truncated":false}}
 %---
-%[output:0373281e]
-%   data: {"dataType":"text","outputData":{"text":"The total headcount of FAANG companies in 2024 is approximately 1,990,000 employees.\n","truncated":false}}
+%[output:907b667c]
+%   data: {"dataType":"text","outputData":{"text":"The total headcount of the FAANG companies in 2024 is approximately 1,990,000 employees. This includes about 100,000 employees at Facebook (Meta), 1,500,000 at Amazon, 200,000 at Apple, 10,000 at Netflix, and 180,000 at Google (Alphabet).\n","truncated":false}}
 %---

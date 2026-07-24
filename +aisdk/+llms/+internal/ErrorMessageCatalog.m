@@ -61,6 +61,7 @@ catalog("llms:invalidClientType") = "Client must be an OpenAIClient or OllamaCli
 catalog("llmToolArgument:invalidInput") = "First argument must be a string scalar or a structure array.";
 catalog("llmToolArgument:nonScalarRequired") = "Required must be a scalar logical when constructing a single LLMToolArgument.";
 catalog("llmToolArgument:nonScalarNameValue") = "NameValue must be a scalar logical when constructing a single LLMToolArgument.";
+catalog("llms:invalidToolArguments") = "Tool arguments must be a struct or LLMToolArgument object.";
 catalog("llms:invalidFunctionCall") = "Unrecognized tool {1}.";
 catalog("llms:message:InvalidToolCallID") = "Tool call ID must be empty or a string scalar.";
 catalog("llms:unsupportedToolType") = "Tools must only contain LocalLLMTool and MCPTool objects.";
@@ -71,4 +72,8 @@ catalog("llms:message:NotAnImage") = "Unable to read image from ''{1}''.";
 catalog("llms:message:InvalidImageSource") = "Image must be a file path, URL, or numeric array.";
 catalog("llms:message:InvalidImageContent") = "Message content must be a nonempty numeric or logical array.";
 catalog("llms:message:InvalidTextContent") = "Message content must be a string scalar or character vector.";
+catalog("llms:vararginInInputs") = "Unable to derive input arguments because the function signature contains ''varargin''. Specify the InputArguments name-value argument.";
+catalog("llms:cannotInferInputArguments") = "Unable to derive input arguments from the function metadata. Specify the InputArguments name-value argument.";
+catalog("llms:varargoutInOutputs") = "Unable to derive output arguments because the function signature contains ''varargout''. Specify the OutputArguments name-value argument.";
+catalog("llms:unknownOutputCount") = "Unable to derive output arguments because the function has an unknown number of outputs. Specify the OutputArguments name-value argument.";
 end

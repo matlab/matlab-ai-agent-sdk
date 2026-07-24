@@ -3,20 +3,16 @@
 %[text] ## Implement Functions for Tools to Use
 %[text] 
 function [output, workspace] = toolProvider(workspace, type)
+% Tool for acquiring tools for either string manipulations or arithmetic operations. Use input 'string' for string manipulation tools and  'number' for arithmetic operations.
     arguments
         workspace(1,1) struct
         type(1,1) string
     end
     if type == "string"
-        tools = aisdk.LLMTool(@concatenateStrings, ...
-            Description="Tool for concatenating two strings", ...
-            InputArguments=struct(a="abc", b="xyz"));
+        tools = aisdk.LLMTool(@concatenateStrings);
     elseif type == "number"
-        tools = aisdk.LLMTool(@sumOfTwoNumbers, ...
-            Description="Tool for computing the sum of two numbers", ...
-            InputArguments=struct(a=1, b=2));
-        tools(end+1) = aisdk.LLMTool(@getRandomInteger, ...
-            Description="Tool for providing a random integer between 1 and 10");
+        tools = aisdk.LLMTool(@sumOfTwoNumbers);
+        tools(end+1) = aisdk.LLMTool(@getRandomInteger);
     else
         output.error = "No suitable tools found";
         return;
@@ -26,6 +22,7 @@ function [output, workspace] = toolProvider(workspace, type)
 end
 
 function str = concatenateStrings(a, b)
+% Concatenate two strings
     arguments
         a(1,1) string
         b(1,1) string
@@ -34,6 +31,7 @@ function str = concatenateStrings(a, b)
 end
 
 function c = sumOfTwoNumbers(a, b)
+% Compute the sum of two numbers
     arguments
         a(1,1) double
         b(1,1) double
@@ -42,15 +40,17 @@ function c = sumOfTwoNumbers(a, b)
 end
 
 function x = getRandomInteger()
+% Get random integer between 1 and 10
     x = randi(10,1);
 end
 
-function [obs, workspace] = subAgent(workspace, systemPrompt, prompt)
-arguments
-    workspace(1,1) struct
-    systemPrompt
-    prompt
-end
+function [observation, workspace] = subAgent(workspace, systemPrompt, prompt)
+% Tool for delegating jobs to a sub-process with a set of tools
+    arguments
+        workspace(1,1) struct
+        systemPrompt
+        prompt
+    end
     if ~isfield(workspace, "Tools")
         error("Context must contain a Tools field");
     end
@@ -58,19 +58,14 @@ end
     subAgent = aisdk.AIAgent(llmOpts, SystemPrompt=systemPrompt, ...
         Tools=workspace.Tools, ...
         Workspace=workspace);
-    obs = subAgent.run(prompt);
+    observation = subAgent.run(prompt);
     workspace = subAgent.Workspace;
 end
 %%
 %[text] ## **Set up tools and the "system prompt" for the reAct loop**
-topLevelTools = aisdk.LLMTool(@toolProvider, ...
-    Description="Tool for acquiring tools for either string manipulations or arithmetic operations. Use input 'string' for string manipulation tools and  'number' for arithmetic operations.", ...
-    InputArguments=aisdk.LLMToolArgument("ToolType", "DataType", "string"), ...
-    Workspace="agent");
-topLevelTools(end+1) = aisdk.LLMTool(@subAgent, ...
-    Description="Tool for delegating jobs to a sub-process with a set of tools", ...
-    InputArguments=struct("SystemPrompt", "abc", "Prompt", "abc"), ...
-    Workspace="agent");
+topLevelTools = aisdk.LLMTool(@toolProvider, Workspace="agent");
+topLevelTools(end+1) = aisdk.LLMTool(@subAgent, Workspace="agent");
+
 topLevelPrompt = "You are an assistant who has two sets of tools available for either string manipulations or arithmetic operations." + ...
         "You can acquire these tools using the toolProvider tool. " + ...
         "Given a problem, devise a strategy for solving the problem using the tools available to you. " + ...
@@ -95,13 +90,13 @@ output2 = topLevelAgent.run(prompt2) %[output:9c544e7d] %[output:99c8073d]
 %   data: {"layout":"inline","rightPanelPercent":40}
 %---
 %[output:542cc9f9]
-%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function toolProvider with inputs {\"ToolType\":\"number\"}]\n[function return] \"Added tools :sumOfTwoNumbers, getRandomInteger\"\n[think]\n[call function subAgent with inputs {\"SystemPrompt\":\"You have tools for generating random integers and for summing two numbers.\",\"Prompt\":\"Generate a random integer between 1 and 10.\"}]\n[think]\n[call function getRandomInteger with inputs {}]\n[function return] 7\n[think]\nThe random integer between 1 and 10 that I generated is 7. Would you like me to generate another one?\n[function return] \"The random integer between 1 and 10 that I generated is 7. Would you like me to generate another one?\"\n[call function subAgent with inputs {\"SystemPrompt\":\"You have tools for generating random integers and for summing two numbers.\",\"Prompt\":\"Generate a random integer between 1 and 10.\"}]\n[think]\n[call function getRandomInteger with inputs {}]\n[function return] 8\n[think]\nThe random integer generated between 1 and 10 is 8.\n[function return] \"The random integer generated between 1 and 10 is 8.\"\n[think]\n[call function subAgent with inputs {\"SystemPrompt\":\"You have tools for generating random integers and for summing two numbers.\",\"Prompt\":\"Given the two integers 7 and 8, compute their sum.\"}]\n[think]\n[call function sumOfTwoNumbers with inputs {\"a\":7,\"b\":8}]\n[function return] 15\n[think]\nThe sum of the integers 7 and 8 is 15.\n[function return] \"The sum of the integers 7 and 8 is 15.\"\n[think]\nThe two random integers I generated are 7 and 8. Their sum is 15.\n","truncated":false}}
+%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function toolProvider with inputs {\"type\":\"number\"}]\n[function return] {\"output\":\"Added tools :sumOfTwoNumbers, getRandomInteger\"}\n[think]\n[call function subAgent with inputs {\"systemPrompt\":\"You are an assistant that generates random integers between 1 and 10.\",\"prompt\":\"Generate a random integer between 1 and 10.\"}]\n[think]\n[call function getRandomInteger with inputs {}]\n[function return] {\"x\":1}\n[think]\nThe random integer generated between 1 and 10 is 1.\n[function return] {\"observation\":\"The random integer generated between 1 and 10 is 1.\"}\n[call function subAgent with inputs {\"systemPrompt\":\"You are an assistant that generates random integers between 1 and 10.\",\"prompt\":\"Generate a random integer between 1 and 10.\"}]\n[think]\n[call function getRandomInteger with inputs {}]\n[function return] {\"x\":3}\n[think]\nThe random integer between 1 and 10 is 3.\n[function return] {\"observation\":\"The random integer between 1 and 10 is 3.\"}\n[think]\n[call function subAgent with inputs {\"systemPrompt\":\"You are a calculator assistant.\",\"prompt\":\"Calculate the sum of the numbers 1 and 3.\"}]\n[think]\n[call function sumOfTwoNumbers with inputs {\"a\":1,\"b\":3}]\n[function return] {\"c\":4}\n[think]\nThe sum of the numbers 1 and 3 is 4.\n[function return] {\"observation\":\"The sum of the numbers 1 and 3 is 4.\"}\n[think]\nThe two random integers generated between 1 and 10 are 1 and 3. Their sum is 4.\n","truncated":false}}
 %---
 %[output:654a7ec5]
-%   data: {"dataType":"textualVariable","outputData":{"name":"output","value":"\"The two random integers I generated are 7 and 8. Their sum is 15.\""}}
+%   data: {"dataType":"textualVariable","outputData":{"name":"output","value":"\"The two random integers generated between 1 and 10 are 1 and 3. Their sum is 4.\""}}
 %---
 %[output:9c544e7d]
-%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function toolProvider with inputs {\"ToolType\":\"string\"}]\n[function return] \"Added tools :concatenateStrings\"\n[think]\n[call function subAgent with inputs {\"SystemPrompt\":\"You have the tool to concatenate strings.\",\"Prompt\":\"Concatenate the strings 'acdc' and 'abba'.\"}]\n[think]\n[call function concatenateStrings with inputs {\"a\":\"acdc\",\"b\":\"abba\"}]\n[function return] \"acdcabba\"\n[think]\nThe concatenated string of 'acdc' and 'abba' is 'acdcabba'.\n[function return] \"The concatenated string of 'acdc' and 'abba' is 'acdcabba'.\"\n[think]\nThe concatenation of the strings 'acdc' and 'abba' is 'acdcabba'.\n","truncated":false}}
+%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function toolProvider with inputs {\"type\":\"string\"}]\n[function return] {\"output\":\"Added tools :concatenateStrings\"}\n[think]\n[call function subAgent with inputs {\"systemPrompt\":\"You are a string manipulation assistant.\",\"prompt\":\"Concatenate the strings 'acdc' and 'abba'.\"}]\n[think]\n[call function concatenateStrings with inputs {\"a\":\"acdc\",\"b\":\"abba\"}]\n[function return] {\"str\":\"acdcabba\"}\n[think]\nThe concatenation of the strings 'acdc' and 'abba' is 'acdcabba'.\n[function return] {\"observation\":\"The concatenation of the strings 'acdc' and 'abba' is 'acdcabba'.\"}\n[think]\nThe concatenation of the strings 'acdc' and 'abba' is 'acdcabba'.\n","truncated":false}}
 %---
 %[output:99c8073d]
 %   data: {"dataType":"textualVariable","outputData":{"name":"output2","value":"\"The concatenation of the strings 'acdc' and 'abba' is 'acdcabba'.\""}}

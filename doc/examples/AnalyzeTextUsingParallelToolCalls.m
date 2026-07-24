@@ -15,7 +15,8 @@ llm = aisdk.LLMClient(api, model) %[output:1b130a97]
 %%
 %[text] ## Tools
 %[text] Define the function that extracts data from the customer record.
-function [obs, workspace] = extractCustomerData(workspace, name, age, email)
+function [observation, workspace] = extractCustomerData(workspace, name, age, email)
+%Extract structured customer data from text
     arguments
         workspace(1,1) struct
         name(1,1) string
@@ -30,17 +31,10 @@ function [obs, workspace] = extractCustomerData(workspace, name, age, email)
     else
         workspace.customerData(end+1, :) = {name, age, email};
     end
-    obs = "Extracted data for " + name;
+    observation = "Extracted data for " + name;
 end
 
-structuredInput = struct( ...
-    name="Jane Goodall", ...
-    age=91, ...
-    email="unknown");
-inputsSpec = aisdk.LLMToolArgument(structuredInput);
 extractionTool = aisdk.LLMTool(@extractCustomerData, ...
-    Description="Extract structured customer data from text", ...
-    InputArguments=inputsSpec, ...
     RequiresApproval="never", ... %[control:dropdown:2476]{"position":[22,29]}
     Workspace = "agent");
 %%
@@ -69,14 +63,16 @@ agent.Workspace.customerData %[output:1cb1e815]
 %[text] ## Calling another function
 %[text] Define a function that filters the customer data by age.
 function [json, data] = searchCustomerData(data, minAge, maxAge)
+% Get the customers who match the specified and age
+    arguments
+        data 
+        minAge(1,1) double
+        maxAge(1,1) double
+    end
     data.filteredCustomerData = data.customerData(data.customerData.age >= minAge & data.customerData.age <= maxAge,:);
     json = jsonencode(data.filteredCustomerData);
 end
-inputsSpec2 = struct("minAge", 1, "maxAge", 99);
-
 filteringTool = aisdk.LLMTool(@searchCustomerData, ...
-    Description="Get the customers who match the specified and age", ...
-    InputArguments=inputsSpec2, ...
     RequiresApproval="never", ... %[control:dropdown:2ead]{"position":[22,29]}
     Workspace = "agent");
 %%
@@ -109,19 +105,19 @@ agent.Workspace.filteredCustomerData %[output:134df723]
 %   data: {"dataType":"textualVariable","outputData":{"name":"llm","value":"  <a href=\"matlab:helpPopup('aisdk.llms.client.OpenAIClient')\" style=\"font-weight:bold\">OpenAIClient<\/a> with properties:\n\n                 API: \"openai\"\n           ModelName: \"gpt-4.1-mini\"\n             BaseURL: \"https:\/\/api.openai.com\/v1\/chat\/completions\"\n        MaxNumTokens: Inf\n     ReasoningEffort: \"auto\"\n       StopSequences: []\n           StreamFcn: []\n             TimeOut: 120\n      ResponseFormat: \"text\"\n           Verbosity: \"auto\"\n         Temperature: \"auto\"\n                TopP: \"auto\"\n     PresencePenalty: \"auto\"\n    FrequencyPenalty: \"auto\"\n"}}
 %---
 %[output:7f3522b1]
-%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function extractCustomerData with inputs {\"name\":\"John Doe\",\"age\":35,\"email\":\"johndoe@email.com\"}]\n[function return] \"Extracted data for John Doe\"\n[call function extractCustomerData with inputs {\"name\":\"Jane Smith\",\"age\":28,\"email\":\"janesmith@email.com\"}]\n[function return] \"Extracted data for Jane Smith\"\n[call function extractCustomerData with inputs {\"name\":\"Alex Lee\",\"age\":29,\"email\":\"alexlee@email.com\"}]\n[function return] \"Extracted data for Alex Lee\"\n[call function extractCustomerData with inputs {\"name\":\"Evelyn Carter\",\"age\":32,\"email\":\"evelyncarter32@email.com\"}]\n[function return] \"Extracted data for Evelyn Carter\"\n[call function extractCustomerData with inputs {\"name\":\"Jackson Briggs\",\"age\":45,\"email\":\"jacksonb45@email.com\"}]\n[function return] \"Extracted data for Jackson Briggs\"\n[call function extractCustomerData with inputs {\"name\":\"Aria Patel\",\"age\":27,\"email\":\"apatel27@email.com\"}]\n[function return] \"Extracted data for Aria Patel\"\n[call function extractCustomerData with inputs {\"name\":\"Liam Tanaka\",\"age\":28,\"email\":\"liam.tanaka@email.com\"}]\n[function return] \"Extracted data for Liam Tanaka\"\n[call function extractCustomerData with inputs {\"name\":\"Sofia Russo\",\"age\":24,\"email\":\"sofia.russo124@email.com\"}]\n[function return] \"Extracted data for Sofia Russo\"\n[think]\nHere is the extracted customer data:\n\n1. Name: John Doe, Age: 35, Email: johndoe@email.com\n2. Name: Jane Smith, Age: 28, Email: janesmith@email.com\n3. Name: Alex Lee, Age: 29, Email: alexlee@email.com\n4. Name: Evelyn Carter, Age: 32, Email: evelyncarter32@email.com\n5. Name: Jackson Briggs, Age: 45, Email: jacksonb45@email.com\n6. Name: Aria Patel, Age: 27, Email: apatel27@email.com\n7. Name: Liam Tanaka, Age: 28, Email: liam.tanaka@email.com\n8. Name: Sofia Russo, Age: 24, Email: sofia.russo124@email.com\n","truncated":false}}
+%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function extractCustomerData with inputs {\"name\":\"John Doe\",\"age\":35,\"email\":\"johndoe@email.com\"}]\n[function return] {\"observation\":\"Extracted data for John Doe\"}\n[call function extractCustomerData with inputs {\"name\":\"Jane Smith\",\"age\":28,\"email\":\"janesmith@email.com\"}]\n[function return] {\"observation\":\"Extracted data for Jane Smith\"}\n[call function extractCustomerData with inputs {\"name\":\"Alex Lee\",\"age\":29,\"email\":\"alexlee@email.com\"}]\n[function return] {\"observation\":\"Extracted data for Alex Lee\"}\n[call function extractCustomerData with inputs {\"name\":\"Evelyn Carter\",\"age\":32,\"email\":\"evelyncarter32@email.com\"}]\n[function return] {\"observation\":\"Extracted data for Evelyn Carter\"}\n[call function extractCustomerData with inputs {\"name\":\"Jackson Briggs\",\"age\":45,\"email\":\"jacksonb45@email.com\"}]\n[function return] {\"observation\":\"Extracted data for Jackson Briggs\"}\n[call function extractCustomerData with inputs {\"name\":\"Aria Patel\",\"age\":27,\"email\":\"apatel27@email.com\"}]\n[function return] {\"observation\":\"Extracted data for Aria Patel\"}\n[call function extractCustomerData with inputs {\"name\":\"Liam Tanaka\",\"age\":28,\"email\":\"liam.tanaka@email.com\"}]\n[function return] {\"observation\":\"Extracted data for Liam Tanaka\"}\n[call function extractCustomerData with inputs {\"name\":\"Sofia Russo\",\"age\":24,\"email\":\"sofia.russo124@email.com\"}]\n[function return] {\"observation\":\"Extracted data for Sofia Russo\"}\n[think]\nI have extracted the customer data as follows:\n1. John Doe, 35 years old, email: johndoe@email.com\n2. Jane Smith, 28 years old, email: janesmith@email.com\n3. Alex Lee, 29 years old, email: alexlee@email.com\n4. Evelyn Carter, 32 years old, email: evelyncarter32@email.com\n5. Jackson Briggs, 45 years old, email: jacksonb45@email.com\n6. Aria Patel, 27 years old, email: apatel27@email.com\n7. Liam Tanaka, 28 years old, email: liam.tanaka@email.com\n8. Sofia Russo, 24 years old, email: sofia.russo124@email.com\n\nIf you need the data in a specific format or file, please let me know!\n","truncated":false}}
 %---
 %[output:0952152a]
-%   data: {"dataType":"text","outputData":{"text":"Here is the extracted customer data:\n\n1. Name: John Doe, Age: 35, Email: johndoe@email.com\n2. Name: Jane Smith, Age: 28, Email: janesmith@email.com\n3. Name: Alex Lee, Age: 29, Email: alexlee@email.com\n4. Name: Evelyn Carter, Age: 32, Email: evelyncarter32@email.com\n5. Name: Jackson Briggs, Age: 45, Email: jacksonb45@email.com\n6. Name: Aria Patel, Age: 27, Email: apatel27@email.com\n7. Name: Liam Tanaka, Age: 28, Email: liam.tanaka@email.com\n8. Name: Sofia Russo, Age: 24, Email: sofia.russo124@email.com\n","truncated":false}}
+%   data: {"dataType":"text","outputData":{"text":"I have extracted the customer data as follows:\n1. John Doe, 35 years old, email: johndoe@email.com\n2. Jane Smith, 28 years old, email: janesmith@email.com\n3. Alex Lee, 29 years old, email: alexlee@email.com\n4. Evelyn Carter, 32 years old, email: evelyncarter32@email.com\n5. Jackson Briggs, 45 years old, email: jacksonb45@email.com\n6. Aria Patel, 27 years old, email: apatel27@email.com\n7. Liam Tanaka, 28 years old, email: liam.tanaka@email.com\n8. Sofia Russo, 24 years old, email: sofia.russo124@email.com\n\nIf you need the data in a specific format or file, please let me know!\n","truncated":false}}
 %---
 %[output:1cb1e815]
 %   data: {"dataType":"tabular","outputData":{"columnNames":["name","age","email"],"columns":3,"dataTypes":["string","double","string"],"header":"8×3 table","name":"ans","rows":8,"type":"table","value":[["\"John Doe\"","35","\"johndoe@email.com\""],["\"Jane Smith\"","28","\"janesmith@email.com\""],["\"Alex Lee\"","29","\"alexlee@email.com\""],["\"Evelyn Carter\"","32","\"evelyncarter32@email.com\""],["\"Jackson Briggs\"","45","\"jacksonb45@email.com\""],["\"Aria Patel\"","27","\"apatel27@email.com\""],["\"Liam Tanaka\"","28","\"liam.tanaka@email.com\""],["\"Sofia Russo\"","24","\"sofia.russo124@email.com\""]]}}
 %---
 %[output:22c8241f]
-%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function searchCustomerData with inputs {\"minAge\":28,\"maxAge\":29}]\n[function return] \"[{\\\"name\\\":\\\"Jane Smith\\\",\\\"age\\\":28,\\\"email\\\":\\\"janesmith@email.com\\\"},{\\\"name\\\":\\\"Alex Lee\\\",\\\"age\\\":29,\\\"email\\\":\\\"alexlee@email.com\\\"},{\\\"name\\\":\\\"Liam Tanaka\\\",\\\"age\\\":28,\\\"email\\\":\\\"liam.tanaka@email.com\\\"}]\"\n[think]\nThe customers who are both under 30 and older than 27 are:\n\n1. Jane Smith, 28 years old, Email: janesmith@email.com\n2. Alex Lee, 29 years old, Email: alexlee@email.com\n3. Liam Tanaka, 28 years old, Email: liam.tanaka@email.com\n","truncated":false}}
+%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function searchCustomerData with inputs {\"minAge\":28,\"maxAge\":29}]\n[function return] {\"json\":\"[{\\\"name\\\":\\\"Jane Smith\\\",\\\"age\\\":28,\\\"email\\\":\\\"janesmith@email.com\\\"},{\\\"name\\\":\\\"Alex Lee\\\",\\\"age\\\":29,\\\"email\\\":\\\"alexlee@email.com\\\"},{\\\"name\\\":\\\"Liam Tanaka\\\",\\\"age\\\":28,\\\"email\\\":\\\"liam.tanaka@email.com\\\"}]\"}\n[think]\nThe customers who are older than 27 and under 30 are:\n1. Jane Smith, 28 years old, email: janesmith@email.com\n2. Alex Lee, 29 years old, email: alexlee@email.com\n3. Liam Tanaka, 28 years old, email: liam.tanaka@email.com\n","truncated":false}}
 %---
 %[output:2f3157b2]
-%   data: {"dataType":"text","outputData":{"text":"The customers who are both under 30 and older than 27 are:\n\n1. Jane Smith, 28 years old, Email: janesmith@email.com\n2. Alex Lee, 29 years old, Email: alexlee@email.com\n3. Liam Tanaka, 28 years old, Email: liam.tanaka@email.com\n","truncated":false}}
+%   data: {"dataType":"text","outputData":{"text":"The customers who are older than 27 and under 30 are:\n1. Jane Smith, 28 years old, email: janesmith@email.com\n2. Alex Lee, 29 years old, email: alexlee@email.com\n3. Liam Tanaka, 28 years old, email: liam.tanaka@email.com\n","truncated":false}}
 %---
 %[output:134df723]
 %   data: {"dataType":"tabular","outputData":{"columnNames":["name","age","email"],"columns":3,"dataTypes":["string","double","string"],"header":"3×3 table","name":"ans","rows":3,"type":"table","value":[["\"Jane Smith\"","28","\"janesmith@email.com\""],["\"Alex Lee\"","29","\"alexlee@email.com\""],["\"Liam Tanaka\"","28","\"liam.tanaka@email.com\""]]}}

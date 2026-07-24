@@ -21,8 +21,8 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
                 name(1,1) string = ""
                 NVPairs.Description(1,1) string
                 NVPairs.DisplayTitle(1,1) string
-                NVPairs.InputArguments(1,:)
-                NVPairs.OutputArguments(1,:)
+                NVPairs.InputArguments(1,:) {aisdk.llms.internal.mustBeToolArguments}
+                NVPairs.OutputArguments(1,:) {aisdk.llms.internal.mustBeToolArguments}
                 NVPairs.Annotations(1,1) struct = struct()
                 NVPairs.RequiresApproval(1,1) aisdk.llms.tool.RequiresApproval = "never"
                 NVPairs.Workspace(1,1) string {mustBeMember(NVPairs.Workspace, ["none","agent"])}
@@ -50,7 +50,7 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
                 this.DisplayTitle = this.Name;
             end
 
-            metaData = aisdk.llms.tool.LocalLLMTool.getMetaData(funcName);
+            metaData = aisdk.llms.tool.LocalLLMTool.getMetaData(fcnHandle);
             hasMetaData = ~isempty(metaData);
 
             if isfield(NVPairs, "Workspace")
@@ -85,9 +85,15 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
                 if this.Workspace == "agent" && ~isempty(inputs)
                     inputs = inputs(2:end);
                 end
+                inputNames = arrayfun(@(s) string(s.Identifier.Name), inputs);
+                if ~isempty(inputNames) && any(inputNames == "varargin")
+                    error("llms:vararginInInputs", ...
+                        aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:vararginInInputs"));
+                end
                 this.InputArguments = aisdk.llms.tool.LocalLLMTool.getParamsFromSignature(inputs);
             else
-                this.InputArguments = aisdk.LLMToolArgument.empty(1,0);
+                error("llms:cannotInferInputArguments", ...
+                    aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:cannotInferInputArguments"));
             end
 
             if isfield(NVPairs, "OutputArguments") && isa(NVPairs.OutputArguments, "aisdk.LLMToolArgument")
@@ -99,7 +105,15 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
                 if this.Workspace == "agent" && ~isempty(outputs)
                     outputs = outputs(1:end-1);
                 end
+                outputNames = arrayfun(@(s) string(s.Identifier.Name), outputs);
+                if ~isempty(outputNames) && any(outputNames == "varargout")
+                    error("llms:varargoutInOutputs", ...
+                        aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:varargoutInOutputs"));
+                end
                 this.OutputArguments = aisdk.llms.tool.LocalLLMTool.getParamsFromSignature(outputs);
+            elseif nargout(fcnHandle) ~= 1
+                error("llms:unknownOutputCount", ...
+                    aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:unknownOutputCount"));
             else
                 this.OutputArguments = aisdk.LLMToolArgument.empty(1,0);
             end
@@ -221,17 +235,39 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
         end
 
 
-        function metaData = getMetaData(fcnName)
+        function metaData = getMetaData(fcnHandle)
+            fn = functions(fcnHandle);
+            if isfield(fn, "parentage")
+                qualifiedName = join(string(fliplr(fn.parentage)), ">");
+            else
+                qualifiedName = string(fn.function);
+            end
             if ~isempty(which('metafunction'))
-                metaData = metafunction(fcnName);
+                metaData = metafunction(qualifiedName);
             else
                 metaData = aisdk.llms.tool.LocalLLMTool.convertInternalMeta( ...
-                    matlab.internal.metafunction(fcnName));
+                    matlab.internal.metafunction(qualifiedName));
+                % matlab.internal.metafunction does not populate description
+                % for all functions, so try the function help instead.
+                if ~isempty(metaData) && strlength(metaData.Description) == 0
+                    h = strtrim(string(help(qualifiedName)));
+                    if strlength(h) > 0
+                        lines = splitlines(h);
+                        desc = strip(lines(1));
+                        fcnName = string(fn.function);
+                        if startsWith(desc, fcnName, "IgnoreCase", true)
+                            desc = strip(extractAfter(desc, strlength(fcnName)));
+                        end
+                        desc = regexprep(desc, "^[\s\-]+", "");
+                        metaData.Description = desc;
+                    end
+                end
             end
         end
 
         function out = convertInternalMeta(m)
-            if isempty(m)
+            if ~isscalar(m)
+                % metadata missing or ambiguous
                 out = [];
                 return
             end
@@ -241,7 +277,7 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
             out.Signature.Outputs = aisdk.llms.tool.LocalLLMTool.convertArgs(m.Signature.Outputs);
         end
 
-        function args = convertArgs(oldArgs)
+        function args = convertArgs(oldArgs) 
             args = struct("Identifier", {}, "Description", {}, ...
                 "NameValue", {}, "Required", {}, "Validation", {});
             idx = 0;

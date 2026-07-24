@@ -3,31 +3,39 @@ classdef tLLMTool < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
+    methods (TestClassSetup)
+        function addFunctionsToPath(testCase)
+            testsRoot = fileparts(fileparts(fileparts(mfilename("fullpath"))));
+            testCase.applyFixture(matlab.unittest.fixtures.PathFixture( ...
+                fullfile(testsRoot, "resources", "functions")));
+        end
+    end
+
     methods (Test, TestTags = {'Unit'})
         function select_existingName_returnsTool(testCase)
-            tool1 = aisdk.llms.tool.LocalLLMTool(@sin);
-            tool2 = aisdk.llms.tool.LocalLLMTool(@cos);
+            tool1 = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
+            tool2 = aisdk.llms.tool.LocalLLMTool(@greetUser);
             tools = [tool1, tool2];
-            found = tools.select("sin");
-            testCase.verifyEqual(found.Name, "sin");
+            found = tools.select("addTwoNumbers");
+            testCase.verifyEqual(found.Name, "addTwoNumbers");
         end
 
         function select_duplicateNames_returnsFirstMatch(testCase)
-            tool1 = aisdk.llms.tool.LocalLLMTool(@sin, Description="First");
-            tool2 = aisdk.llms.tool.LocalLLMTool(@sin, "sin", Description="Second");
+            tool1 = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers, Description="First");
+            tool2 = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers, Description="Second");
             tools = [tool1, tool2];
-            found = tools.select("sin");
+            found = tools.select("addTwoNumbers");
             testCase.verifyEqual(found.Description, "First");
         end
 
         function select_unknownName_throwsError(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@sin);
+            tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
             testCase.verifyError(@() tool.select("nonexistent"), ...
                 "llms:invalidFunctionCall");
         end
 
         function concatenation_mixedSubclasses_createsHeterogeneousArray(testCase)
-            tool1 = aisdk.llms.tool.LocalLLMTool(@sin);
+            tool1 = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
             tool2 = aisdk.llms.tool.MCPTool();
             tool2.Name = "myTool";
             tools = [tool1, tool2];
@@ -36,7 +44,7 @@ classdef tLLMTool < matlab.unittest.TestCase
         end
 
         function select_heterogeneousArray_returnsCorrectSubclass(testCase)
-            tool1 = aisdk.llms.tool.LocalLLMTool(@sin);
+            tool1 = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
             tool2 = aisdk.llms.tool.MCPTool();
             tool2.Name = "myTool";
             tools = [tool1, tool2];
@@ -46,7 +54,7 @@ classdef tLLMTool < matlab.unittest.TestCase
         end
 
         function setProperties_validValues_updatesAll(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@sin, Description="Sine");
+            tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
             tool.Name = "renamed";
             tool.DisplayTitle = "My Title";
             tool.Description = "New desc";
@@ -58,7 +66,7 @@ classdef tLLMTool < matlab.unittest.TestCase
         end
 
         function display_heterogeneousArray_showsAllSubclassTypes(testCase)
-            tool1 = aisdk.llms.tool.LocalLLMTool(@sin, Description="Sine");
+            tool1 = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
             tool2 = aisdk.llms.tool.MCPTool();
             tool2.Name = "mcpTool";
             tools = [tool1, tool2];
@@ -68,7 +76,7 @@ classdef tLLMTool < matlab.unittest.TestCase
         end
 
         function display_heterogeneousArray_showsCommonPropertiesOnly(testCase)
-            tool1 = aisdk.llms.tool.LocalLLMTool(@sin, Description="Sine");
+            tool1 = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
             tool2 = aisdk.llms.tool.MCPTool();
             tool2.Name = "mcpTool";
             tools = [tool1, tool2];

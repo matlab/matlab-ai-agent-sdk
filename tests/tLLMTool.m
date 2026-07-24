@@ -44,7 +44,9 @@ classdef tLLMTool < matlab.unittest.TestCase
         end
 
         function anonymousFunction_positionalName_setsName(testCase)
-            tool = aisdk.LLMTool(@(x) x+1, "increment", Description="Add one");
+            tool = aisdk.LLMTool(@(x) x+1, "increment", Description="Add one", ...
+                InputArguments=aisdk.LLMToolArgument("x", DataType="number"), ...
+                OutputArguments=aisdk.LLMToolArgument("result", DataType="number"));
             testCase.verifyEqual(tool.Name, "increment");
         end
 

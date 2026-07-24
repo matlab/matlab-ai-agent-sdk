@@ -6,7 +6,8 @@ classdef tClientBase < matlab.unittest.TestCase
     methods (Test, TestTags = {'Unit'})
         function encodeToolSingleRequired(testCase)
             tool = aisdk.LLMTool(@(x) x, "myFcn", Description="A function", ...
-                InputArguments=aisdk.LLMToolArgument("x", DataType="number", Description="Value"));
+                InputArguments=aisdk.LLMToolArgument("x", DataType="number", Description="Value"), ...
+                OutputArguments=aisdk.LLMToolArgument("result"));
             schema = captureToolSchema(tool);
             testCase.verifyEqual(schema.type, "object");
             testCase.verifyTrue(isfield(schema.properties, "x"));
@@ -18,7 +19,8 @@ classdef tClientBase < matlab.unittest.TestCase
         function encodeToolMultipleParams(testCase)
             tool = aisdk.LLMTool(@(x) x, "myFcn", Description="A function", ...
                 InputArguments=[aisdk.LLMToolArgument("a", DataType="number"), ...
-                        aisdk.LLMToolArgument("b", DataType="string")]);
+                        aisdk.LLMToolArgument("b", DataType="string")], ...
+                OutputArguments=aisdk.LLMToolArgument("result"));
             schema = captureToolSchema(tool);
             testCase.verifyTrue(isfield(schema.properties, "a"));
             testCase.verifyTrue(isfield(schema.properties, "b"));
@@ -29,7 +31,8 @@ classdef tClientBase < matlab.unittest.TestCase
         function argumentsToSchema_withEmptyDataType_omitsTypeField(testCase)
             import matlab.unittest.constraints.HasField
             tool = aisdk.LLMTool(@(x) x, "myFcn", Description="A function", ...
-                InputArguments=aisdk.LLMToolArgument("x", DataType="", Description="A param"));
+                InputArguments=aisdk.LLMToolArgument("x", DataType="", Description="A param"), ...
+                OutputArguments=aisdk.LLMToolArgument("result"));
             schema = captureToolSchema(tool);
             testCase.verifyThat(schema.properties.x, ~HasField("type"));
         end
@@ -37,14 +40,16 @@ classdef tClientBase < matlab.unittest.TestCase
         function argumentsToSchema_withEmptyDescription_omitsField(testCase)
             import matlab.unittest.constraints.HasField
             tool = aisdk.LLMTool(@(x) x, "myFcn", Description="A function", ...
-                InputArguments=aisdk.LLMToolArgument("x", DataType="number", Description=""));
+                InputArguments=aisdk.LLMToolArgument("x", DataType="number", Description=""), ...
+                OutputArguments=aisdk.LLMToolArgument("result"));
             schema = captureToolSchema(tool);
             testCase.verifyThat(schema.properties.x, ~HasField("description"));
         end
 
         function encodeToolOmitsRequiredWhenNoneRequired(testCase)
             tool = aisdk.LLMTool(@(x) x, "myFcn", Description="A function", ...
-                InputArguments=aisdk.LLMToolArgument("x", DataType="number", Required=false));
+                InputArguments=aisdk.LLMToolArgument("x", DataType="number", Required=false), ...
+                OutputArguments=aisdk.LLMToolArgument("result"));
             schema = captureToolSchema(tool);
             testCase.verifyFalse(isfield(schema, "required"));
         end
@@ -52,7 +57,8 @@ classdef tClientBase < matlab.unittest.TestCase
         function encodeToolMultipleRequired(testCase)
             tool = aisdk.LLMTool(@(x) x, "myFcn", Description="A function", ...
                 InputArguments=[aisdk.LLMToolArgument("a", DataType="number"), ...
-                        aisdk.LLMToolArgument("b", DataType="number")]);
+                        aisdk.LLMToolArgument("b", DataType="number")], ...
+                OutputArguments=aisdk.LLMToolArgument("result"));
             schema = captureToolSchema(tool);
             testCase.verifyEqual(sort(schema.required), sort(["a", "b"]));
         end
@@ -108,7 +114,8 @@ classdef tClientBase < matlab.unittest.TestCase
             client = aisdk.llms.client.OpenAIClient("gpt-4o", APIKey="fake-key");
             client.sendRequestFcn = @fakeOk;
             tool = aisdk.LLMTool(@(x) x, "toolA", Description="A tool", ...
-                InputArguments=aisdk.LLMToolArgument("x", DataType="number"));
+                InputArguments=aisdk.LLMToolArgument("x", DataType="number"), ...
+                OutputArguments=aisdk.LLMToolArgument("result"));
             testCase.verifyError( ...
                 @() generate(client, "hi", Tools=tool, ToolChoice="unknown"), ...
                 "MATLAB:validators:mustBeMember");
@@ -126,7 +133,8 @@ classdef tClientBase < matlab.unittest.TestCase
             client = aisdk.llms.client.OpenAIClient("gpt-4o", APIKey="fake-key");
             client.sendRequestFcn = @fakeSend;
             tool = aisdk.LLMTool(@(x) x, "toolA", Description="A tool", ...
-                InputArguments=aisdk.LLMToolArgument("x", DataType="number"));
+                InputArguments=aisdk.LLMToolArgument("x", DataType="number"), ...
+                OutputArguments=aisdk.LLMToolArgument("result"));
             generate(client, "hi", Tools=tool, ToolChoice="toolA");
             testCase.verifyTrue(~isempty(captured));
 
@@ -145,7 +153,8 @@ classdef tClientBase < matlab.unittest.TestCase
             client = aisdk.llms.client.OpenAIClient("gpt-4o", APIKey="fake-key");
             client.sendRequestFcn = @fakeSend;
             tool = aisdk.LLMTool(@(x) x, "funcA", Description="A tool", ...
-                InputArguments=aisdk.LLMToolArgument("x", DataType="number"));
+                InputArguments=aisdk.LLMToolArgument("x", DataType="number"), ...
+                OutputArguments=aisdk.LLMToolArgument("result"));
             generate(client, "hi", Tools=tool, ToolChoice=[]);
             testCase.verifyEqual(captured{1}.tool_choice, "auto");
 
@@ -179,7 +188,8 @@ classdef tClientBase < matlab.unittest.TestCase
             client = aisdk.llms.client.OpenAIClient("gpt-4o", APIKey="fake-key");
             client.sendRequestFcn = @fakeSend;
             tool = aisdk.LLMTool(@(x) x, "myFunc", Description="A tool", ...
-                InputArguments=aisdk.LLMToolArgument("x", DataType="number"));
+                InputArguments=aisdk.LLMToolArgument("x", DataType="number"), ...
+                OutputArguments=aisdk.LLMToolArgument("result"));
             generate(client, "hi", Tools=tool, ToolChoice="myFunc");
             testCase.verifyEqual(captured{1}.tool_choice.type, "function");
             testCase.verifyEqual(captured{1}.tool_choice.("function").name, "myFunc");
@@ -198,7 +208,8 @@ classdef tClientBase < matlab.unittest.TestCase
             client = aisdk.llms.client.OpenAIClient("gpt-4o", APIKey="fake-key");
             client.sendRequestFcn = @fakeSend;
             tool = aisdk.LLMTool(@(x) x, "toolA", Description="A tool", ...
-                InputArguments=aisdk.LLMToolArgument("x", DataType="number"));
+                InputArguments=aisdk.LLMToolArgument("x", DataType="number"), ...
+                OutputArguments=aisdk.LLMToolArgument("result"));
             generate(client, "hi", Tools=tool, ToolChoice="required");
             testCase.verifyEqual(captured{1}.tool_choice, "required");
 

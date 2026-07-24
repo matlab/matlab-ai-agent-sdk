@@ -141,6 +141,13 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             testCase.verifyEqual(tool.InputArguments(1).Description, "First");
         end
 
+        function outputsFromllmToolArgument(testCase)
+            args = aisdk.LLMToolArgument("result", DataType="number", Description="Sum");
+            tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers, OutputArguments=args);
+            testCase.verifyLength(tool.OutputArguments, 1);
+            testCase.verifyEqual(tool.OutputArguments(1).Description, "Sum");
+        end
+
         function outputsFromPrototypeStruct(testCase)
             tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers, ...
                 OutputArguments=struct("result", 1.0));
@@ -318,17 +325,20 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             testCase.verifyTrue(workspace.called);
         end
 
-        function anonFunctionWithToolName(testCase)
+        function anonymousFunction_withExplicitArguments_evaluatesCorrectly(testCase)
             tool = aisdk.llms.tool.LocalLLMTool(@(x,y) x+y, "myAdder", ...
                 InputArguments=[aisdk.LLMToolArgument("x", DataType="number"), ...
-                    aisdk.LLMToolArgument("y", DataType="number")]);
-            testCase.verifyEqual(tool.Name, "myAdder");
+                    aisdk.LLMToolArgument("y", DataType="number")], ...
+                OutputArguments=aisdk.LLMToolArgument("result", DataType="number"));
             output = tool.evaluate(struct("x", 3, "y", 4));
-            testCase.verifyEqual(output, 7);
+            testCase.verifyEqual(output.result, 7);
         end
 
         function anonymousFunction_positionalName_setsName(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@(x,y) x+y, "myAdder");
+            tool = aisdk.llms.tool.LocalLLMTool(@(x,y) x+y, "myAdder", ...
+                InputArguments=[aisdk.LLMToolArgument("x", DataType="number"), ...
+                    aisdk.LLMToolArgument("y", DataType="number")], ...
+                OutputArguments=aisdk.LLMToolArgument("result"));
             testCase.verifyEqual(tool.Name, "myAdder");
         end
 
@@ -359,6 +369,18 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
                 "llms:duplicateArgumentNames");
         end
 
+        function constructor_invalidInputArguments_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.llms.tool.LocalLLMTool(@addTwoNumbers, InputArguments=42), ...
+                "llms:invalidToolArguments");
+        end
+
+        function constructor_invalidOutputArguments_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.llms.tool.LocalLLMTool(@addTwoNumbers, OutputArguments="bad"), ...
+                "llms:invalidToolArguments");
+        end
+
         function constructor_invalidDefinition_errors(testCase)
             testCase.verifyError( ...
                 @() aisdk.llms.tool.LocalLLMTool(42), ...
@@ -366,18 +388,18 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
         end
 
         function construct_noWorkspaceSpecified_defaultsToNone(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@sin, Description="Sine");
+            tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
             testCase.verifyEqual(tool.Workspace, "none");
         end
 
         function construct_workspaceNone_setsNone(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@sin, Description="Sine", Workspace="none");
+            tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers, Workspace="none");
             testCase.verifyEqual(tool.Workspace, "none");
         end
 
         function construct_invalidWorkspace_errors(testCase)
-            testCase.verifyError(@() aisdk.llms.tool.LocalLLMTool(@sin, ...
-                Description="Sine", Workspace="invalid"), ...
+            testCase.verifyError(@() aisdk.llms.tool.LocalLLMTool(@addTwoNumbers, ...
+                Workspace="invalid"), ...
                 "MATLAB:validators:mustBeMember");
         end
 
@@ -397,10 +419,59 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
                 "llms:workspaceDoesNotSupportVarargout");
         end
 
-        function constructor_noMetadata_returnsEmptyInputs(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@() "hello", "noMeta", ...
-                Description="A function with no metadata");
-            testCase.verifyEmpty(tool.InputArguments);
+        function constructor_nonexistentFunction_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.llms.tool.LocalLLMTool(@functionThatDoesNotExist), ...
+                "llms:cannotInferInputArguments");
+        end
+
+        function constructor_noMetadata_noInputArguments_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.llms.tool.LocalLLMTool(@(a,b) a+b, "add"), ...
+                "llms:cannotInferInputArguments");
+        end
+
+        function constructor_noMetadata_withExplicitArguments_succeeds(testCase)
+            args = aisdk.LLMToolArgument("a", DataType="number");
+            tool = aisdk.llms.tool.LocalLLMTool(@(a) a*2, "double", ...
+                InputArguments=args, OutputArguments=aisdk.LLMToolArgument("result"));
+            testCase.verifyLength(tool.InputArguments, 1);
+        end
+
+        function constructor_noMetadata_noOutputArguments_nargoutNotOne_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.llms.tool.LocalLLMTool(@(a) a+1, "inc", ...
+                    InputArguments=aisdk.LLMToolArgument("a", DataType="number")), ...
+                "llms:unknownOutputCount");
+        end
+
+        function constructor_vararginInInputs_noInputArguments_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.llms.tool.LocalLLMTool(@typedWithVarargin), ...
+                "llms:vararginInInputs");
+        end
+
+        function constructor_vararginInInputs_withInputArguments_succeeds(testCase)
+            args = [aisdk.LLMToolArgument("x", DataType="number"), ...
+                    aisdk.LLMToolArgument("y", DataType="number")];
+            tool = aisdk.llms.tool.LocalLLMTool(@typedWithVarargin, ...
+                InputArguments=args);
+            testCase.verifyLength(tool.InputArguments, 2);
+        end
+
+        function constructor_varargoutInOutputs_noOutputArguments_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.llms.tool.LocalLLMTool(@size, ...
+                    InputArguments=aisdk.LLMToolArgument("A", DataType="number")), ...
+                "llms:varargoutInOutputs");
+        end
+
+        function constructor_varargoutInOutputs_withOutputArguments_succeeds(testCase)
+            outs = [aisdk.LLMToolArgument("m"), aisdk.LLMToolArgument("n")];
+            tool = aisdk.llms.tool.LocalLLMTool(@size, ...
+                InputArguments=aisdk.LLMToolArgument("A", DataType="number"), ...
+                OutputArguments=outs);
+            testCase.verifyLength(tool.OutputArguments, 2);
         end
 
         function constructor_logicalInput_mapsToBoolean(testCase)
@@ -414,24 +485,121 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
                 "llms:unsupportedMATLABType");
         end
 
-        function constructor_functionWithVarargin_excludesFromInputArguments(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@typedWithVarargin);
-            testCase.verifySize(tool.InputArguments, [1 1]);
-            testCase.verifyEqual(tool.InputArguments(1).Name, "x");
-        end
-
-        function constructor_functionWithVarargout_excludesFromOutputArguments(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@size);
-            testCase.verifyEmpty(tool.OutputArguments);
-        end
-
         function constructor_withNamespacedFunction_replacesDotsWithUnderscores(testCase)
             tool = aisdk.LLMTool(@some.namespace.testFcn);
             testCase.verifyEqual(tool.Name, "some_namespace_testFcn");
         end
 
+        function constructor_nonScalarMetafunction_errors(testCase)
+            % Only applies on 25b and earlier (matlab.internal.metafunction path)
+            testCase.assumeEmpty(which('metafunction'));
+            testCase.verifyError( ...
+                @() aisdk.llms.tool.LocalLLMTool(@count), ...
+                "llms:cannotInferInputArguments");
+        end
+
+        function constructor_nonScalarMetafunction_succeedsWithExplicitArgs(testCase)
+            % Only applies on 25b and earlier (matlab.internal.metafunction path)
+            testCase.assumeEmpty(which('metafunction'));
+            tool = aisdk.llms.tool.LocalLLMTool(@count, ...
+                InputArguments=struct(input="str"), ...
+                OutputArguments=struct(n=0));
+            testCase.verifyEqual(tool.InputArguments.Name, "input");
+            testCase.verifyEqual(tool.OutputArguments.Name, "n");
+        end
+
+        function anonymousFunction_zeroInputsZeroOutputs_succeeds(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool(@() disp('Hello'), "greet", ...
+                InputArguments=struct(), OutputArguments=struct());
+            testCase.verifyEmpty(tool.InputArguments);
+            testCase.verifyEmpty(tool.OutputArguments);
+        end
+
+        function anonymousFunction_explicitArguments_overrideEmptyMetadata(testCase)
+            inputs = [aisdk.LLMToolArgument("x", DataType="number"), ...
+                    aisdk.LLMToolArgument("y", DataType="number")];
+            outputs = aisdk.LLMToolArgument("result", DataType="number");
+            tool = aisdk.llms.tool.LocalLLMTool(@(x, y) x + y, "add", ...
+                InputArguments=inputs, OutputArguments=outputs);
+            testCase.verifyLength(tool.InputArguments, 2);
+            testCase.verifyEqual(tool.InputArguments(1).Name, "x");
+            testCase.verifyEqual(tool.InputArguments(2).Name, "y");
+            testCase.verifyLength(tool.OutputArguments, 1);
+            testCase.verifyEqual(tool.OutputArguments(1).Name, "result");
+        end
+
+        function staticMethod_extractsInputsFromMetadata(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool( ...
+                @ToolTestHelper.addNumbers, "addNumbers");
+            testCase.verifyLength(tool.InputArguments, 2);
+            testCase.verifyEqual(tool.InputArguments(1).Name, "a");
+            testCase.verifyEqual(tool.InputArguments(2).Name, "b");
+        end
+
+        function staticMethod_extractsOutputsFromMetadata(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool( ...
+                @ToolTestHelper.addNumbers, "addNumbers");
+            testCase.verifyLength(tool.OutputArguments, 1);
+            testCase.verifyEqual(tool.OutputArguments(1).Name, "c");
+        end
+
+        function staticMethod_description_extractedFromMetadata(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool( ...
+                @ToolTestHelper.addNumbers, "addNumbers");
+            testCase.verifyEqual(tool.Description, "Add two numbers together.");
+        end
+
+        function staticMethod_name_replacesDotsWithUnderscores(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool(@ToolTestHelper.addNumbers);
+            testCase.verifyEqual(tool.Name, "ToolTestHelper_addNumbers");
+        end
+
+        function staticMethod_multipleOutputs_extractedFromMetadata(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool( ...
+                @ToolTestHelper.doAllMathsStatic, "doAllMathsStatic");
+            testCase.verifyLength(tool.OutputArguments, 4);
+            testCase.verifyEqual(tool.OutputArguments(1).Name, "added");
+            testCase.verifyEqual(tool.OutputArguments(2).Name, "subtracted");
+            testCase.verifyEqual(tool.OutputArguments(3).Name, "multiplied");
+            testCase.verifyEqual(tool.OutputArguments(4).Name, "divided");
+        end
+
+        function instanceMethod_requiresName(testCase)
+            obj = ToolTestHelper();
+            testCase.verifyError( ...
+                @() aisdk.llms.tool.LocalLLMTool(@obj.multiply), ...
+                "llms:anonymousFunctionRequiresName");
+        end
+
+        function localFunction_inputArguments_extractedFromMetadata(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool(@localAdd);
+            testCase.verifyLength(tool.InputArguments, 2);
+            testCase.verifyEqual(tool.InputArguments(1).Name, "a");
+            testCase.verifyEqual(tool.InputArguments(1).DataType, "number");
+            testCase.verifyEqual(tool.InputArguments(2).Name, "b");
+            testCase.verifyEqual(tool.InputArguments(2).DataType, "number");
+        end
+
+        function localFunction_outputArguments_extractedFromMetadata(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool(@localAdd);
+            testCase.verifyLength(tool.OutputArguments, 1);
+            testCase.verifyEqual(tool.OutputArguments(1).Name, "c");
+        end
+
+        function localFunction_description_extractedFromMetadata(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool(@localAdd);
+            testCase.verifyEqual(tool.Description, "Add two numbers together.");
+        end
+
+        function localFunction_name_extractedFromHandle(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool(@localAdd);
+            testCase.verifyEqual(tool.Name, "localAdd");
+        end
+
+        %% Display
+
         function display_showsCorrectProperties(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@sin, Description="Sine");
+            tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
             output = formattedDisplayText(tool);
             testCase.verifySubstring(output, "Name");
             testCase.verifySubstring(output, "Description");
@@ -454,6 +622,17 @@ end
 function [output, workspace] = contextualAdd(workspace, a, b)
     output = a + b;
     workspace.called = true;
+end
+
+function c = localAdd(a, b)
+% localAdd - - - - Add two numbers together.
+
+% Multiple dashes and spaces test that the prefix-stripping regex handles them correctly.
+    arguments
+        a (1,1) double
+        b (1,1) double
+    end
+    c = a + b;
 end
 
 function workspace = singleOutputWorkspace(workspace)

@@ -7,17 +7,19 @@
 %%
 %[text] ## Define Tools
 %[text] Create tools for solving quadratic equations and finding the smallest real number.
-function obs = solveQuadraticEquation(a, b, c)
+function result = solveQuadraticEquation(a, b, c)
+% Compute roots of ax^2 + bx + c = 0
     arguments
         a(1,1) double
         b(1,1) double
         c(1,1) double
     end
     r = roots([a b c]);
-    obs = jsonencode(string(r));
+    result = jsonencode(string(r));
 end
 
-function obs = findSmallestReal(x1, x2)
+function result = findSmallestReal(x1, x2)
+% Find smallest real number from two numbers
     arguments
         x1(1,1) string
         x2(1,1) string
@@ -25,20 +27,16 @@ function obs = findSmallestReal(x1, x2)
     allRoots = [str2double(x1) str2double(x2)];
     realRoots = allRoots(imag(allRoots)==0);
     if isempty(realRoots)
-        obs = "No real numbers.";
+        result = "No real numbers.";
     else
-        obs = jsonencode(min(realRoots));
+        result = jsonencode(min(realRoots));
     end
 end
 
 quadraticTool = aisdk.LLMTool(@solveQuadraticEquation, ...
-    Description="Compute roots of ax^2 + bx + c = 0", ...
-    InputArguments=struct("a", 1, "b", 2, "c", -3), ...
     RequiresApproval="never"); %[control:dropdown:tool1]{"position":[22,29]}
 
 smallestTool = aisdk.LLMTool(@findSmallestReal, ...
-    Description="Find smallest real number from two numbers", ...
-    InputArguments=struct("x1", "1", "x2", "-3"), ...
     RequiresApproval="never"); %[control:dropdown:tool2]{"position":[22,29]}
 %%
 %[text] ## Create Agent
@@ -82,7 +80,7 @@ disp("Agent: " + response) %[output:56d3774a]
 %   data: {"dataType":"text","outputData":{"text":"User: What is the smallest root of x^2+2x-3=0?\n","truncated":false}}
 %---
 %[output:7087b699]
-%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function solveQuadraticEquation with inputs {\"a\":1,\"b\":2,\"c\":-3}]\n[function return] \"[\\\"-3\\\",\\\"1\\\"]\"\n[think]\n[call function findSmallestReal with inputs {\"x1\":\"-3\",\"x2\":\"1\"}]\n[function return] \"-3\"\n[think]\nThe smallest root of the equation x^2 + 2x - 3 = 0 is -3.\n","truncated":false}}
+%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function solveQuadraticEquation with inputs {\"a\":1,\"b\":2,\"c\":-3}]\n[function return] {\"result\":\"[\\\"-3\\\",\\\"1\\\"]\"}\n[think]\n[call function findSmallestReal with inputs {\"x1\":\"-3\",\"x2\":\"1\"}]\n[function return] {\"result\":\"-3\"}\n[think]\nThe smallest root of the equation x^2 + 2x - 3 = 0 is -3.\n","truncated":false}}
 %---
 %[output:56d3774a]
 %   data: {"dataType":"text","outputData":{"text":"Agent: The smallest root of the equation x^2 + 2x - 3 = 0 is -3.\n","truncated":false}}
