@@ -74,6 +74,9 @@ classdef tExamples < matlab.unittest.TestCase
         end
 
         function testSupervisorSubagentExample(testCase)
+            import matlab.unittest.fixtures.PathFixture
+            testCase.applyFixture(PathFixture( ...
+                fullfile(testCase.TestDir,"private","ui-doubles")));
             testCase.startCapture("SupervisorSubagentExample");
             evalc("SupervisorSubagentExample");
         end
