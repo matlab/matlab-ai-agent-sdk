@@ -38,20 +38,15 @@ classdef tLLMTool < matlab.unittest.TestCase
             testCase.verifyEqual(tool.InputArguments(1).Name, "a");
         end
 
-        function passesNameOverride(testCase)
-            tool = aisdk.LLMTool(@addTwoNumbers, "myAdd");
-            testCase.verifyEqual(tool.Name, "myAdd");
-        end
-
-        function anonymousFunction_positionalName_setsName(testCase)
-            tool = aisdk.LLMTool(@(x) x+1, "increment", Description="Add one", ...
+        function anonymousFunction_nameValue_setsName(testCase)
+            tool = aisdk.LLMTool(@(x) x+1, Name="increment", Description="Add one", ...
                 InputArguments=aisdk.LLMToolArgument("x", DataType="number"), ...
                 OutputArguments=aisdk.LLMToolArgument("result", DataType="number"));
             testCase.verifyEqual(tool.Name, "increment");
         end
 
-        function namedFunction_positionalName_overridesFuncName(testCase)
-            tool = aisdk.LLMTool(@addTwoNumbers, "customName");
+        function namedFunction_nameValue_overridesFuncName(testCase)
+            tool = aisdk.LLMTool(@addTwoNumbers, Name="customName");
             testCase.verifyEqual(tool.Name, "customName");
         end
 

@@ -208,7 +208,7 @@ classdef tAIAgent < matlab.unittest.TestCase
 
         function approval_withDeniedTool_executesRemainingToolsInRound(testCase)
             tool1 = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="always");
-            tool2 = aisdk.LLMTool(@addTwoNumbers, "addWithoutApproval", RequiresApproval="never");
+            tool2 = aisdk.LLMTool(@addTwoNumbers, Name="addWithoutApproval", RequiresApproval="never");
             tools = [tool1, tool2];
 
             tokens = struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
@@ -370,9 +370,9 @@ classdef tAIAgent < matlab.unittest.TestCase
 
         function approval_multipleToolswithPartialReasons_emitsOnlyForNonEmpty(testCase)
             tool1 = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="always");
-            tool2 = aisdk.LLMTool(@addTwoNumbers, "doubleNumber", ...
+            tool2 = aisdk.LLMTool(@addTwoNumbers, Name="doubleNumber", ...
                 RequiresApproval="always");
-            tool3 = aisdk.LLMTool(@addTwoNumbers, "decrementNumber", ...
+            tool3 = aisdk.LLMTool(@addTwoNumbers, Name="decrementNumber", ...
                 RequiresApproval="always");
             tools = [tool1, tool2, tool3];
 

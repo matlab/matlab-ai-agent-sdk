@@ -12,7 +12,7 @@ function tools = LLMTool(toolDefinition, varargin)
 %
 %   Example:
 %       tool = LLMTool(@sin, Description="Compute sine")
-%       tool = LLMTool(@(x) x+1, "increment", Description="Add one")
+%       tool = LLMTool(@(x) x+1, Name="increment", Description="Add one")
 %
 %   See also: aisdk.llms.tool.LocalLLMTool, aisdk.llms.tool.MCPTool
 

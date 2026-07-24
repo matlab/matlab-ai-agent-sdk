@@ -15,10 +15,10 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
     end
 
     methods
-        function this = LocalLLMTool(fcnHandle, name, NVPairs)
+        function this = LocalLLMTool(fcnHandle, NVPairs)
             arguments
                 fcnHandle(1,1) function_handle
-                name(1,1) string = ""
+                NVPairs.Name(1,1) string = ""
                 NVPairs.Description(1,1) string
                 NVPairs.DisplayTitle(1,1) string
                 NVPairs.InputArguments(1,:) {aisdk.llms.internal.mustBeToolArguments}
@@ -32,14 +32,14 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
 
             % func2str only starts with "@" for anonymous functions
             isAnonymous = startsWith(funcName, "@");
-            if isAnonymous && strlength(name) == 0
+            if isAnonymous && strlength(NVPairs.Name) == 0
                 error("llms:anonymousFunctionRequiresName", ...
                     aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:anonymousFunctionRequiresName"));
             end
 
             this.Function = fcnHandle;
-            if strlength(name) > 0
-                this.Name = name;
+            if strlength(NVPairs.Name) > 0
+                this.Name = NVPairs.Name;
             else
                 this.Name = replace(funcName, ".", "_");
             end
