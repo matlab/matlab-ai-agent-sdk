@@ -5,10 +5,10 @@
 MATLAB® AI Agent SDK lets you build and run AI agents in MATLAB.
 
 - Create agents based on OpenAI®, Ollama™, or OpenAI-compatible APIs.
-
 - Integrate LLMs and agentic workflows into your workflows in a targeted manner, retaining deterministic workflows when those are more suitable.
-
-- Let your agent work on large amounts of data without needing to send the data to the LLM.
+- Create agentic tools that use:
+  - large amounts of data
+  - any MATLAB data type
 
 ## Research Preview
 
