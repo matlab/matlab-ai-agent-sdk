@@ -19,7 +19,7 @@ end
 % Define the headers for the API request
 
 headers = matlab.net.http.HeaderField('Content-Type', 'application/json');
-if ~isempty(token)
+if ~isempty(token) && strlength(token) > 0
     headers = [headers ...
         matlab.net.http.HeaderField('Authorization', "Bearer " + token)...
         matlab.net.http.HeaderField('api-key', token)];

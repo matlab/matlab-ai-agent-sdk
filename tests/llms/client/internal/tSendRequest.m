@@ -3,6 +3,10 @@ classdef tSendRequest < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
+    properties (TestParameter)
+        EmptyToken = {[], "", ''};
+    end
+
     methods (Test, TestTags = {'Unit'})
         function sendRequest_withToken_includesAuthHeaders(testCase)
             captured = {};
@@ -28,10 +32,10 @@ classdef tSendRequest < matlab.unittest.TestCase
             end
         end
 
-        function sendRequest_emptyToken_omitsAuthHeaders(testCase)
+        function sendRequest_emptyToken_omitsAuthHeaders(testCase, EmptyToken)
             captured = {};
             aisdk.llms.client.internal.sendRequest( ...
-                struct("model", "test"), [], ...
+                struct("model", "test"), EmptyToken, ...
                 "https://fake/v1", 10, [], @fakeSend);
 
             request = captured{1};
