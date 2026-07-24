@@ -28,18 +28,23 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
                 NVPairs.Workspace(1,1) string {mustBeMember(NVPairs.Workspace, ["none","agent"])}
             end
 
-            funcName = func2str(fcnHandle);
-
-            % func2str only starts with "@" for anonymous functions
-            isAnonymous = startsWith(funcName, "@");
-            if isAnonymous && strlength(NVPairs.Name) == 0
+            fcnInfo = functions(fcnHandle);
+            funcName = fcnInfo.function;
+            if fcnInfo.type == "anonymous" && strlength(NVPairs.Name) == 0
                 error("llms:anonymousFunctionRequiresName", ...
                     aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:anonymousFunctionRequiresName"));
+            end
+
+            if fcnInfo.type == "nested" && (~isfield(NVPairs, "InputArguments") || ~isfield(NVPairs, "OutputArguments"))
+                error("llms:nestedFunctionRequiresExplicitDefinition", ...
+                    aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:nestedFunctionRequiresExplicitDefinition"));
             end
 
             this.Function = fcnHandle;
             if strlength(NVPairs.Name) > 0
                 this.Name = NVPairs.Name;
+            elseif contains(funcName, "/")
+                this.Name = extractAfter(funcName, "/");
             else
                 this.Name = replace(funcName, ".", "_");
             end

@@ -596,6 +596,45 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             testCase.verifyEqual(tool.Name, "localAdd");
         end
 
+        function construct_workspaceAgent_inputsInferredFromMetadata_stripsWorkspaceArg(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool(@contextualMultiply, Workspace="agent");
+            testCase.verifyLength(tool.InputArguments, 2);
+            testCase.verifyEqual(tool.InputArguments(1).Name, "x");
+            testCase.verifyEqual(tool.InputArguments(2).Name, "y");
+        end
+
+        function construct_workspaceAgent_outputsInferredFromMetadata_stripsWorkspaceArg(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool(@contextualMultiply, Workspace="agent");
+            testCase.verifyLength(tool.OutputArguments, 1);
+            testCase.verifyEqual(tool.OutputArguments(1).Name, "output");
+        end
+
+        function nestedFunction_withoutExplicitArgs_errors(testCase)
+            function [obs, ws] = storeValue(ws, value)
+                ws.storedValue = value;
+                obs = "Stored " + value;
+            end
+            testCase.verifyError(@() aisdk.llms.tool.LocalLLMTool(@storeValue), ...
+                "llms:nestedFunctionRequiresExplicitDefinition");
+            testCase.verifyError(@() aisdk.llms.tool.LocalLLMTool(@storeValue, ...
+                InputArguments=aisdk.LLMToolArgument("value", DataType="string")), ...
+                "llms:nestedFunctionRequiresExplicitDefinition");
+            testCase.verifyError(@() aisdk.llms.tool.LocalLLMTool(@storeValue, ...
+                OutputArguments=aisdk.LLMToolArgument("obs", DataType="string")), ...
+                "llms:nestedFunctionRequiresExplicitDefinition");
+        end
+
+        function nestedFunction_nameInferredFromHandle(testCase)
+            function [obs, ws] = storeValue(ws, value)
+                ws.storedValue = value;
+                obs = "Stored " + value;
+            end
+            tool = aisdk.llms.tool.LocalLLMTool(@storeValue, ...
+                InputArguments=aisdk.LLMToolArgument("value", DataType="string"), ...
+                OutputArguments=aisdk.LLMToolArgument("obs", DataType="string"));
+            testCase.verifyEqual(tool.Name, "storeValue");
+        end
+
         %% Display
 
         function display_showsCorrectProperties(testCase)
@@ -642,4 +681,15 @@ end
 function [c, varargout] = varargoutWorkspace(workspace, a, b)
     c = a + b;
     varargout{1} = workspace;
+end
+
+function [output, workspace] = contextualMultiply(workspace, x, y)
+% contextualMultiply - Multiply two numbers with context.
+    arguments
+        workspace (1,1) struct
+        x (1,1) double
+        y (1,1) double
+    end
+    output = x * y;
+    workspace.called = true;
 end
