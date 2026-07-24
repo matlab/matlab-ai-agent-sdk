@@ -1,5 +1,5 @@
 {
-    "llmTool": {
+    "aisdk.LLMTool": {
         "inputs": [
             {
                 "mutuallyExclusiveGroup": [
@@ -27,12 +27,12 @@
                         {
                             "name": "InputArguments",
                             "kind": "namevalue",
-                            "type": [["llmToolArgument"], ["struct"]]
+                            "type": [["aisdk.LLMToolArgument"], ["struct"]]
                         },
                         {
                             "name": "OutputArguments",
                             "kind": "namevalue",
-                            "type": [["llmToolArgument"], ["struct"]]
+                            "type": [["aisdk.LLMToolArgument"], ["struct"]]
                         },
                         {
                             "name": "Annotations",
