@@ -11,6 +11,10 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
         end
     end
 
+    properties (TestParameter)
+        VariableSizeKind = {"varargin", "varargout"}
+    end
+
     methods (Test, TestTags = {'Unit'})
         function constructFromFunctionHandle(testCase)
             tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
@@ -635,6 +639,91 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             testCase.verifyEqual(tool.Name, "storeValue");
         end
 
+        %% convertInternalMeta / convertArgs (legacy path for <= R2025b)
+        % Mock matlab.internal.metafunction output by a struct with the
+        % same fields.
+
+        function convertInternalMeta_convertsScalarMetafunction(testCase)
+            m.Name = "myFunc";
+            m.Description = "A helper function";
+            m.Signature.Inputs(1).Kind = "positional";
+            m.Signature.Inputs(1).Name = "x";
+            m.Signature.Inputs(1).Description = "input value";
+            m.Signature.Inputs(1).DefaultValue = [];
+            m.Signature.Inputs(1).Validation.Class.Name = "double";
+            m.Signature.Outputs(1).Kind = "positional";
+            m.Signature.Outputs(1).Name = "y";
+            m.Signature.Outputs(1).Description = "output value";
+            m.Signature.Outputs(1).DefaultValue = [];
+            m.Signature.Outputs(1).Validation = [];
+
+            out = aisdk.llms.tool.LocalLLMTool.convertInternalMeta(m);
+
+            testCase.verifyEqual(out.Name, "myFunc");
+            testCase.verifyEqual(out.Description, "A helper function");
+            testCase.verifyLength(out.Signature.Inputs, 1);
+            testCase.verifyEqual(out.Signature.Inputs.Identifier.Name, "x");
+            testCase.verifyTrue(out.Signature.Inputs.Required);
+            testCase.verifyFalse(out.Signature.Inputs.NameValue);
+            testCase.verifyLength(out.Signature.Outputs, 1);
+            testCase.verifyEqual(out.Signature.Outputs.Identifier.Name, "y");
+        end
+
+        function convertInternalMeta_nonScalar_returnsEmpty(testCase)
+            m(1).Name = "f1";
+            m(1).Description = "";
+            m(1).Signature.Inputs = [];
+            m(1).Signature.Outputs = [];
+            m(2).Name = "f2";
+            m(2).Description = "";
+            m(2).Signature.Inputs = [];
+            m(2).Signature.Outputs = [];
+
+            out = aisdk.llms.tool.LocalLLMTool.convertInternalMeta(m);
+
+            testCase.verifyEmpty(out);
+        end
+
+        function convertArgs_nameValueArg_setsNameValueTrue(testCase)
+            a.Kind = "namevalue";
+            a.Name = "SomeNVArg";
+            a.Description = "A name-value argument";
+            a.DefaultValue = false;
+            a.Validation.Class.Name = "logical";
+
+            args = aisdk.llms.tool.LocalLLMTool.convertArgs(a);
+
+            testCase.verifyEqual(args.Identifier.Name, "SomeNVArg");
+            testCase.verifyTrue(args.NameValue);
+            testCase.verifyFalse(args.Required);
+        end
+
+        function convertArgs_positionalWithNoDefault_isRequired(testCase)
+            a.Kind = "positional";
+            a.Name = "x";
+            a.Description = "";
+            a.DefaultValue = [];
+            a.Validation = [];
+
+            args = aisdk.llms.tool.LocalLLMTool.convertArgs(a);
+
+            testCase.verifyTrue(args.Required);
+            testCase.verifyFalse(args.NameValue);
+        end
+
+        function convertArgs_positionalWithDefault_isNotRequired(testCase)
+            a.Kind = "positional";
+            a.Name = "x";
+            a.Description = "";
+            a.DefaultValue = 0;
+            a.Validation = [];
+
+            args = aisdk.llms.tool.LocalLLMTool.convertArgs(a);
+
+            testCase.verifyFalse(args.Required);
+            testCase.verifyFalse(args.NameValue);
+        end
+
         %% Display
 
         function display_showsCorrectProperties(testCase)
@@ -648,6 +737,26 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             testCase.verifySubstring(output, "RequiresApproval");
             testCase.verifySubstring(output, "DisplayTitle");
             testCase.verifySubstring(output, "Annotations");
+        end
+    end
+
+    methods (Test, TestTags = {'Unit'}, ParameterCombination = 'sequential')
+        function convertArgs_skipsVariableSizeArguments(testCase, VariableSizeKind)
+            a(1).Kind = "positional";
+            a(1).Name = "x";
+            a(1).Description = "";
+            a(1).DefaultValue = [];
+            a(1).Validation = [];
+            a(2).Kind = VariableSizeKind;
+            a(2).Name = VariableSizeKind;
+            a(2).Description = "";
+            a(2).DefaultValue = [];
+            a(2).Validation = [];
+
+            args = aisdk.llms.tool.LocalLLMTool.convertArgs(a);
+
+            testCase.verifyLength(args, 1);
+            testCase.verifyEqual(args.Identifier.Name, "x");
         end
     end
 
@@ -666,7 +775,8 @@ end
 function c = localAdd(a, b)
 % localAdd - - - - Add two numbers together.
 
-% Multiple dashes and spaces test that the prefix-stripping regex handles them correctly.
+% Multiple dashes and spaces test that the prefix-stripping regex handles 
+% them correctly.
     arguments
         a (1,1) double
         b (1,1) double

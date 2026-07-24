@@ -239,7 +239,6 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
             end
         end
 
-
         function metaData = getMetaData(fcnHandle)
             fn = functions(fcnHandle);
             if isfield(fn, "parentage")
@@ -269,7 +268,9 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
                 end
             end
         end
+    end
 
+    methods (Static, Access = {?tLocalLLMTool})
         function out = convertInternalMeta(m)
             if ~isscalar(m)
                 % metadata missing or ambiguous
@@ -282,7 +283,7 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
             out.Signature.Outputs = aisdk.llms.tool.LocalLLMTool.convertArgs(m.Signature.Outputs);
         end
 
-        function args = convertArgs(oldArgs) 
+        function args = convertArgs(oldArgs)
             args = struct("Identifier", {}, "Description", {}, ...
                 "NameValue", {}, "Required", {}, "Validation", {});
             idx = 0;
@@ -299,6 +300,5 @@ classdef LocalLLMTool < aisdk.llms.tool.CallableTool
                 args(idx).Validation = a.Validation;
             end
         end
-
     end
 end
