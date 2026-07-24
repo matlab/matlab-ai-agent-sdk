@@ -16,6 +16,8 @@ This SDK is a Research Preview under active development and APIs may change.
 
 Please leave feedback, report bugs and feature requests via [Issues](../../issues). We review all contributions, but we do not merge external pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
+Help us improve the MATLAB AI Agent SDK by completing our short [feedback survey](https://www.surveymonkey.com/r/KLQY8WC).
+
 ## Setup
 
 You can use the add\-on in MATLAB Online™ by clicking this link: [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=matlab/matlab-ai-agent-sdk)
