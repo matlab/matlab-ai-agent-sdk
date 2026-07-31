@@ -217,7 +217,7 @@ agentWithWorkspace.Workspace.matrix = A;
 | [aisdk.LLMTool](doc/functions/aisdk.LLMTool.md) | Tool for AI agent | 
 | [LocalLLMTool](doc/functions/LocalLLMTool.md) | AI agent tool from MATLAB function | 
 | [MCPTool](doc/functions/MCPTool.md) | AI agent tool from MCP server | 
-| [selectTool](doc/functions/selectTool.md) | Select LLM tool from tool array | 
+| [select](doc/functions/select.md) | Select LLM tool from tool array | 
 | [evaluate](doc/functions/evaluate.md) | Evaluate LLM tool | 
 | [aisdk.LLMToolArgument](doc/functions/aisdk.LLMToolArgument.md) | Argument for LLM tool | 
 
