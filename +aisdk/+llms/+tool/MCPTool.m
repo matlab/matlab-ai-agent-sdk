@@ -48,6 +48,14 @@ classdef MCPTool < aisdk.llms.tool.CallableTool
     end
 
     methods (Access = protected)
+        function sig = displaySignature(obj)
+            sig = obj.Name + "(…)";
+        end
+
+        function label = displayTypeLabel(~)
+            label = "MCPTool";
+        end
+
         function [output, workspace] = evaluateImpl(this, args, workspace)
             arguments
                 this

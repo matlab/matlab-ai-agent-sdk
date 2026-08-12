@@ -93,12 +93,12 @@ function img = resolveToImageArray(source, downloadFcn)
                     rethrow(e);
                 end
                 error("llms:message:NotAnImage", "%s", ...
-                    aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:message:NotAnImage", source));
+                    aisdk.llms.internal.MessageCatalog.getMessage("llms:message:NotAnImage", source));
             end
         end
     else
         error("llms:message:InvalidImageSource", ...
-            aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:message:InvalidImageSource"));
+            aisdk.llms.internal.MessageCatalog.getMessage("llms:message:InvalidImageSource"));
     end
 end
 
@@ -110,7 +110,7 @@ function img = readURL(url, downloadFcn)
         img = imread(tempFile);
     catch
         error("llms:message:NotAnImage", "%s", ...
-            aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:message:NotAnImage", url));
+            aisdk.llms.internal.MessageCatalog.getMessage("llms:message:NotAnImage", url));
     end
 end
 
@@ -125,6 +125,6 @@ function mustBeImageArray(val)
     okShape = ismatrix(val) || (ndims(val) == 3 && ismember(size(val,3), [1 3 4]));
     if ~(okType && okShape && ~isempty(val))
         error("llms:message:InvalidImageContent", ...
-            aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:message:InvalidImageContent"));
+            aisdk.llms.internal.MessageCatalog.getMessage("llms:message:InvalidImageContent"));
     end
 end

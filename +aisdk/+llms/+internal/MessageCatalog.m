@@ -1,30 +1,30 @@
-classdef ErrorMessageCatalog
-%ErrorMessageCatalog Stores the error messages from this repository
+classdef MessageCatalog
+%MessageCatalog Stores display and error messages for this repository
 
 %   Copyright 2026 The MathWorks, Inc.
 
     properties(Constant)
         %CATALOG dictionary mapping error ids to error msgs
-        Catalog = buildErrorMessageCatalog;
+        Catalog = buildMessageCatalog;
     end
 
     methods(Static)
-        function msg = getMessage(messageId, slot)
-            %getMessage returns error message given a messageID and a SLOT.
-            %   The value in SLOT should be ordered, where the n-th element
+        function msg = getMessage(messageId, hole)
+            %getMessage returns error message given a messageID and a HOLE.
+            %   The value in HOLE should be ordered, where the n-th element
             %   will replace the value "{n}".
 
             arguments
                 messageId {mustBeNonzeroLengthText}
             end
             arguments(Repeating)
-                slot {mustBeNonzeroLengthText}
+                hole {mustBeNonzeroLengthText}
             end
 
-            msg = aisdk.llms.internal.ErrorMessageCatalog.Catalog(messageId);
-            if ~isempty(slot)
-                for i=1:numel(slot)
-                    msg = replace(msg,"{"+i+"}", slot{i});
+            msg = aisdk.llms.internal.MessageCatalog.Catalog(messageId);
+            if ~isempty(hole)
+                for i=1:numel(hole)
+                    msg = replace(msg,"{"+i+"}", hole{i});
                 end
             end
         end
@@ -35,12 +35,12 @@ classdef ErrorMessageCatalog
             %   The test coverage reports do not include the properties initialization
             %   for Catalog from above, so we have a test seam here to re-run it
             %   within the framework, where it is reported.
-            s = buildErrorMessageCatalog;
+            s = buildMessageCatalog;
         end
     end
 end
 
-function catalog = buildErrorMessageCatalog
+function catalog = buildMessageCatalog
 catalog = dictionary("string", "string");
 catalog("llms:keyMustBeSpecified") = "Unable to find API key. Either set environment variable {1} or specify name-value argument ""APIKey"".";
 catalog("llms:mustSetFunctionsForCall") = "When Tools is empty, ToolChoice must be ""none"" or ""auto"".";
@@ -72,6 +72,7 @@ catalog("llms:message:NotAnImage") = "Unable to read image from ''{1}''.";
 catalog("llms:message:InvalidImageSource") = "Image must be a file path, URL, or numeric array.";
 catalog("llms:message:InvalidImageContent") = "Message content must be a nonempty numeric or logical array.";
 catalog("llms:message:InvalidTextContent") = "Message content must be a string scalar or character vector.";
+catalog("llms:tool:arrayHeader") = "{1} LLMTool array with tools:";
 catalog("llms:vararginInInputs") = "Unable to derive input arguments because the function signature contains ''varargin''. Specify the InputArguments name-value argument.";
 catalog("llms:cannotInferInputArguments") = "Unable to derive input arguments from the function metadata. Specify the InputArguments name-value argument.";
 catalog("llms:varargoutInOutputs") = "Unable to derive output arguments because the function signature contains ''varargout''. Specify the OutputArguments name-value argument.";

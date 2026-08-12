@@ -5,6 +5,6 @@ function mustBeValidToolCallID(val)
 
     if ~(isstring(val) && isscalar(val))
         error("llms:message:InvalidToolCallID", ...
-            aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:message:InvalidToolCallID"));
+            aisdk.llms.internal.MessageCatalog.getMessage("llms:message:InvalidToolCallID"));
     end
 end

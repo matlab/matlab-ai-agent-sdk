@@ -272,6 +272,6 @@ end
 function mustBeClient(value)
 if ~isa(value, 'aisdk.llms.client.ClientBase')
     error("llms:invalidClientType", ...
-        aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:invalidClientType"));
+        aisdk.llms.internal.MessageCatalog.getMessage("llms:invalidClientType"));
 end
 end

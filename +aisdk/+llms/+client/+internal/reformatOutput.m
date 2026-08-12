@@ -9,7 +9,7 @@ function result = reformatOutput(result,responseFormat)
         try
             result = jsondecode(result);
         catch
-            error("llms:apiReturnedIncompleteJSON",aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:apiReturnedIncompleteJSON",result))
+            error("llms:apiReturnedIncompleteJSON",aisdk.llms.internal.MessageCatalog.getMessage("llms:apiReturnedIncompleteJSON",result))
         end
     end
     if isstruct(responseFormat) && ~isscalar(responseFormat)

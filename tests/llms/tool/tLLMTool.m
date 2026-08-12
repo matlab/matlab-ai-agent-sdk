@@ -75,21 +75,19 @@ classdef tLLMTool < matlab.unittest.TestCase
             testCase.verifySubstring(output, "MCPTool");
         end
 
-        function display_heterogeneousArray_showsCommonPropertiesOnly(testCase)
+        function display_heterogeneousArray_showsTableColumns(testCase)
             tool1 = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
             tool2 = aisdk.llms.tool.MCPTool();
             tool2.Name = "mcpTool";
             tools = [tool1, tool2];
             output = formattedDisplayText(tools);
-            testCase.verifySubstring(output, "Name");
+            testCase.verifySubstring(output, "Syntax");
             testCase.verifySubstring(output, "Description");
-            testCase.verifySubstring(output, "RequiresApproval");
-            testCase.verifySubstring(output, "DisplayTitle");
-            testCase.verifySubstring(output, "Annotations");
+            testCase.verifySubstring(output, "Type");
+            testCase.verifySubstring(output, "Workspace");
             cs = @matlab.unittest.constraints.ContainsSubstring;
             testCase.verifyThat(output, ~cs("InputArguments"));
             testCase.verifyThat(output, ~cs("OutputArguments"));
-            testCase.verifyThat(output, ~cs("Workspace"));
             testCase.verifyThat(output, ~cs("InputSchema"));
             testCase.verifyThat(output, ~cs("OutputSchema"));
         end

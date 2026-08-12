@@ -231,7 +231,7 @@ classdef OllamaClient < aisdk.llms.client.ClientBase
                     end
                     if ~isstruct(args)
                         error("llms:invalidToolCallArguments", ...
-                            aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:invalidToolCallArguments", class(args)));
+                            aisdk.llms.internal.MessageCatalog.getMessage("llms:invalidToolCallArguments", class(args)));
                     end
                     messages(end+1) = aisdk.LLMToolCallMessage(tc.name, args, ToolCallID=id); %#ok<AGROW>
                 end

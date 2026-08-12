@@ -235,7 +235,7 @@ classdef OpenAIClient < aisdk.llms.client.ClientBase
                     args = jsondecode(tc.function.arguments);
                     if ~isstruct(args)
                         error("llms:invalidToolCallArguments", ...
-                            aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:invalidToolCallArguments", class(args)));
+                            aisdk.llms.internal.MessageCatalog.getMessage("llms:invalidToolCallArguments", class(args)));
                     end
                     messages(end+1) = aisdk.LLMToolCallMessage(tc.function.name, args, ToolCallID=id); %#ok<AGROW>
                 end

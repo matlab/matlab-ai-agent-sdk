@@ -48,6 +48,6 @@ end
 function mustBeTextContent(val)
     if ~(isstring(val) || ischar(val)) || (isstring(val) && ~isscalar(val))
         error("llms:message:InvalidTextContent", ...
-            aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:message:InvalidTextContent"));
+            aisdk.llms.internal.MessageCatalog.getMessage("llms:message:InvalidTextContent"));
     end
 end

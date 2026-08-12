@@ -17,10 +17,15 @@ classdef LLMTool < matlab.mixin.Heterogeneous & matlab.mixin.CustomDisplay
         Annotations(1,1) struct
     end
 
+    properties (SetAccess = protected)
+        %Workspace   Whether the tool accepts and returns a workspace argument.
+        Workspace(1,1) string {mustBeMember(Workspace, ["none","agent"])} = "none"
+    end
+
 
     methods (Sealed, Access=protected)
         function displayNonScalarObject(obj)
-            displayNonScalarObject@matlab.mixin.CustomDisplay(obj);
+            displayTools(obj);
         end
 
         function header = getHeader(obj)
@@ -45,15 +50,50 @@ classdef LLMTool < matlab.mixin.Heterogeneous & matlab.mixin.CustomDisplay
             if isprop(obj, "OutputSchema")
                 props = [props; "OutputSchema"];
             end
-            if isprop(obj, "Workspace")
-                props = [props; "Workspace"];
-            end
+            props = [props; "Workspace"];
             if isprop(obj, "RequiresApproval")
                 props = [props; "RequiresApproval"];
             end
             props = [props; "DisplayTitle"; "Annotations"];
             groups = matlab.mixin.util.PropertyGroup(props);
         end
+    end
+
+    methods (Sealed, Access=private)
+        function displayTools(obj)
+            n = numel(obj);
+            dimStr = matlab.mixin.CustomDisplay.convertDimensionsToString(obj);
+            header = aisdk.llms.internal.MessageCatalog.getMessage( ...
+                "llms:tool:arrayHeader", dimStr);
+            fprintf("  %s\n\n", header);
+
+            syntaxCol      = strings(n,1);
+            descriptionCol = strings(n,1);
+            typeCol        = strings(n,1);
+            workspaceCol   = strings(n,1);
+
+            for i = 1:n
+                syntaxCol(i) = displaySignature(obj(i));
+                descriptionCol(i) = truncateDescription(obj(i).Description);
+                typeCol(i) = displayTypeLabel(obj(i));
+                workspaceCol(i) = displayWorkspaceLabel(obj(i));
+            end
+
+            t = table(char(syntaxCol), char(descriptionCol), char(typeCol), char(workspaceCol), ...
+                VariableNames=["Syntax", "Description", "Type", "Workspace"]);
+            disp(t);
+        end
+    end
+
+    methods (Access=protected)
+        function label = displayWorkspaceLabel(obj)
+            label = """" + obj.Workspace + """";
+        end
+    end
+
+    methods (Abstract, Access=protected)
+        sig = displaySignature(obj)
+        label = displayTypeLabel(obj)
     end
 
     methods (Sealed)
@@ -65,9 +105,18 @@ classdef LLMTool < matlab.mixin.Heterogeneous & matlab.mixin.CustomDisplay
             toolIndex = find(strcmp(name, [these.Name]), 1);
             if isempty(toolIndex)
                 error("llms:invalidFunctionCall", ...
-                    aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:invalidFunctionCall", name));
+                    aisdk.llms.internal.MessageCatalog.getMessage("llms:invalidFunctionCall", name));
             end
             tools = these(toolIndex);
         end
+    end
+end
+
+function txt = truncateDescription(description)
+% Flatten newlines and truncate to maxLen chars.
+    maxLen = 60;
+    txt = replace(description, newline, " ");
+    if strlength(txt) > maxLen + 1
+        txt = extractBefore(txt, maxLen + 1) + "…";
     end
 end

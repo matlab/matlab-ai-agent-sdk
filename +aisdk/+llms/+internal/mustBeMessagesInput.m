@@ -9,17 +9,17 @@ function mustBeMessagesInput(val)
     if isstring(val)
         if ~isscalar(val)
             error("llms:client:InvalidMessageInput", ...
-                aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:client:InvalidMessageInput"));
+                aisdk.llms.internal.MessageCatalog.getMessage("llms:client:InvalidMessageInput"));
         end
         return
     end
     if ischar(val)
         if ~isrow(val)
             error("llms:client:InvalidMessageInput", ...
-                aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:client:InvalidMessageInput"));
+                aisdk.llms.internal.MessageCatalog.getMessage("llms:client:InvalidMessageInput"));
         end
         return
     end
     error("llms:client:InvalidMessageInput", ...
-        aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:client:InvalidMessageInput"));
+        aisdk.llms.internal.MessageCatalog.getMessage("llms:client:InvalidMessageInput"));
 end

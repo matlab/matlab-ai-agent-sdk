@@ -71,7 +71,7 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
                 message = aisdk.LLMTextMessage(string(input));
             else
                 error("llms:client:InvalidMessageInput", ...
-                    aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:client:InvalidMessageInput"));
+                    aisdk.llms.internal.MessageCatalog.getMessage("llms:client:InvalidMessageInput"));
             end
         end
     end
@@ -93,7 +93,7 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
             if ~isempty(toolChoice)
                 mustBeTextScalar(toolChoice);
                 if isempty(functionNames) && ~ismember(toolChoice, ["auto", "none"])
-                    error("llms:mustSetFunctionsForCall", aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:mustSetFunctionsForCall"));
+                    error("llms:mustSetFunctionsForCall", aisdk.llms.internal.MessageCatalog.getMessage("llms:mustSetFunctionsForCall"));
                 end
                 if ~isempty(functionNames)
                     mustBeMember(toolChoice, ["none","auto","required", functionNames]);
@@ -131,7 +131,7 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
                     "parameters", tool.InputSchema);
             else
                 error("llms:unsupportedToolType", ...
-                    aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:unsupportedToolType"));
+                    aisdk.llms.internal.MessageCatalog.getMessage("llms:unsupportedToolType"));
             end
             toolStruct = struct("type", "function", "function", funcStruct);
         end
@@ -187,7 +187,7 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
                 err = "HTTP " + string(response.StatusCode) + ": " + jsonencode(response.Body.Data);
             end
             error("llms:apiReturnedError", ...
-                aisdk.llms.internal.ErrorMessageCatalog.getMessage("llms:apiReturnedError", err));
+                aisdk.llms.internal.MessageCatalog.getMessage("llms:apiReturnedError", err));
         end
     end
 
