@@ -1,7 +1,10 @@
 %[text] # Nested Tools and Subagents Example
 %[text] This is a somewhat artificial example with a "tool provider" tool that return to a top level agents either arithmetic operation tools or a string manipulation tools, depending on what it's been asked to do. It then works out the solution to the user problem using those newly-acquired tools in a subagent.
+%%
+%[text] ## Set Up Client
+topLevelClient = aisdk.LLMClient("openai", "gpt-4.1-mini");
+%%
 %[text] ## Implement Functions for Tools to Use
-%[text] 
 function [output, workspace] = toolProvider(workspace, type)
 % Tool for acquiring tools for either string manipulations or arithmetic operations. Use input 'string' for string manipulation tools and  'number' for arithmetic operations.
     arguments
@@ -73,7 +76,6 @@ topLevelPrompt = "You are an assistant who has two sets of tools available for e
         "Do not answer directly questions you should use tools for. ";
 %%
 %[text] ## Run Agent
-topLevelClient = aisdk.LLMClient("openai", "gpt-4.1-mini");
 topLevelAgent = aisdk.AIAgent(topLevelClient, SystemPrompt=topLevelPrompt, ...
     Tools=topLevelTools);
 prompt = "Create two random integers between 1 and 10, tell me what they are and compute their sum?";
@@ -90,14 +92,14 @@ output2 = topLevelAgent.run(prompt2) %[output:9c544e7d] %[output:99c8073d]
 %   data: {"layout":"inline","rightPanelPercent":40}
 %---
 %[output:542cc9f9]
-%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function toolProvider with inputs {\"type\":\"number\"}]\n[function return] {\"output\":\"Added tools :sumOfTwoNumbers, getRandomInteger\"}\n[think]\n[call function subAgent with inputs {\"systemPrompt\":\"You are an assistant that generates random integers between 1 and 10.\",\"prompt\":\"Generate a random integer between 1 and 10.\"}]\n[think]\n[call function getRandomInteger with inputs {}]\n[function return] {\"x\":1}\n[think]\nThe random integer generated between 1 and 10 is 1.\n[function return] {\"observation\":\"The random integer generated between 1 and 10 is 1.\"}\n[call function subAgent with inputs {\"systemPrompt\":\"You are an assistant that generates random integers between 1 and 10.\",\"prompt\":\"Generate a random integer between 1 and 10.\"}]\n[think]\n[call function getRandomInteger with inputs {}]\n[function return] {\"x\":3}\n[think]\nThe random integer between 1 and 10 is 3.\n[function return] {\"observation\":\"The random integer between 1 and 10 is 3.\"}\n[think]\n[call function subAgent with inputs {\"systemPrompt\":\"You are a calculator assistant.\",\"prompt\":\"Calculate the sum of the numbers 1 and 3.\"}]\n[think]\n[call function sumOfTwoNumbers with inputs {\"a\":1,\"b\":3}]\n[function return] {\"c\":4}\n[think]\nThe sum of the numbers 1 and 3 is 4.\n[function return] {\"observation\":\"The sum of the numbers 1 and 3 is 4.\"}\n[think]\nThe two random integers generated between 1 and 10 are 1 and 3. Their sum is 4.\n","truncated":false}}
+%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function toolProvider with inputs {\"type\":\"number\"}]\n[function return] {\"output\":\"Added tools :sumOfTwoNumbers, getRandomInteger\"}\n[think]\n[call function subAgent with inputs {\"systemPrompt\":\"You have tools for creating random integers and computing sums of two numbers. Use one tool to get two random integers between 1 and 10, then use the sum tool to compute their sum.\",\"prompt\":\"Generate two random integers between 1 and 10, tell me what they are. Then compute their sum.\"}]\n[think]\n[call function getRandomInteger with inputs {}]\n[function return] {\"x\":10}\n[call function getRandomInteger with inputs {}]\n[function return] {\"x\":8}\n[think]\n[call function sumOfTwoNumbers with inputs {\"a\":10,\"b\":8}]\n[function return] {\"c\":18}\n[think]\nThe two random integers are 10 and 8. Their sum is 18.\n[function return] {\"observation\":\"The two random integers are 10 and 8. Their sum is 18.\"}\n[think]\nThe two random integers I created are 10 and 8. Their sum is 18.\n","truncated":false}}
 %---
 %[output:654a7ec5]
-%   data: {"dataType":"textualVariable","outputData":{"name":"output","value":"\"The two random integers generated between 1 and 10 are 1 and 3. Their sum is 4.\""}}
+%   data: {"dataType":"textualVariable","outputData":{"name":"output","value":"\"The two random integers I created are 10 and 8. Their sum is 18.\""}}
 %---
 %[output:9c544e7d]
-%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function toolProvider with inputs {\"type\":\"string\"}]\n[function return] {\"output\":\"Added tools :concatenateStrings\"}\n[think]\n[call function subAgent with inputs {\"systemPrompt\":\"You are a string manipulation assistant.\",\"prompt\":\"Concatenate the strings 'acdc' and 'abba'.\"}]\n[think]\n[call function concatenateStrings with inputs {\"a\":\"acdc\",\"b\":\"abba\"}]\n[function return] {\"str\":\"acdcabba\"}\n[think]\nThe concatenation of the strings 'acdc' and 'abba' is 'acdcabba'.\n[function return] {\"observation\":\"The concatenation of the strings 'acdc' and 'abba' is 'acdcabba'.\"}\n[think]\nThe concatenation of the strings 'acdc' and 'abba' is 'acdcabba'.\n","truncated":false}}
+%   data: {"dataType":"text","outputData":{"text":"[think]\n[call function toolProvider with inputs {\"type\":\"string\"}]\n[function return] {\"output\":\"Added tools :concatenateStrings\"}\n[think]\n[call function subAgent with inputs {\"systemPrompt\":\"You have a tool to concatenate two strings. Use the tool to concatenate the strings 'acdc' and 'abba' and provide the result.\",\"prompt\":\"Concatenate the strings 'acdc' and 'abba'.\"}]\n[think]\n[call function concatenateStrings with inputs {\"a\":\"acdc\",\"b\":\"abba\"}]\n[function return] {\"str\":\"acdcabba\"}\n[think]\nThe concatenated result of the strings 'acdc' and 'abba' is 'acdcabba'.\n[function return] {\"observation\":\"The concatenated result of the strings 'acdc' and 'abba' is 'acdcabba'.\"}\n[think]\nThe concatenated result of the strings 'acdc' and 'abba' is 'acdcabba'.\n","truncated":false}}
 %---
 %[output:99c8073d]
-%   data: {"dataType":"textualVariable","outputData":{"name":"output2","value":"\"The concatenation of the strings 'acdc' and 'abba' is 'acdcabba'.\""}}
+%   data: {"dataType":"textualVariable","outputData":{"name":"output2","value":"\"The concatenated result of the strings 'acdc' and 'abba' is 'acdcabba'.\""}}
 %---

@@ -5,6 +5,11 @@
 %[text] - Run the agent to solve a quadratic equation
 %[text] - Display the agent's reasoning and final answer \
 %%
+%[text] ## Set Up Client
+api = "openai"; %[control:dropdown:9b1a]{"position":[7,15]}
+model = "gpt-4.1-mini"; %[control:dropdown:5d61]{"position":[9,23]}
+client = aisdk.LLMClient(api, model);
+%%
 %[text] ## Define Tools
 %[text] Create tools for solving quadratic equations and finding the smallest real number.
 function result = solveQuadraticEquation(a, b, c)
@@ -41,10 +46,6 @@ smallestTool = aisdk.LLMTool(@findSmallestReal, ...
 %%
 %[text] ## Create Agent
 %[text] Create an LLM client and agent with a system prompt.
-api = "openai"; %[control:dropdown:api]{"position":[7,15]}
-model = "gpt-4.1-mini"; %[control:dropdown:model]{"position":[9,23]}
-client = aisdk.LLMClient(api, model);
-
 systemPrompt = "You are a mathematical reasoning agent. " + ...
     "Think step-by-step, use tools when needed, and provide a final answer.";
 
@@ -64,17 +65,17 @@ disp("Agent: " + response) %[output:56d3774a]
 %[metadata:view]
 %   data: {"layout":"inline","rightPanelPercent":35}
 %---
+%[control:dropdown:9b1a]
+%   data: {"defaultValue":"\"openai\"","itemLabels":["openai","ollama"],"items":["\"openai\"","\"ollama\""],"label":"provider","run":"Section"}
+%---
+%[control:dropdown:5d61]
+%   data: {"defaultValue":"\"gpt-4.1-mini\"","itemLabels":["gpt-4.1-mini","qwen3"],"items":["\"gpt-4.1-mini\"","\"qwen3\""],"label":"model","run":"Section"}
+%---
 %[control:dropdown:tool1]
 %   data: {"defaultValue":"\"never\"","itemLabels":["always","once","never"],"items":["\"always\"","\"once\"","\"never\""],"label":"RequiresApproval","run":"Section"}
 %---
 %[control:dropdown:tool2]
 %   data: {"defaultValue":"\"never\"","itemLabels":["always","once","never"],"items":["\"always\"","\"once\"","\"never\""],"label":"RequiresApproval","run":"Section"}
-%---
-%[control:dropdown:api]
-%   data: {"defaultValue":"\"openai\"","itemLabels":["openai","ollama"],"items":["\"openai\"","\"ollama\""],"label":"provider","run":"Section"}
-%---
-%[control:dropdown:model]
-%   data: {"defaultValue":"\"gpt-4.1-mini\"","itemLabels":["gpt-4.1-mini","qwen3"],"items":["\"gpt-4.1-mini\"","\"qwen3\""],"label":"model","run":"Section"}
 %---
 %[output:734686e1]
 %   data: {"dataType":"text","outputData":{"text":"User: What is the smallest root of x^2+2x-3=0?\n","truncated":false}}
