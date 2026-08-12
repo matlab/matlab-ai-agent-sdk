@@ -10,6 +10,11 @@ classdef tExamples < matlab.unittest.TestCase
 
     methods (TestClassSetup)
         function setUpAndTearDowns(testCase)
+
+            testCase.assumeFalse( ...
+                isMATLABReleaseOlderThan("R2024a"), ...
+                "Local functions must be defined at the end of the script.");
+
             % Capture and replay server interactions
             testCase.TestDir = fileparts(mfilename("fullpath"));
             import matlab.unittest.fixtures.PathFixture
@@ -82,6 +87,11 @@ classdef tExamples < matlab.unittest.TestCase
         end
 
         function testSendImageMessagesToVisionModels(testCase)
+
+            testCase.assumeFalse( ...
+                isMATLABReleaseOlderThan("R2026b"), ...
+                "MATLABWindow exited Unexpected in TeamCity.");
+
             testCase.startCapture("SendImageMessagesToVisionModels");
             evalc("SendImageMessagesToVisionModels");
         end
@@ -93,10 +103,16 @@ classdef tExamples < matlab.unittest.TestCase
         end
 
         function testFitPolynomialToDataUsingAIAgent(testCase)
+            
+            testCase.assumeFalse( ...
+                isMATLABReleaseOlderThan("R2026b"), ...
+                "MATLABWindow exited Unexpected in TeamCity.");
+
             % Requires Curve Fitting Toolbox
             testCase.assumeTrue( ...
                 ~isempty(ver("curvefit")), ...
                 "Curve Fitting Toolbox is not installed");
+            
             testCase.startCapture("FitPolynomialToDataUsingAIAgent");
             evalc("FitPolynomialToDataUsingAIAgent");
         end

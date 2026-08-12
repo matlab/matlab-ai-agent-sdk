@@ -495,8 +495,14 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
         end
 
         function constructor_nonScalarMetafunction_errors(testCase)
-            % Only applies on 25b and earlier (matlab.internal.metafunction path)
-            testCase.assumeEmpty(which('metafunction'));
+            
+            testCase.assumeEmpty(which('metafunction'), ...
+                "Only applies on 25b and earlier (matlab.internal.metafunction path)");
+
+            testCase.assumeFalse( ...
+                isMATLABReleaseOlderThan("R2024b"), ...
+                "count metadata is scalar and cannot trigger this path.");
+            
             testCase.verifyError( ...
                 @() aisdk.llms.tool.LocalLLMTool(@count), ...
                 "llms:cannotInferInputArguments");
