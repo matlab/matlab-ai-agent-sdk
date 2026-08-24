@@ -343,6 +343,24 @@ classdef tSystem < matlab.unittest.TestCase
             testCase.verifyGreaterThanOrEqual(info.Tokens.NumCachedInputTokens, 0);
         end
 
+        function run_withGrowingConversation_updatesContextUsage(testCase)
+            client = testCase.Client;
+            client.ContextSize = 1000;
+            agent = aisdk.AIAgent(client, DisplayMode="off");
+
+            testCase.verifyEqual(agent.ContextUsage, 0);
+
+            run(agent, "Name 2 countries");
+            firstContextUsage = agent.ContextUsage;
+
+            run(agent, "Name 3 cities");
+            secondContextUsage = agent.ContextUsage;
+
+            testCase.verifyGreaterThan(firstContextUsage, 0);
+            testCase.verifyGreaterThan(secondContextUsage, firstContextUsage, ...
+                "ContextUsage should grow as the conversation history grows");
+        end
+
         %% SDK traces tool calls in message history
 
         function run_afterToolUse_tracksCallAndArguments(testCase)
