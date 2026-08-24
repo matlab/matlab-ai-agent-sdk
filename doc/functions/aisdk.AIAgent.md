@@ -205,6 +205,28 @@ then an agent can get stuck trying and failing to call the same tool repeatedly.
 For more information on the agentic loop, see [`Algorithms`](#algorithms).
 
 Data Types: `double`
+### `ContextUsage` — Fraction of model context used
+<a id="contextusage"></a>
+
+Read-only: `NaN` | positive scalar
+
+This property is read-only.
+
+Fraction of model context used, specified as `NaN` or as a positive
+scalar.
+
+The context usage increases during each run of the agent. When the context usage
+grows above 1, the model can not keep track of the beginning of the conversation and the
+response quality can degrade. Some models may error or display other unexpected
+behavior. To avoid this degradation, consider summarizing the conversation and starting
+a new agent when the context usage grows too large.
+
+The software calculates the context usage based on the
+`ContextSize` property of the underlying  LLM client
+`client`. By default, the context size, and therefore the context
+usage, is `NaN`.
+
+Data Types: `double`
 ### `NumInputTokens` — Cumulative number of input tokens
 <a id="numinputtokens"></a>
 

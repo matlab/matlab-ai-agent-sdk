@@ -19,6 +19,7 @@ classdef AIAgent < handle
 %       Workspace        - Struct for passing data between tool calls
 %       DisplayMode      - Display mode ("off" or "detailed")
 %       ResponseFormat   - Format of response ("text", "json", struct, or JSON schema string)
+%       ContextUsage     - Fraction of context window used
 %
 %   AIAgent Methods:
 %       run              - Run agentic loop with tool calling until completion
@@ -56,6 +57,9 @@ classdef AIAgent < handle
     end
 
     properties (SetAccess=private)
+        %ApprovedTools   List of tools approved 
+        ApprovedTools(1,:) string
+
         %NumInputTokens   Cumulative input (prompt) tokens across all generate calls.
         NumInputTokens(1,1) double = 0
 
@@ -67,8 +71,16 @@ classdef AIAgent < handle
 
         %NumTotalTokens   Cumulative total tokens across all generate calls.
         NumTotalTokens(1,1) double = 0
+    end
 
-        ApprovedTools(1,:) string
+    properties (Dependent, SetAccess=private)
+        %ContextUsage   Fraction of the context window used
+        ContextUsage(1,1) double
+    end
+
+    properties (Hidden, SetAccess=private)
+        %LastInputTokens   Input tokens from the most recent generate call.
+        LastInputTokens(1,1) double = 0
     end
 
     properties (Hidden)
@@ -169,6 +181,7 @@ classdef AIAgent < handle
 
                 if isstruct(text)
                     % assumes tool calls never produce structured text content
+                    this.LastInputTokens = info.Tokens.NumInputTokens;
                     response = text;
                     return;
                 end
@@ -178,15 +191,6 @@ classdef AIAgent < handle
                 end
 
                 toolCalls = msgs(arrayfun(@(m) isa(m, 'aisdk.LLMToolCallMessage'), msgs));
-                if isempty(toolCalls)
-                    if ~isempty(allTexts)
-                        response = join(allTexts, newline);
-                    else
-                        response = text;
-                    end
-                    return;
-                end
-
                 approvalReasons = string.empty;
                 for i = 1:numel(toolCalls)
                     tc = toolCalls(i);
@@ -240,17 +244,30 @@ classdef AIAgent < handle
                 for j = 1:numel(approvalReasons)
                     this.Messages(end+1) = aisdk.LLMTextMessage(approvalReasons(j));
                 end
+                this.LastInputTokens = info.Tokens.NumInputTokens;
+
+                if isempty(toolCalls)
+                    break
+                end
             end
 
-            if ~isempty(allTexts)
-                response = join(allTexts, newline);
-            else
+            if isempty(allTexts)
                 response = "";
+            else
+                response = join(allTexts, newline);
             end
-            warning("aiAgent:MaxIterationsReached", ...
-                "Tool calling loop reached maximum of %d iterations.", nvp.MaxIterations);
+            if iteration == nvp.MaxIterations && ~isempty(toolCalls)
+                warning("aiAgent:MaxIterationsReached", ...
+                    "Tool calling loop reached maximum of %d iterations.", nvp.MaxIterations);
+            end
         end
 
+    end
+
+    methods
+        function value = get.ContextUsage(this)
+            value = this.LastInputTokens / this.Client.ContextSize;
+        end
     end
 
     methods (Access=private)

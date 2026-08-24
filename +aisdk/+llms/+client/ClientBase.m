@@ -28,6 +28,11 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
         BaseURL  (1,1) string
     end
 
+    properties
+        %ContextSize   Maximum context window size in tokens.
+        ContextSize (1,1) double {aisdk.llms.internal.mustBePositiveIntegerOrNaN} = NaN
+    end
+
     properties (Hidden, Access=protected, Transient)
         %APIKey   API key for authentication.
         APIKey    (1,1) string

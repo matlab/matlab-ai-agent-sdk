@@ -133,6 +133,29 @@ Data Types: `char` | `string`
 Maximum number of generated tokens, specified as `inf` or as a positive integer.
 
 Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8` | `uint16` | `uint32` | `uint64`
+### `ContextSize` — Maximum number of input tokens
+<a id="contextsize"></a>
+
+
+`NaN`
+(default) | positive integer
+
+Maximum number of input tokens, specified as `NaN` or as a
+positive integer.
+
+Specify the context size so that an [`aisdk.AIAgent`](aisdk.AIAgent.md) object can
+calculate the fraction of the model context that the agent has used in a
+conversation.
+
+When `ContextSize` is `NaN`, the
+`ContextUsage` property of the agent is also
+`NaN`.
+
+The maximum number of input tokens not only depends on the model, but can also
+depend on other properties, such as the locally available VRAM. For more information,
+consult the model documentation.
+
+Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8` | `uint16` | `uint32` | `uint64`
 ### `ReasoningEffort` — Amount of internal reasoning
 <a id="reasoningeffort"></a>
 
@@ -391,6 +414,7 @@ with the [`aisdk.LLMClient`](aisdk.LLMClient.md) function.
 | [`BaseURL`](#baseurl) | Supported | Supported |
 | [`MaxNumTokens`](#maxnumtokens) | Supported | Supported |
 | [`ReasoningEffort`](#reasoningeffort) | Supported |   |
+| [`ContextSize`](#contextsize) | Supported | Supported |
 | [`StopSequences`](#stopsequences) | Supported | Supported |
 | [`StreamFcn`](#streamfcn) | Supported | Supported |
 | [`TimeOut`](#timeout) | Supported | Supported |

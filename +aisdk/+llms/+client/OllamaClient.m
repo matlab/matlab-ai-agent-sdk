@@ -116,11 +116,13 @@ classdef OllamaClient < aisdk.llms.client.ClientBase
                 nvp.StreamFcn         (1,1) {mustBeA(nvp.StreamFcn,'function_handle')}
                 nvp.APIKey                  {aisdk.llms.internal.mustBeNonzeroLengthTextScalar}
                 nvp.BaseURL           (1,1) string = ""
+                nvp.ContextSize       (1,1) {aisdk.llms.internal.mustBePositiveIntegerOrNaN} = NaN
             end
 
             this.ModelName = modelName;
             this.APIKey = this.parseAPIKey(nvp);
             this.BaseURL = this.parseEndpoint(nvp);
+            this.ContextSize = nvp.ContextSize;
 
             this.Temperature = nvp.Temperature;
             this.TopP = nvp.TopP;
