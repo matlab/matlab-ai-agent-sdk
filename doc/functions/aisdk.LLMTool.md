@@ -230,6 +230,11 @@ Tool name, specified as a string scalar or character vector.
 By default, the tool name is the name of the function specified by
 [`f`](#f).
 
+If the function name contains a dot, for example because it is defined in a
+namespace, then the resulting tool name replaces the dot with an underscore. For
+example, the function `"mynamesp.myFunction"` has the tool name
+`"mynamesp_myFunction"`.
+
 If `f` is an anonymous function, then you must specify
 `Name`.
 

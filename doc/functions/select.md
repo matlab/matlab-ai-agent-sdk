@@ -9,6 +9,11 @@ Select LLM tool from tool array
 ## Description
 <a id="description"></a>
 
+Use the `select` function to manually select a tool from an
+array of LLM tools. For example, do this to test and debug, or to create a custom agent
+architecture. When you create an AI agent by using the [`aisdk.AIAgent`](aisdk.AIAgent.md) function, the
+software selects and evaluates the tools automatically.
+
 `tool = select(tools,name)`
 selects the tool with name `name` from the array of LLM tools
 `tools`.

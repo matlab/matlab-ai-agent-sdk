@@ -107,7 +107,7 @@ JSON schema data type, specified as `""`,
 
 To use other data types, including non-scalar inputs, complex numbers, and
 specialized objects including custom objects, add the data to the agent workspace and
-configure the tool to work with the agent workspace. For more information, see [`Configure Tool to Use Agent Workspace`](#configure-tool-to-use-agent-workspace).
+configure the tool to work with the agent workspace. For more information, see [`aisdk.AIAgent`](aisdk.AIAgent.md).
 
 Data Types: `string`
 ### `Required` — Argument is required
@@ -200,7 +200,7 @@ structure:
 
 To use other data types, including non-scalar inputs, complex numbers, and specialized
 objects including custom objects, add the data to the agent workspace and configure the tool
-to work with the agent workspace. For more information, see [`Configure Tool to Use Agent Workspace`](#configure-tool-to-use-agent-workspace).
+to work with the agent workspace. For more information, see [`aisdk.AIAgent`](aisdk.AIAgent.md).
 ## See Also
 <a id="see-also"></a>
 

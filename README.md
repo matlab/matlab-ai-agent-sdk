@@ -4,7 +4,7 @@
 
 MATLAB® AI Agent SDK lets you build and run AI agents in MATLAB.
 
-- Create agents based on OpenAI®, Ollama™, or OpenAI-compatible APIs.
+- Create agents based on OpenAI® Chat Completions, Ollama™, or OpenAI-compatible APIs.
 - Integrate LLMs and agentic workflows into your workflows in a targeted manner, retaining deterministic workflows when those are more suitable.
 - Create agentic tools that use:
   - large amounts of data
@@ -20,6 +20,8 @@ Help us improve the MATLAB AI Agent SDK by completing our short [feedback survey
 
 ## Setup
 
+Using this add\-on requires MATLAB R2023a or newer.
+
 You can use the add\-on in MATLAB Online™ by clicking this link: [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=matlab/matlab-ai-agent-sdk)
 
 To use the add\-on on an installed version of MATLAB, you can clone the GitHub repository. In the MATLAB Command Window, run this command:
@@ -33,7 +35,7 @@ To run code from the add\-on outside of the installation directory, add the path
 
 ### OpenAI
 
-Using the OpenAI API requires an OpenAI API key. For information on how to obtain one, as well as pricing, terms and conditions of use, and available models, see the [OpenAI documentation](https://platform.openai.com/docs/overview).
+Using the OpenAI Chat Completions API requires an OpenAI API key. For information on how to obtain one, as well as pricing, terms and conditions of use, and available models, see the [OpenAI documentation](https://platform.openai.com/docs/overview).
 
 Set your key as an environment variable in a `.env` file:
 

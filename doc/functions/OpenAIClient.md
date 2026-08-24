@@ -1,12 +1,12 @@
 # OpenAIClient
 <a id="openaiclient"></a>
 
-Client for OpenAI API
+Client for OpenAI Chat Completions API
 ## Description
 <a id="description"></a>
 
 Use an `OpenAIClient` object to set large language model (LLM)
-options to generate text and create agents using the OpenAI&#x00AE; API.
+options to generate text and create agents using the OpenAI&#x00AE; Chat Completions API.
 
 To generate text, use the `OpenAIClient` object as an input to the
 [`generate`](generate.md)
