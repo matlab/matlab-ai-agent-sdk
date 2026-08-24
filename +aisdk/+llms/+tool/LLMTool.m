@@ -51,8 +51,8 @@ classdef LLMTool < matlab.mixin.Heterogeneous & matlab.mixin.CustomDisplay
                 props = [props; "OutputSchema"];
             end
             props = [props; "Workspace"];
-            if isprop(obj, "RequiresApproval")
-                props = [props; "RequiresApproval"];
+            if isprop(obj, "ApprovalRequest")
+                props = [props; "ApprovalRequest"];
             end
             props = [props; "DisplayTitle"; "Annotations"];
             groups = matlab.mixin.util.PropertyGroup(props);

@@ -199,9 +199,9 @@ classdef AIAgent < handle
                             string(output), ToolCallID=tc.ToolCallID, Name=tc.Name);
                         continue
                     end
-                    if tool.RequiresApproval == "once" && ismember(tc.Name, this.ApprovedTools)
+                    if tool.ApprovalRequest == "once" && ismember(tc.Name, this.ApprovedTools)
                         % Already approved in a previous round
-                    elseif tool.RequiresApproval ~= "never"
+                    elseif tool.ApprovalRequest ~= "never"
                         approval = this.ApprovalFcn(tool, tc.Arguments);
                         if ~approval.Approved
                             msg = "User denied tool execution of " + tc.Name;

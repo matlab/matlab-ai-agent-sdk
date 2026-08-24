@@ -4,7 +4,7 @@ function result = uiconfirm(tool, toolArguments)
 %   displaying the tool name and its arguments as pretty-printed JSON. The
 %   user can approve or deny the call and optionally provide a message.
 %   TOOL is a scalar aisdk.llms.tool.LLMTool. RESULT is a struct with fields
-%   Approved, Permanent, and Reason. When the tool has RequiresApproval
+%   Approved, Permanent, and Reason. When the tool has ApprovalRequest
 %   set to "once", an additional "Approve Always" button is shown.
 %
 %   Copyright 2026 The MathWorks, Inc.

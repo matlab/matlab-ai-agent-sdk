@@ -88,12 +88,12 @@ classdef tMCPTool < matlab.unittest.TestCase
             end
         end
 
-        function constructor_default_setsRequiresApprovalNever(testCase)
+        function constructor_default_setsApprovalRequestNever(testCase)
             mockClient = makeMockClient({ ...
                 struct("name", "myTool", "description", "desc", "inputSchema", struct())});
 
             tools = aisdk.llms.tool.MCPTool(mockClient);
-            testCase.verifyEqual(tools.RequiresApproval, aisdk.llms.tool.RequiresApproval.never);
+            testCase.verifyEqual(tools.ApprovalRequest, aisdk.llms.tool.ApprovalRequest.never);
         end
 
         function call_structArgs_passesAsNVPairs(testCase)
@@ -172,7 +172,7 @@ classdef tMCPTool < matlab.unittest.TestCase
             testCase.verifySubstring(output, "Description");
             testCase.verifySubstring(output, "InputSchema");
             testCase.verifySubstring(output, "OutputSchema");
-            testCase.verifySubstring(output, "RequiresApproval");
+            testCase.verifySubstring(output, "ApprovalRequest");
             testCase.verifySubstring(output, "DisplayTitle");
             testCase.verifySubstring(output, "Annotations");
         end

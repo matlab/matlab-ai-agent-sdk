@@ -160,7 +160,7 @@ classdef tSystem < matlab.unittest.TestCase
                 result.Permanent = false;
                 result.Reason = "";
             end
-            tool = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="always");
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="always");
             agent = aisdk.AIAgent(testCase.Client, Tools=tool, ...
                 ApprovalFcn=@approve, DisplayMode = "off");
 
@@ -180,7 +180,7 @@ classdef tSystem < matlab.unittest.TestCase
             tool = aisdk.LLMTool(@addTwoNumbers, ...
                 Description="Add two numbers", ...
                 InputArguments=struct(a=1, b=2), ...
-                RequiresApproval="always");
+                ApprovalRequest="always");
             agent = aisdk.AIAgent(testCase.Client, Tools=tool, ...
                 ApprovalFcn=@approveWithReason, DisplayMode="off");
 
@@ -195,7 +195,7 @@ classdef tSystem < matlab.unittest.TestCase
                 result.Permanent = false;
                 result.Reason = "User denied this action.";
             end
-            tool = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="always");
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="always");
             agent = aisdk.AIAgent(testCase.Client, Tools=tool, ...
                 ApprovalFcn=@denyApproval, DisplayMode = "off");
 

@@ -40,7 +40,7 @@
                             "type": [["struct", "scalar"]]
                         },
                         {
-                            "name": "RequiresApproval",
+                            "name": "ApprovalRequest",
                             "kind": "namevalue",
                             "type": [["choices={'never','once','always'}"]]
                         },

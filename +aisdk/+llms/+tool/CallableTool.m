@@ -4,8 +4,8 @@ classdef CallableTool < aisdk.llms.tool.LLMTool
 % Copyright 2026 The MathWorks, Inc.
 
     properties
-        %RequiresApproval   Approval mode for user confirmation before calling.
-        RequiresApproval(1,1) aisdk.llms.tool.RequiresApproval
+        %ApprovalRequest   Approval mode for user confirmation before calling.
+        ApprovalRequest(1,1) aisdk.llms.tool.ApprovalRequest
     end
 
     properties (Access = protected)

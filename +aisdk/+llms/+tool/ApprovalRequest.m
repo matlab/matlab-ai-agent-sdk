@@ -1,5 +1,5 @@
-classdef RequiresApproval
-%RequiresApproval Enumeration for tool approval modes.
+classdef ApprovalRequest
+%ApprovalRequest Enumeration for tool approval modes.
 
 % Copyright 2026 The MathWorks, Inc.
 

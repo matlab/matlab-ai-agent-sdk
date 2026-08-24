@@ -119,14 +119,14 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             testCase.verifyEqual(tool.Annotations, ann);
         end
 
-        function requiresApproval_withDefault_isNever(testCase)
+        function approvalRequest_withDefault_isNever(testCase)
             tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
-            testCase.verifyEqual(tool.RequiresApproval, aisdk.llms.tool.RequiresApproval.never);
+            testCase.verifyEqual(tool.ApprovalRequest, aisdk.llms.tool.ApprovalRequest.never);
         end
 
-        function requiresApproval_withCustomValue_setsEnum(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers, RequiresApproval="always");
-            testCase.verifyEqual(tool.RequiresApproval, aisdk.llms.tool.RequiresApproval.always);
+        function approvalRequest_withCustomValue_setsEnum(testCase)
+            tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers, ApprovalRequest="always");
+            testCase.verifyEqual(tool.ApprovalRequest, aisdk.llms.tool.ApprovalRequest.always);
         end
 
         function inputsFromPrototypeStruct(testCase)
@@ -740,7 +740,7 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             testCase.verifySubstring(output, "InputArguments");
             testCase.verifySubstring(output, "OutputArguments");
             testCase.verifySubstring(output, "Workspace");
-            testCase.verifySubstring(output, "RequiresApproval");
+            testCase.verifySubstring(output, "ApprovalRequest");
             testCase.verifySubstring(output, "DisplayTitle");
             testCase.verifySubstring(output, "Annotations");
         end

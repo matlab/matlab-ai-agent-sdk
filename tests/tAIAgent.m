@@ -207,8 +207,8 @@ classdef tAIAgent < matlab.unittest.TestCase
         end
 
         function approval_withDeniedTool_executesRemainingToolsInRound(testCase)
-            tool1 = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="always");
-            tool2 = aisdk.LLMTool(@addTwoNumbers, Name="addWithoutApproval", RequiresApproval="never");
+            tool1 = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="always");
+            tool2 = aisdk.LLMTool(@addTwoNumbers, Name="addWithoutApproval", ApprovalRequest="never");
             tools = [tool1, tool2];
 
             tokens = struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
@@ -237,7 +237,7 @@ classdef tAIAgent < matlab.unittest.TestCase
         end
 
         function approval_withDenialReason_includesReasonInToolResult(testCase)
-            tool = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="always");
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="always");
 
             tokens = struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                 "NumTotalTokens", 15, "NumCachedInputTokens", 0));
@@ -259,7 +259,7 @@ classdef tAIAgent < matlab.unittest.TestCase
         end
 
         function approval_withNeverMode_neverInvokesApprovalFcn(testCase)
-            tool = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="never");
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
 
             tokens = struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                 "NumTotalTokens", 15, "NumCachedInputTokens", 0));
@@ -278,7 +278,7 @@ classdef tAIAgent < matlab.unittest.TestCase
         end
 
         function approval_withAlwaysMode_asksOnEveryCall(testCase)
-            tool = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="always");
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="always");
 
             tokens = struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                 "NumTotalTokens", 15, "NumCachedInputTokens", 0));
@@ -299,7 +299,7 @@ classdef tAIAgent < matlab.unittest.TestCase
         end
 
         function approval_withOnceModeAndPermanent_skipsSubsequentCalls(testCase)
-            tool = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="once");
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="once");
 
             tokens = struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                 "NumTotalTokens", 15, "NumCachedInputTokens", 0));
@@ -320,7 +320,7 @@ classdef tAIAgent < matlab.unittest.TestCase
         end
 
         function approval_withOnceModeNotPermanent_asksAgainNextRound(testCase)
-            tool = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="once");
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="once");
 
             tokens = struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                 "NumTotalTokens", 15, "NumCachedInputTokens", 0));
@@ -341,7 +341,7 @@ classdef tAIAgent < matlab.unittest.TestCase
         end
 
         function approval_withApprovedReason_insertsUserMessage(testCase)
-            tool = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="always");
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="always");
 
             tokens = struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                 "NumTotalTokens", 15, "NumCachedInputTokens", 0));
@@ -369,11 +369,11 @@ classdef tAIAgent < matlab.unittest.TestCase
         end
 
         function approval_multipleToolswithPartialReasons_emitsOnlyForNonEmpty(testCase)
-            tool1 = aisdk.LLMTool(@addTwoNumbers, RequiresApproval="always");
+            tool1 = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="always");
             tool2 = aisdk.LLMTool(@addTwoNumbers, Name="doubleNumber", ...
-                RequiresApproval="always");
+                ApprovalRequest="always");
             tool3 = aisdk.LLMTool(@addTwoNumbers, Name="decrementNumber", ...
-                RequiresApproval="always");
+                ApprovalRequest="always");
             tools = [tool1, tool2, tool3];
 
             tokens = struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...

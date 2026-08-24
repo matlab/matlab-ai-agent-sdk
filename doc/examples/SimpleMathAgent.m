@@ -39,10 +39,10 @@ function result = findSmallestReal(x1, x2)
 end
 
 quadraticTool = aisdk.LLMTool(@solveQuadraticEquation, ...
-    RequiresApproval="never"); %[control:dropdown:tool1]{"position":[22,29]}
+    ApprovalRequest="never"); %[control:dropdown:tool1]{"position":[22,29]}
 
 smallestTool = aisdk.LLMTool(@findSmallestReal, ...
-    RequiresApproval="never"); %[control:dropdown:tool2]{"position":[22,29]}
+    ApprovalRequest="never"); %[control:dropdown:tool2]{"position":[22,29]}
 %%
 %[text] ## Create Agent
 %[text] Create an LLM client and agent with a system prompt.
@@ -72,10 +72,10 @@ disp("Agent: " + response) %[output:56d3774a]
 %   data: {"defaultValue":"\"gpt-4.1-mini\"","itemLabels":["gpt-4.1-mini","qwen3"],"items":["\"gpt-4.1-mini\"","\"qwen3\""],"label":"model","run":"Section"}
 %---
 %[control:dropdown:tool1]
-%   data: {"defaultValue":"\"never\"","itemLabels":["always","once","never"],"items":["\"always\"","\"once\"","\"never\""],"label":"RequiresApproval","run":"Section"}
+%   data: {"defaultValue":"\"never\"","itemLabels":["always","once","never","never\")"],"items":["\"always\"","\"once\"","\"never\"","never\")"],"label":"ApprovalRequest","run":"Section"}
 %---
 %[control:dropdown:tool2]
-%   data: {"defaultValue":"\"never\"","itemLabels":["always","once","never"],"items":["\"always\"","\"once\"","\"never\""],"label":"RequiresApproval","run":"Section"}
+%   data: {"defaultValue":"\"never\"","itemLabels":["always","once","never","never\")"],"items":["\"always\"","\"once\"","\"never\"","never\")"],"label":"ApprovalRequest","run":"Section"}
 %---
 %[output:734686e1]
 %   data: {"dataType":"text","outputData":{"text":"User: What is the smallest root of x^2+2x-3=0?\n","truncated":false}}

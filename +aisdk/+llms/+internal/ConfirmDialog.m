@@ -26,7 +26,7 @@ classdef ConfirmDialog < handle
             end
 
             toolName = tool.Name;
-            this.ShowAlwaysOption = (tool.RequiresApproval == "once");
+            this.ShowAlwaysOption = (tool.ApprovalRequest == "once");
 
             argsJson = jsonencode(toolArguments, PrettyPrint=true);
 
