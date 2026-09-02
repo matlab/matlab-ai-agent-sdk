@@ -13,6 +13,10 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
 
     properties (TestParameter)
         VariableSizeKind = {"varargin", "varargout"}
+        AddTwoNumbersFunction = struct( ...
+            "PathFunction", @addTwoNumbers, ...
+            "LocalFunction", @localAdd, ...
+            "StaticClassMethod", @ToolTestHelper.addNumbers)
     end
 
     methods (Test, TestTags = {'Unit'})
@@ -32,23 +36,30 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             testCase.verifyEqual(tool.InputArguments(1).DataType, "");
         end
 
-        function extractsDescriptionFromMetadata(testCase)
+        function extractsDescriptionFromMetadata(testCase, AddTwoNumbersFunction)
+            tool = aisdk.llms.tool.LocalLLMTool( ...
+                AddTwoNumbersFunction, Name="addNumbers");
+            testCase.verifyEqual(tool.Description, "Add two numbers together.");
+        end
+
+        function extractsInputsFromMetadata(testCase, AddTwoNumbersFunction)
+            tool = aisdk.llms.tool.LocalLLMTool( ...
+                AddTwoNumbersFunction, Name="addNumbers");
+            testCase.verifyLength(tool.InputArguments, 2);
+            testCase.verifyEqual([tool.InputArguments.Name], ["a", "b"]);
+            testCase.verifyEqual([tool.InputArguments.DataType], ["number", "number"]);
+        end
+
+        function extractsOutputsFromMetadata(testCase, AddTwoNumbersFunction)
+            tool = aisdk.llms.tool.LocalLLMTool( ...
+                AddTwoNumbersFunction, Name="addNumbers");
+            testCase.verifyLength(tool.OutputArguments, 1);
+            testCase.verifyEqual(tool.OutputArguments.Name, "c");
+        end
+
+        function nameValueFunction_description_extractedFromMetadata(testCase)
             tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbersUsingNVP);
             testCase.verifySubstring(tool.Description, "Add two numbers together");
-        end
-
-        function extractsInputsFromMetadata(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
-            testCase.verifyLength(tool.InputArguments, 2);
-            testCase.verifyEqual(tool.InputArguments(1).Name, "a");
-            testCase.verifyEqual(tool.InputArguments(2).Name, "b");
-            testCase.verifyEqual(tool.InputArguments(1).DataType, "number");
-        end
-
-        function extractsOutputsFromMetadata(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@addTwoNumbers);
-            testCase.verifyLength(tool.OutputArguments, 1);
-            testCase.verifyEqual(tool.OutputArguments(1).Name, "c");
         end
 
         function detectsNVPInputs(testCase)
@@ -538,27 +549,6 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             testCase.verifyEqual(tool.OutputArguments(1).Name, "result");
         end
 
-        function staticMethod_extractsInputsFromMetadata(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool( ...
-                @ToolTestHelper.addNumbers, Name="addNumbers");
-            testCase.verifyLength(tool.InputArguments, 2);
-            testCase.verifyEqual(tool.InputArguments(1).Name, "a");
-            testCase.verifyEqual(tool.InputArguments(2).Name, "b");
-        end
-
-        function staticMethod_extractsOutputsFromMetadata(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool( ...
-                @ToolTestHelper.addNumbers, Name="addNumbers");
-            testCase.verifyLength(tool.OutputArguments, 1);
-            testCase.verifyEqual(tool.OutputArguments(1).Name, "c");
-        end
-
-        function staticMethod_description_extractedFromMetadata(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool( ...
-                @ToolTestHelper.addNumbers, Name="addNumbers");
-            testCase.verifyEqual(tool.Description, "Add two numbers together.");
-        end
-
         function staticMethod_name_replacesDotsWithUnderscores(testCase)
             tool = aisdk.llms.tool.LocalLLMTool(@ToolTestHelper.addNumbers);
             testCase.verifyEqual(tool.Name, "ToolTestHelper_addNumbers");
@@ -579,26 +569,6 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             testCase.verifyError( ...
                 @() aisdk.llms.tool.LocalLLMTool(@obj.multiply), ...
                 "llms:anonymousFunctionRequiresName");
-        end
-
-        function localFunction_inputArguments_extractedFromMetadata(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@localAdd);
-            testCase.verifyLength(tool.InputArguments, 2);
-            testCase.verifyEqual(tool.InputArguments(1).Name, "a");
-            testCase.verifyEqual(tool.InputArguments(1).DataType, "number");
-            testCase.verifyEqual(tool.InputArguments(2).Name, "b");
-            testCase.verifyEqual(tool.InputArguments(2).DataType, "number");
-        end
-
-        function localFunction_outputArguments_extractedFromMetadata(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@localAdd);
-            testCase.verifyLength(tool.OutputArguments, 1);
-            testCase.verifyEqual(tool.OutputArguments(1).Name, "c");
-        end
-
-        function localFunction_description_extractedFromMetadata(testCase)
-            tool = aisdk.llms.tool.LocalLLMTool(@localAdd);
-            testCase.verifyEqual(tool.Description, "Add two numbers together.");
         end
 
         function localFunction_name_extractedFromHandle(testCase)

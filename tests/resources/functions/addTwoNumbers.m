@@ -1,5 +1,5 @@
 function c = addTwoNumbers(a, b)
-% Add two numbers together#
+% Add two numbers together.
 % Inputs
 % - a double first summand
 % - b double second summand
