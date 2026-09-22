@@ -78,4 +78,20 @@ catalog("llms:cannotInferInputArguments") = "Unable to derive input arguments fr
 catalog("llms:varargoutInOutputs") = "Unable to derive output arguments because the function signature contains ''varargout''. Specify the OutputArguments name-value argument.";
 catalog("llms:unknownOutputCount") = "Unable to derive output arguments because the function has an unknown number of outputs. Specify the OutputArguments name-value argument.";
 catalog("llms:nestedFunctionRequiresExplicitDefinition") = "Unable to derive function arguments from a nested function. Specify the InputArguments and OutputArguments name-value arguments.";
+catalog("llms:mcpClient:nonScalarURL") = "MCP server URL must be a string scalar or character vector.";
+catalog("llms:mcpClient:urlEndpointRequiresHttpTransport") = "To specify the MCP server as a URL, the transport protocol must be ""streamable-http"" or ""sse"".";
+catalog("llms:mcpClient:httpTransportRequiresUrl") = "When Transport=""{1}"", the endpoint must start with ""http://"" or ""https://"". To start a local command, specify Transport=""stdio"" instead.";
+catalog("llms:mcpClient:invalidToolPrefix") = "ToolPrefix must start with a letter and contain only letters, digits, and underscores.";
+catalog("llms:mcpClient:oddNameValuePairs") = "Arguments after the tool name must be name-value pairs.";
+catalog("llms:mcpClient:badRequest") = "The server rejected the connection with Bad Request. Check that the URL and transport type are correct: a server that expects streamable HTTP rejects SSE connections, and the other way round.";
+catalog("llms:mcpClient:unauthorized") = "MCP servers that require authentication are not supported.";
+catalog("llms:mcpClient:forbidden") = "The MCP server denied access.";
+catalog("llms:mcpClient:notFound") = "The MCP server endpoint was not found. Check that the URL is correct.";
+catalog("llms:mcpClient:methodNotAllowed") = "The server returned Method Not Allowed. Check that the URL and transport type are correct.";
+catalog("llms:mcpClient:badGateway") = "The MCP server is unreachable (bad gateway). Check that the server is running.";
+catalog("llms:mcpClient:hostNotFound") = "Host not found. Check that the URL is correct.";
+catalog("llms:mcpClient:connectionRefused") = "Connection refused. Check that the server is running and the port is correct.";
+catalog("llms:mcpClient:connectionTimeout") = "Connection timed out. The server may be unreachable or the TimeOut value may be too low.";
+catalog("llms:mcpClient:stdioNotFound") = "The MCP server command was not found. Check that it is installed and on PATH.";
+catalog("llms:mcpClient:stdioPermission") = "Permission denied when starting the MCP server. Check the file permissions.";
 end

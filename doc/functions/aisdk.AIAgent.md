@@ -16,6 +16,8 @@ MATLAB&#x00AE;.
 creates an `aisdk.AIAgent` object with the specified LLM client
 `client`.
 
+numinp
+
 `agent = aisdk.AIAgent(client,Name=Value)`
 specifies additional options using one or more name-value arguments. For example, to limit
 the maximum number of tool calling iterations to 10, set

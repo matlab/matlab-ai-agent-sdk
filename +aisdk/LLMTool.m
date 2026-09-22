@@ -27,7 +27,7 @@ end
 
 if isa(toolDefinition, "function_handle")
     tools = aisdk.llms.tool.LocalLLMTool(toolDefinition, varargin{1:end});
-elseif isa(toolDefinition, "mcpHTTPClient")
+elseif isa(toolDefinition, "mcpHTTPClient") || isa(toolDefinition, "aisdk.MCPClient")
     tools = aisdk.llms.tool.MCPTool(toolDefinition, varargin{1:end});
 else
     error("llms:invalidFunctionDefinition", ...

@@ -1,4 +1,28 @@
 {
+    "aisdk.MCPClient": {
+        "inputs": [
+            {
+                "name": "endpoint",
+                "kind": "required",
+                "type": "string"
+            },
+            {
+                "name": "Transport",
+                "kind": "namevalue",
+                "type": "choices={'auto','streamable-http','sse','stdio'}"
+            },
+            {
+                "name": "ToolPrefix",
+                "kind": "namevalue",
+                "type": [["string", "scalar"]]
+            },
+            {
+                "name": "TimeOut",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0"]]
+            }
+        ]
+    },
     "aisdk.LLMTool": {
         "inputs": [
             {
@@ -54,7 +78,7 @@
                         {
                             "name": "mcpClient",
                             "kind": "required",
-                            "type": [["mcpHTTPClient"]]
+                            "type": [["mcpHTTPClient"], ["aisdk.MCPClient"]]
                         }
                     ]
                 ]

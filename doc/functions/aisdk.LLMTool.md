@@ -115,20 +115,20 @@ tool =
 <a id="create-tool-from-mcp-server"></a>
 
 To create one or more AI tools from the tools provided by an MCP
-server, first connect to the MCP server by using the [`mcpHTTPClient`](https://www.mathworks.com/matlabcentral/fileexchange/182699-matlab-mcp-http-client)
+server, first connect to the MCP server by using the `aisdk.MCPClient`
 function. Then, use the client as the input to the [`aisdk.LLMTool`](aisdk.LLMTool.md) function.
 
-Connect to an MCP server with server endpoint `endpoint` by using
-the [`mcpHTTPClient`](https://www.mathworks.com/matlabcentral/fileexchange/182699-matlab-mcp-http-client) function.
+Create an MCP client from the MCP server `mcpServer`.
 
 ```
-client = mcpHTTPClient(endpoint);
+client = aisdk.MCPClient(mcpServer);
 ```
 
-Create an AI tool from the MCP server by using the [`aisdk.LLMTool`](aisdk.LLMTool.md) function.
+Extract the tools from the MCP server by using the `Tools`
+property.
 
 ```
-tool = aisdk.LLMTool(client);
+tool = client.Tools;
 ```
 
 If the MCP server provides more than one tool, then `tool` is an
@@ -204,11 +204,11 @@ Data Types: `function_handle`
 ### `client` — MCP client
 <a id="client"></a>
 
-[`mcpHTTPClient`](https://www.mathworks.com/matlabcentral/fileexchange/182699-matlab-mcp-http-client) object
+`aisdk.MCPClient` object
 
-MCP client, specified as an [`mcpHTTPClient`](https://www.mathworks.com/matlabcentral/fileexchange/182699-matlab-mcp-http-client) object.
+MCP client, specified as an [`aisdk.MCPClient`](aisdk.MCPClient.md) object.
 
-Data Types: [`mcpHTTPClient`](https://www.mathworks.com/matlabcentral/fileexchange/182699-matlab-mcp-http-client)
+Data Types: `aisdk.MCPClient`
 ## Name-Value Arguments
 <a id="name-value-arguments"></a>
 
@@ -234,6 +234,13 @@ If the function name contains a dot, for example because it is defined in a
 namespace, then the resulting tool name replaces the dot with an underscore. For
 example, the function `"mynamesp.myFunction"` has the tool name
 `"mynamesp_myFunction"`.
+
+For [`MCPTool`](MCPTool.md) objects, if
+the `ToolPrefix` property of the MCP tool is not empty, then the
+tool prefix is added to the beginning of the tool name, followed by an underscore. For
+example, if you specify the name `"myTool"` and the tool prefix is
+`"myServer"`, then the resulting tool name is
+`"myServer_myTool"`.
 
 If `f` is an anonymous function, then you must specify
 `Name`.

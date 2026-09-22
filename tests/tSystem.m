@@ -191,6 +191,91 @@ classdef tSystem < matlab.unittest.TestCase
             testCase.verifySubstring(toolResults(1).Result, "Error");
         end
 
+        %% MCPClient tools integrate with AIAgent
+
+        function run_withMCPClientTools_callsToolAndReturnsResult(testCase)
+            mcpClient = aisdk.MCPClient("mock", Transport="mock", ...
+                ToolPrefix="server1");
+            tools = mcpClient.Tools;
+
+            tokens = struct("Tokens", struct( ...
+                "NumInputTokens", 10, "NumOutputTokens", 5, ...
+                "NumTotalTokens", 15, "NumCachedInputTokens", 0));
+            llmClient = MockClient();
+            llmClient.GenerateOutputs = {
+                {"", aisdk.LLMToolCallMessage("server1_example-tool", ...
+                    struct("param1", "hello"), ToolCallID="call_1"), tokens}
+                {"Done.", aisdk.LLMTextMessage("Done.", Role="assistant"), tokens}
+            };
+
+            agent = aisdk.AIAgent(llmClient, SystemPrompt="Use tools.", ...
+                Tools=tools, DisplayMode="off");
+            response = agent.run("Do it.");
+
+            testCase.verifyEqual(response, "Done.");
+            toolResults = agent.Messages([agent.Messages.Role] == "tool");
+            testCase.verifyNotEmpty(toolResults);
+            testCase.verifySubstring(toolResults(1).Result, "Example result");
+        end
+
+        function run_withMCPClientToolsNoPrefix_callsToolAndReturnsResult(testCase)
+            mcpClient = aisdk.MCPClient("mock", Transport="mock");
+            tools = mcpClient.Tools;
+
+            tokens = struct("Tokens", struct( ...
+                "NumInputTokens", 10, "NumOutputTokens", 5, ...
+                "NumTotalTokens", 15, "NumCachedInputTokens", 0));
+            llmClient = MockClient();
+            llmClient.GenerateOutputs = {
+                {"", aisdk.LLMToolCallMessage("example-tool", ...
+                    struct("param1", "world"), ToolCallID="call_1"), tokens}
+                {"Got it.", aisdk.LLMTextMessage("Got it.", Role="assistant"), tokens}
+            };
+
+            agent = aisdk.AIAgent(llmClient, SystemPrompt="Use tools.", ...
+                Tools=tools, DisplayMode="off");
+            response = agent.run("Do it.");
+
+            testCase.verifyEqual(response, "Got it.");
+            toolMsgs = testCase.verifyHasRole(agent.Messages, "tool");
+            testCase.verifySubstring(toolMsgs(1).Result, "Example result");
+        end
+
+        function run_withTwoMCPClientServers_routesCallToCorrectServer(testCase)
+            srv1 = aisdk.MCPClient("mock", Transport="mock", ToolPrefix="srv1");
+            srv2 = aisdk.MCPClient("mock", Transport="mock", ToolPrefix="srv2");
+            tools = [srv1.Tools, srv2.Tools];
+
+            tokens = struct("Tokens", struct( ...
+                "NumInputTokens", 10, "NumOutputTokens", 5, ...
+                "NumTotalTokens", 15, "NumCachedInputTokens", 0));
+            llmClient = MockClient();
+            llmClient.GenerateOutputs = {
+                {"", aisdk.LLMToolCallMessage("srv2_example-tool", ...
+                    struct("param1", "hello"), ToolCallID="call_1"), tokens}
+                {"Done.", aisdk.LLMTextMessage("Done.", Role="assistant"), tokens}
+            };
+
+            agent = aisdk.AIAgent(llmClient, Tools=tools, DisplayMode="off");
+            response = agent.run("Do it.");
+
+            testCase.verifyEqual(response, "Done.");
+            toolMsgs = testCase.verifyHasRole(agent.Messages, "tool");
+            testCase.verifySubstring(toolMsgs(1).Result, "Example result");
+        end
+
+        function run_withRealLLMAndMCPClientTools_callsToolAndReturnsResult(testCase)
+            mcpClient = aisdk.MCPClient("mock", Transport="mock");
+            agent = aisdk.AIAgent(testCase.Client, Tools=mcpClient.Tools, DisplayMode="off");
+
+            run(agent, "Use the example-tool with param1 set to hello.", ...
+                ToolChoice="required");
+
+            toolResults = agent.Messages([agent.Messages.Role] == "tool");
+            testCase.assertNotEmpty(toolResults, "MCP tool should have been called");
+            testCase.verifySubstring(toolResults(1).Result, "Example result");
+        end
+
         %% Tools support human-in-the-loop approval
 
         function run_withApprovalRequired_callsApprovalFcn(testCase)
@@ -433,9 +518,9 @@ classdef tSystem < matlab.unittest.TestCase
             testCase.verifyNotEqual(response, "", "Expected a non-empty response");
         end
 
-        function verifyHasRole(testCase, messages, role)
-            testCase.verifyNotEmpty( ...
-                messages([messages.Role] == role), ...
+        function filtered = verifyHasRole(testCase, messages, role)
+            filtered = messages([messages.Role] == role);
+            testCase.verifyNotEmpty(filtered, ...
                 "Message history should contain a """ + role + """ message");
         end
 

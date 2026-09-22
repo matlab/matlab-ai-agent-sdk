@@ -163,6 +163,15 @@ classdef tMCPTool < matlab.unittest.TestCase
                 "MATLAB:TooManyInputs");
         end
 
+        function constructor_missingDescription_doesNotError(testCase)
+            mockClient = makeMockClient({ ...
+                struct("name", "myTool", "inputSchema", struct("type", "object"))});
+
+            tools = aisdk.llms.tool.MCPTool(mockClient);
+            testCase.verifyEqual(tools.Name, "myTool");
+            testCase.verifyEqual(tools.Description, "");
+        end
+
         function display_showsCorrectProperties(testCase)
             tool = aisdk.llms.tool.MCPTool();
             tool.Name = "mcpTool";

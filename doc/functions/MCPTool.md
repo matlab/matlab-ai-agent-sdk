@@ -10,8 +10,10 @@ server.
 ## Creation
 <a id="creation"></a>
 
-Create an `MCPTool` object by using the [`aisdk.LLMTool`](aisdk.LLMTool.md)
-function and specifying an [`mcpHTTPClient`](https://www.mathworks.com/matlabcentral/fileexchange/182699-matlab-mcp-http-client) object as the input argument.
+To create an `MCPTool` object, first connect to an MCP server by creating
+an [`aisdk.MCPClient`](aisdk.MCPClient.md) and then extract
+the tools from the server by using the `Tools` property of the MCP
+client.
 ## Properties
 <a id="properties"></a>
 ### `InputSchema` — Input argument schema
@@ -130,24 +132,69 @@ Data Types: `struct`
 <a id="create-tool-from-mcp-server"></a>
 
 To create one or more AI tools from the tools provided by an MCP
-server, first connect to the MCP server by using the [`mcpHTTPClient`](https://www.mathworks.com/matlabcentral/fileexchange/182699-matlab-mcp-http-client)
+server, first connect to the MCP server by using the `aisdk.MCPClient`
 function. Then, use the client as the input to the [`aisdk.LLMTool`](aisdk.LLMTool.md) function.
 
-Connect to an MCP server with server endpoint `endpoint` by using
-the [`mcpHTTPClient`](https://www.mathworks.com/matlabcentral/fileexchange/182699-matlab-mcp-http-client) function.
+Create an MCP client from the MCP server `mcpServer`.
 
 ```
-client = mcpHTTPClient(endpoint);
+client = aisdk.MCPClient(mcpServer);
 ```
 
-Create an AI tool from the MCP server by using the [`aisdk.LLMTool`](aisdk.LLMTool.md) function.
+Extract the tools from the MCP server by using the `Tools`
+property.
 
 ```
-tool = aisdk.LLMTool(client);
+tool = client.Tools;
 ```
 
 If the MCP server provides more than one tool, then `tool` is an
 array of `MCPTool` objects.
+### Manually Evaluate MCP Tool
+<a id="manually-evaluate-mcp-tool"></a>
+
+This example shows how to manually evaluate an LLM tool provided by an MCP server by using the `evaluate` function.
+
+For example, evaluate tools to debug, or when creating a custom agent architecture. When you add tools to an [`aisdk.AIAgent`](aisdk.AIAgent.md) object instead, then the agent calls and evaluates tools automatically.
+
+To learn about the input arguments of an `MCPTool` object `tool`, inspect the JSON input schema by using the `InputSchema` property.
+
+```
+tool.InputSchema
+```
+
+```
+ans =
+
+  struct with fields:
+
+    properties: [1×1 struct]
+      required: {'parameter1'}
+          type: 'object'
+```
+
+The tools has one required input argument, `parameter1`. To
+determine the required data type of this parameter, inspect the parameter:
+
+```
+tool.InputSchema.properties.parameter1;
+```
+
+```
+ans =
+
+  struct with fields:
+
+    title: "parameter1"
+     type: "string"
+```
+
+Evaluate the tool.
+
+```
+inputArguments = struct(parameter1="test");
+output = evaluate(tool,inputArguments);
+```
 ## See Also
 <a id="see-also"></a>
 

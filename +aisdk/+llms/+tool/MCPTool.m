@@ -17,13 +17,23 @@ classdef MCPTool < aisdk.llms.tool.CallableTool
                 return
             end
             callMethod = @mcpClient.callTool;
+            if isa(mcpClient, "aisdk.MCPClient")
+                prefixFcn = @mcpClient.prefixedToolName;
+            else
+                % The external mcpHTTPClient is also supported here. It has
+                % no ToolPrefix, and so no prefixedToolName method, and its
+                % tool names are used as-is.
+                prefixFcn = @string;
+            end
             toolDescriptions = mcpClient.ServerTools;
             tools = cell(1, numel(toolDescriptions));
             for i = 1:numel(toolDescriptions)
                 td = toolDescriptions{i};
                 tool = aisdk.llms.tool.MCPTool();
-                tool.Name = td.name;
-                tool.Description = td.description;
+                tool.Name = prefixFcn(td.name);
+                if isfield(td, "description")
+                    tool.Description = td.description;
+                end
                 if isfield(td, "annotations")
                     tool.Annotations = td.annotations;
                 end

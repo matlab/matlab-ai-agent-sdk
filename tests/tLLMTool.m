@@ -100,6 +100,21 @@ classdef tLLMTool < matlab.unittest.TestCase
                 @() aisdk.LLMTool(mockClient, "extra"), ...
                 "MATLAB:TooManyInputs");
         end
+
+        function createFromMCPClient(testCase)
+            client = aisdk.MCPClient("mock", Transport="mock");
+            tools = aisdk.LLMTool(client);
+            testCase.verifyClass(tools, "aisdk.llms.tool.MCPTool");
+            testCase.verifyNotEmpty(tools);
+            testCase.verifyEqual(tools(1).Name, "example-tool");
+        end
+
+        function createFromMCPClient_toolIsCallable(testCase)
+            client = aisdk.MCPClient("mock", Transport="mock");
+            tools = aisdk.LLMTool(client);
+            result = tools(1).evaluate(struct("param1", "hello"));
+            testCase.verifyEqual(result.content.text, 'Example result');
+        end
     end
 
 end

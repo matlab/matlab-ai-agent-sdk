@@ -27,8 +27,8 @@ that cannot be converted to JSON data types, such as complex numbers, arrays, or
 classes.
 ## Examples
 <a id="examples"></a>
-### Evaluate Local LLM Tool
-<a id="evaluate-local-llm-tool"></a>
+### Manually Evaluate Local LLM Tool
+<a id="manually-evaluate-local-llm-tool"></a>
 
 This example shows how to manually evaluate a local LLM tool by using
 the `evaluate` function.
@@ -55,6 +55,51 @@ output = evaluate(tool,struct(x=0))
 output =
 
      0
+```
+### Manually Evaluate MCP Tool
+<a id="manually-evaluate-mcp-tool"></a>
+
+This example shows how to manually evaluate an LLM tool provided by an MCP server by using the `evaluate` function.
+
+For example, evaluate tools to debug, or when creating a custom agent architecture. When you add tools to an [`aisdk.AIAgent`](aisdk.AIAgent.md) object instead, then the agent calls and evaluates tools automatically.
+
+To learn about the input arguments of an `MCPTool` object `tool`, inspect the JSON input schema by using the `InputSchema` property.
+
+```
+tool.InputSchema
+```
+
+```
+ans =
+
+  struct with fields:
+
+    properties: [1×1 struct]
+      required: {'parameter1'}
+          type: 'object'
+```
+
+The tools has one required input argument, `parameter1`. To
+determine the required data type of this parameter, inspect the parameter:
+
+```
+tool.InputSchema.properties.parameter1;
+```
+
+```
+ans =
+
+  struct with fields:
+
+    title: "parameter1"
+     type: "string"
+```
+
+Evaluate the tool.
+
+```
+inputArguments = struct(parameter1="test");
+output = evaluate(tool,inputArguments);
 ```
 ## Input Arguments
 <a id="input-arguments"></a>
