@@ -506,6 +506,30 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyNotEqual(firstMsg.Role, "system");
         end
 
+        function toolErrorReturnedAsObservation_forMCPTool(testCase)
+            throwingMock = mcpHTTPClientMock({ ...
+                struct("name", "failingTool", "description", "Always fails", ...
+                    "inputSchema", struct())}, ...
+                @(~, varargin) error("mcp:serverError", "server error"));
+            tool = aisdk.LLMTool(throwingMock);
+
+            tokens = struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
+                "NumTotalTokens", 15, "NumCachedInputTokens", 0));
+
+            client = MockClient();
+            client.GenerateOutputs = {
+                {"", aisdk.LLMToolCallMessage("failingTool", struct(), ToolCallID="call_1"), tokens}
+                {"I see the error.", aisdk.LLMTextMessage("I see the error.", Role="assistant"), tokens}
+            };
+
+            agent = aisdk.AIAgent(client, Tools=tool, DisplayMode="off");
+            response = agent.run("Use the failing tool.");
+
+            testCase.verifyEqual(response, "I see the error.");
+            toolResults = agent.Messages([agent.Messages.Role] == "tool");
+            testCase.verifySubstring(toolResults(1).Result, "Error");
+        end
+
         function run_hallucinatedToolName_returnsErrorAsObservation(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers);
 

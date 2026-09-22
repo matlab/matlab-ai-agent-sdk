@@ -153,6 +153,44 @@ classdef tSystem < matlab.unittest.TestCase
             testCase.verifySubstring(toolResults(1).Result, "5");
         end
 
+        function run_withMixedMCPAndLocalTools_picksCorrectTool(testCase)
+            mcpClient = mcpHTTPClientMock({ ...
+                struct("name", "add", "description", "Add two numbers", ...
+                    "inputSchema", struct( ...
+                        "properties", struct("a", struct("type","integer"), "b", struct("type","integer")), ...
+                        "required", {{"a","b"}}, ...
+                        "type", "object"))}, ...
+                @(~, varargin) "42");
+            mcpTool = aisdk.LLMTool(mcpClient);
+            localTool = aisdk.LLMTool(@greetUser);
+
+            agent = aisdk.AIAgent(testCase.Client, ...
+                Tools=[mcpTool, localTool], DisplayMode="off");
+
+            run(agent, "Add 20 and 22.", ToolChoice="required");
+
+            toolResults = agent.Messages([agent.Messages.Role] == "tool");
+            testCase.assertNotEmpty(toolResults, "Expected a tool result");
+            testCase.verifySubstring(toolResults(1).Result, "42");
+        end
+
+        function run_withFailingMCPTool_recoversGracefully(testCase)
+            mcpClient = mcpHTTPClientMock({ ...
+                struct("name", "brokenTool", "description", "Always fails", ...
+                    "inputSchema", struct("type", "object", "properties", struct()))}, ...
+                @(~, varargin) error("mcp:serverError", "server unavailable"));
+            tool = aisdk.LLMTool(mcpClient);
+
+            agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode="off");
+
+            response = run(agent, "Use brokenTool.", ToolChoice="required");
+
+            testCase.verifyNonEmptyResponse(response);
+            toolResults = agent.Messages([agent.Messages.Role] == "tool");
+            testCase.assertNotEmpty(toolResults, "Expected a tool result message");
+            testCase.verifySubstring(toolResults(1).Result, "Error");
+        end
+
         %% Tools support human-in-the-loop approval
 
         function run_withApprovalRequired_callsApprovalFcn(testCase)

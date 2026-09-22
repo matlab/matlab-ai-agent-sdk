@@ -79,6 +79,19 @@ classdef tLLMTool < matlab.unittest.TestCase
             testCase.verifyError(@() aisdk.LLMTool(), "MATLAB:minrhs");
         end
 
+        function createFromMCPHTTPClient_returnsArrayOfMCPTools(testCase)
+            mockClient = mcpHTTPClientMock({ ...
+                struct("name", "tool1", "description", "First", "inputSchema", struct()), ...
+                struct("name", "tool2", "description", "Second", "inputSchema", struct())});
+
+            tools = aisdk.LLMTool(mockClient);
+
+            testCase.verifyClass(tools, "aisdk.llms.tool.MCPTool");
+            testCase.verifyNumElements(tools, 2);
+            testCase.verifyEqual(tools(1).Name, "tool1");
+            testCase.verifyEqual(tools(2).Name, "tool2");
+        end
+
         function mcpHTTPClient_extraArguments_errors(testCase)
             mockClient = mcpHTTPClientMock({ ...
                 struct("name", "myTool", "description", "desc", "inputSchema", struct())});

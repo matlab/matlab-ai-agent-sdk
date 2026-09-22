@@ -203,6 +203,39 @@ classdef tClientBase < matlab.unittest.TestCase
             end
         end
 
+        function encodeTool_mcpTool_passesInputSchemaDirectly(testCase)
+            schema = struct("type", "object", ...
+                "properties", struct("x", struct("type", "number"), ...
+                    "y", struct("type", "string")), ...
+                "required", {{"x"}});
+            mockClient = struct("ServerTools", ...
+                {{struct("name", "myMCPTool", "description", "An MCP tool", ...
+                    "inputSchema", schema)}}, ...
+                "callTool", @(name, varargin) "result");
+            tool = aisdk.llms.tool.MCPTool(mockClient);
+
+            captured = {};
+            client = aisdk.llms.client.OpenAIClient("gpt-4o", APIKey="fake-key");
+            client.sendRequestFcn = @fakeSend;
+            generate(client, "Hello", Tools=tool);
+
+            funcStruct = captured{1}.tools{1}.("function");
+            testCase.verifyEqual(funcStruct.name, "myMCPTool");
+            testCase.verifyEqual(funcStruct.description, "An MCP tool");
+            testCase.verifyEqual(funcStruct.parameters, schema);
+
+            function [response, streamedText] = fakeSend(parameters, ~, ~, ~, ~)
+                captured{1} = parameters;
+                responseData = struct( ...
+                    "choices", struct( ...
+                        "message", struct("role", "assistant", "content", "fake")), ...
+                    "usage", struct( ...
+                        "prompt_tokens", 0, "completion_tokens", 0, "total_tokens", 0));
+                response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
+                streamedText = "";
+            end
+        end
+
         function generate_requiredToolChoice_passesThrough(testCase)
             captured = {};
             client = aisdk.llms.client.OpenAIClient("gpt-4o", APIKey="fake-key");
