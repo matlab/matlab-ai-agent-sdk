@@ -21,7 +21,8 @@ This demo explores three levels of graph-based agent autonomy:
 To run this example, you need:
 
 - MATLAB R2025a or later (R2026a+ required for AMI export tools)
-- Signal Integrity Toolbox
+- SerDes Toolbox — required by the tools
+- Signal Integrity Toolbox — required additionally by the `optimize` tool, which uses `gaSI`
 - AI Agent SDK (`+aisdk` on the MATLAB path)
 - Access to an LLM endpoint (default: OpenAI `gpt-4.1-mini`)
 
@@ -29,7 +30,7 @@ To run this example, you need:
 
 The AI Agent SDK connects to OpenAI by default. Set the `OPENAI_API_KEY` environment variable or save it to a `.env` file on the MATLAB path.
 
-To use a different provider, change the `LLMClient` constructor in `runDemoFlatAgent.m` (or whichever demo script you are running):
+To use a different provider, change the `LLMClient` constructor in `examples/serdes/runDemoFlatAgent.m` (or whichever demo script you are running):
 
 ```matlab
 client = aisdk.LLMClient("ollama","qwen2.5:32b");
@@ -37,49 +38,50 @@ client = aisdk.LLMClient("ollama","qwen2.5:32b");
 
 ## Run Example
 
-Navigate to the demo directory before running:
-
-```matlab
->> cd demos/serdes
-```
+Each script puts itself and the `+agentgraph` package on the path, so run it from anywhere — the paths below
+are relative to the repository root.
 
 There are three ways to run this example:
 
 **Flat agent:** A single agent with all tools figures out the order on its own.
 
 ```matlab
->> run runDemoFlatAgent.m
+>> run agentGallery/taskmaster/examples/serdes/runDemoFlatAgent.m
 ```
 
 **Agent graph:** Four specialized agents — build, analyse, optimize, plot — execute in dependency order via a fixed graph traversal.
 
 ```matlab
->> run runDemoAgentGraph.m
+>> run agentGallery/taskmaster/examples/serdes/runDemoAgentGraph.m
 ```
 
 **Taskmaster:** Same graph, but the Taskmaster agent decides which goal node to drive and can re-iterate until metrics are met.
 
 ```matlab
->> run runDemoTaskmaster.m
+>> run agentGallery/taskmaster/examples/serdes/runDemoTaskmaster.m
 ```
 
 All target the same outcome: optimal equalization and a statistical eye diagram. The graph demos add live observability (a GUI showing node progress) and restrict each agent to only the tools it needs.
 
-### Key files
+### Layout
 
-| File                    | Purpose                                                                          |
-| ----------------------- | -------------------------------------------------------------------------------- |
-| `runDemoFlatAgent.m`  | Single-agent demo script                                                         |
-| `runDemoAgentGraph.m` | Fixed graph traversal (toposort, no orchestrator)                                |
-| `runDemoTaskmaster.m` | Graph + LLM Taskmaster orchestration                                             |
-| `createSerdesTools.m` | Tool array factory (shared across all demos)                                     |
-| `tools/`              | Individual tool wrapper functions                                                |
-| `graphConfig.m`       | Graph node definitions, edges, and per-node prompts                              |
-| `+agentgraph/`        | Domain-agnostic graph framework — see[Architecture](+agentgraph/ARCHITECTURE.md) |
+The framework sits at the top; each domain it is demonstrated on gets a folder under `examples/`.
+
+| File                                    | Purpose                                                                           |
+| --------------------------------------- | --------------------------------------------------------------------------------- |
+| `+agentgraph/`                          | Domain-agnostic graph framework — see [Architecture](+agentgraph/ARCHITECTURE.md) |
+| `prompts/`                              | Taskmaster system prompt used by the framework                                     |
+| `examples/serdes/runDemoFlatAgent.m`  | Single-agent demo script                                                          |
+| `examples/serdes/runDemoAgentGraph.m` | Fixed graph traversal (toposort, no orchestrator)                                 |
+| `examples/serdes/runDemoTaskmaster.m` | Graph + LLM Taskmaster orchestration                                              |
+| `examples/serdes/createSerdesTools.m` | Tool array factory (shared by all three scripts above)                            |
+| `examples/serdes/tools/`              | Individual tool wrapper functions                                                 |
+| `examples/serdes/graphConfig.m`       | Graph node definitions, edges, and per-node prompts                               |
+| `examples/serdes/prompts/`            | One system prompt per node                                                        |
 
 ## Tools
 
-The `tools/` directory contains 19 self-contained tool functions covering the full SerDes workflow:
+The `examples/serdes/tools/` directory contains 19 self-contained tool functions covering the full SerDes workflow:
 
 - **System setup** — `createSerdesSystem`, `configureChannel`, `configureAnalogModel`
 - **Equalization** — `configureCTLE`, `configureFFE`, `configureDFECDR`, `configureVGA`
@@ -92,7 +94,7 @@ Each tool follows the same signature: `[observation, workspace] = toolName(works
 
 ### Swapping in your own tools
 
-To add or replace tools, drop a `.m` file into `tools/` with the standard signature. `createSerdesTools` auto-discovers all `.m` files in that directory and registers them as `aisdk.LLMTool` objects. To restrict which tools a graph node sees, set `ToolNames` on the `AgentNode` in `graphConfig.m`.
+To add or replace tools, drop a `.m` file into `examples/serdes/tools/` with the standard signature. `createSerdesTools` auto-discovers all `.m` files in that directory and registers them as `aisdk.LLMTool` objects. To restrict which tools a graph node sees, set `ToolNames` on the `AgentNode` in `graphConfig.m`.
 
 ## Issues
 

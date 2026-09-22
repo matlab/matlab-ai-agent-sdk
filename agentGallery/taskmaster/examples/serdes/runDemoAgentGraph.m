@@ -1,6 +1,11 @@
 %% SerDes Graph Demo — Optimize CTLE Gain for Eye Height
 
 %% ---- Setup ---------------------------------------------------------------
+% Put this example folder and the +agentgraph package (two levels up) on the
+% path, so the script runs from any working folder.
+here = fileparts(mfilename("fullpath"));
+addpath(here, fullfile(here, "..", ".."));
+
 client = aisdk.LLMClient("openai", "gpt-4.1-mini");
 allTools = createSerdesTools();
 workspace = struct();

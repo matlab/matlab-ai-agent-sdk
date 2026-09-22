@@ -71,7 +71,8 @@ metric-gated decision the fixed toposort cannot express.
 
 ## 5. Prompt management
 
-System prompts live in `demos/serdes/prompts/*.md`:
+Node prompts are example-specific and live in
+`agentGallery/taskmaster/examples/serdes/prompts/*.md`:
 
 | File | Node |
 |------|------|
@@ -79,11 +80,13 @@ System prompts live in `demos/serdes/prompts/*.md`:
 | `analyse.md` | analyse |
 | `optimize.md` | optimize |
 | `plot.md` | plot |
-| `taskmaster.md` | taskmaster (template: `{{nodeRoles}}` replaced at runtime) |
 
-`graphConfig.m` loads these via `fileread`. The taskmaster prompt is loaded in
-`createTaskmaster.m` with the `{{nodeRoles}}` placeholder replaced by the
-graph's actual node descriptions.
+`graphConfig.m` loads these via `fileread`.
+
+The taskmaster prompt is domain-agnostic, so it sits with the framework in
+`agentGallery/taskmaster/prompts/taskmaster.md`. `createTaskmaster.m` loads it
+and replaces the `{{nodeRoles}}` placeholder with the graph's actual node
+descriptions.
 
 ---
 

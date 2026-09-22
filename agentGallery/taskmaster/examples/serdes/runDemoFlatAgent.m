@@ -3,9 +3,14 @@
 %  A single AIAgent with the full tool set figures out the workflow on its own.
 %
 %  Run: open in MATLAB and press F5, or:
-%    matlab -batch "run('demos/serdes/runDemoFlatAgent.m')"
+%    matlab -batch "run('agentGallery/taskmaster/examples/serdes/runDemoFlatAgent.m')"
 
 %% ---- Setup ---------------------------------------------------------------
+% Put this example folder and the +agentgraph package (two levels up) on the
+% path, so the script runs from any working folder.
+here = fileparts(mfilename("fullpath"));
+addpath(here, fullfile(here, "..", ".."));
+
 client = aisdk.LLMClient("openai", "gpt-4.1-mini");
 allTools = createSerdesTools();
 workspace = struct();

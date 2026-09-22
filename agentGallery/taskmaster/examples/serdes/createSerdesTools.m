@@ -2,7 +2,7 @@ function allTools = createSerdesTools()
 %CREATESERDESTOOLS  Build the SerDes LLM tool array from tools/ directory.
 %
 %   allTools = createSerdesTools() returns an array of aisdk.LLMTool objects
-%   registered from all .m files under demos/serdes/tools/. Errors from
+%   registered from all .m files under the sibling tools/ directory. Errors from
 %   missing toolboxes are rethrown; other schema conversion failures (e.g.
 %   struct-typed args) are skipped with a warning.
 

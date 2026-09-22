@@ -4,7 +4,7 @@ classdef tcreateTaskmaster < matlab.unittest.TestCase
         function addToPath(testCase)
             repoRoot = fileparts(fileparts(fileparts(fileparts(fileparts(mfilename("fullpath"))))));
             testCase.applyFixture(matlab.unittest.fixtures.PathFixture( ...
-                fullfile(repoRoot, 'demos', 'serdes')));
+                fullfile(repoRoot, 'agentGallery', 'taskmaster')));
             testCase.applyFixture(matlab.unittest.fixtures.PathFixture( ...
                 fullfile(repoRoot, 'tests', 'helpers')));
         end
