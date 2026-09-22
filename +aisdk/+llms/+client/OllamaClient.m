@@ -324,7 +324,7 @@ end
 function usage = parseUsage(response)
     data = response.Body.Data;
     if iscell(data)
-        data = data{1};
+        data = data{end};
     end
     inputTokens = 0;
     outputTokens = 0;

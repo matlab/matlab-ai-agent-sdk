@@ -35,6 +35,7 @@ httpOpts.ResponseTimeout = timeout;
 httpOpts.ProxyURI = getenv("HTTPS_PROXY");
 
 % Send the request and store the response
+streamedUsage = struct.empty;
 if isempty(streamFcn)
     response = sendFcn(request, endpoint, httpOpts, []);
     streamedText = "";
@@ -43,9 +44,34 @@ else
     consumer = aisdk.llms.utils.ResponseStreamer(streamFcn);
     response = sendFcn(request, endpoint, httpOpts, consumer);
     streamedText = consumer.ResponseText;
+    streamedUsage = consumer.Usage;
 end
 
 response.Body.Data = aisdk.llms.client.internal.decodeResponseBody(response.Body.Data);
+
+if ~isempty(streamedUsage)
+    response.Body.Data = mergeStreamedUsage(response.Body.Data, streamedUsage);
+end
+end
+
+function data = mergeStreamedUsage(data, usage)
+    fields = fieldnames(usage);
+    if isstruct(data)
+        for k = 1:numel(fields)
+            data.(fields{k}) = usage.(fields{k});
+        end
+    elseif iscell(data)
+        last = data{end};
+        if ~isstruct(last)
+            last = struct();
+        end
+        for k = 1:numel(fields)
+            last.(fields{k}) = usage.(fields{k});
+        end
+        data{end} = last;
+    else
+        data = usage;
+    end
 end
 
 function response = defaultSend(request, endpoint, httpOpts, consumer)

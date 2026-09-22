@@ -11,6 +11,9 @@ classdef tSystem < matlab.unittest.TestCase
         Provider = struct( ...
             "openai", struct("api", "openai", "model", "gpt-4.1-mini"), ...
             "ollama", struct("api", "ollama", "model", "qwen3:0.6b"))
+        Streaming = struct( ...
+            "nonStreaming", struct("streamArgs", {{}}), ...
+            "streaming", struct("streamArgs", {{"StreamFcn", @(~) []}}))
     end
 
     methods (TestClassSetup)
@@ -333,8 +336,10 @@ classdef tSystem < matlab.unittest.TestCase
                 agent.NumInputTokens + agent.NumOutputTokens);
         end
 
-        function generate_afterCall_infoStructContainsTokenFields(testCase)
-            [~, ~, info] = generate(testCase.Client, "Say hello.");
+        function generate_afterCall_infoStructContainsTokenFields(testCase, Provider, Streaming)
+            client = aisdk.LLMClient(Provider.api, Provider.model, "Temperature", 0, ...
+                Streaming.streamArgs{:});
+            [~, ~, info] = generate(client, "Say hello.");
 
             testCase.verifyTrue(isfield(info, "Tokens"));
             testCase.verifyGreaterThan(info.Tokens.NumInputTokens, 0);

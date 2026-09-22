@@ -107,6 +107,9 @@ parameters = struct();
 parameters.messages = messages;
 
 parameters.stream = ~isempty(nvp.StreamFcn);
+if parameters.stream
+    parameters.stream_options = struct("include_usage", true);
+end
 
 if ~isempty(functions)
     parameters.tools = functions;

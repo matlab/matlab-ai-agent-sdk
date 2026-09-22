@@ -123,5 +123,74 @@ classdef tSendRequest < matlab.unittest.TestCase
                     "Body", struct("Data", '{"ok":true}'));
             end
         end
+
+        function sendRequest_streamingWithOpenAIUsage_mergesUsageIntoStructBody(testCase)
+            [response, ~] = aisdk.llms.client.internal.sendRequest( ...
+                struct("model", "test"), "tok", ...
+                "https://fake/v1", 10, @(~) [], @fakeSend);
+
+            testCase.verifyTrue(isfield(response.Body.Data, "usage"));
+            testCase.verifyEqual(response.Body.Data.usage.prompt_tokens, 7);
+            testCase.verifyEqual(response.Body.Data.usage.completion_tokens, 11);
+            testCase.verifyEqual(response.Body.Data.usage.total_tokens, 18);
+
+            function response = fakeSend(~, ~, ~, consumer)
+                consumer.Usage = struct("usage", struct( ...
+                    "prompt_tokens", 7, ...
+                    "completion_tokens", 11, ...
+                    "total_tokens", 18));
+                response = struct("StatusCode", "OK", ...
+                    "Body", struct("Data", '{"id":"x"}'));
+            end
+        end
+
+        function sendRequest_streamingWithOllamaUsage_mergesUsageIntoCellBody(testCase)
+            [response, ~] = aisdk.llms.client.internal.sendRequest( ...
+                struct("model", "test"), "tok", ...
+                "https://fake/v1", 10, @(~) [], @fakeSend);
+
+            data = response.Body.Data;
+            testCase.verifyClass(data, "cell");
+            testCase.verifyEqual(data{end}.prompt_eval_count, 5);
+            testCase.verifyEqual(data{end}.eval_count, 9);
+            testCase.verifyEqual(data{1}.done, false);
+
+            function response = fakeSend(~, ~, ~, consumer)
+                consumer.Usage = struct( ...
+                    "prompt_eval_count", 5, ...
+                    "eval_count", 9);
+                body = {struct("done", false), struct("done", true)};
+                response = struct("StatusCode", "OK", ...
+                    "Body", struct("Data", {body}));
+            end
+        end
+
+        function sendRequest_streamingWithoutUsage_leavesBodyUnchanged(testCase)
+            [response, ~] = aisdk.llms.client.internal.sendRequest( ...
+                struct("model", "test"), "tok", ...
+                "https://fake/v1", 10, @(~) [], @fakeSend);
+
+            testCase.verifyEqual(string(response.Body.Data.id), "x");
+            testCase.verifyFalse(isfield(response.Body.Data, "usage"));
+
+            function response = fakeSend(~, ~, ~, ~)
+                response = struct("StatusCode", "OK", ...
+                    "Body", struct("Data", '{"id":"x"}'));
+            end
+        end
+
+        function sendRequest_streamingCallback_returnsConsumerResponseText(testCase)
+            [~, streamedText] = aisdk.llms.client.internal.sendRequest( ...
+                struct("model", "test"), "tok", ...
+                "https://fake/v1", 10, @(~) [], @fakeSend);
+
+            testCase.verifyEqual(streamedText, "hello world");
+
+            function response = fakeSend(~, ~, ~, consumer)
+                consumer.ResponseText = "hello world";
+                response = struct("StatusCode", "OK", ...
+                    "Body", struct("Data", '{"ok":true}'));
+            end
+        end
     end
 end

@@ -8,6 +8,7 @@ classdef ResponseStreamer < matlab.net.http.io.BinaryConsumer
         ResponseText
         StreamFcn
         Incomplete = ""
+        Usage = struct.empty
     end
 
     methods
@@ -59,15 +60,13 @@ classdef ResponseStreamer < matlab.net.http.io.BinaryConsumer
                             aisdk.llms.internal.MessageCatalog.getMessage(...
                                 "llms:stream:responseStreamer:InvalidInput"));
                     end
+                    captureOpenAIUsage(this, json);
                     if isfield(json,'choices')
                         if isempty(json.choices)
                             continue;
                         end
-                        if isfield(json.choices,'finish_reason') && ...
-                                ischar(json.choices.finish_reason) && ismember(json.choices.finish_reason,["stop","tool_calls"])
-                            stop = true;
-                            return
-                        else
+                        if ~(isfield(json.choices,'finish_reason') && ...
+                                ischar(json.choices.finish_reason) && ismember(json.choices.finish_reason,["stop","tool_calls"]))
                             if isfield(json.choices,"delta") && ...
                                     isfield(json.choices.delta,"tool_calls")
                                 if isfield(json.choices.delta.tool_calls,"id")
@@ -103,11 +102,40 @@ classdef ResponseStreamer < matlab.net.http.io.BinaryConsumer
                             this.StreamFcn('');
                             this.ResponseText = [this.ResponseText txt];
                         end
+                        captureOllamaUsage(this, json);
                         if isfield(json,"done")
                             stop = json.done;
                         end
                     end
                 end
+            end
+        end
+    end
+
+    methods (Access=private)
+        function captureOpenAIUsage(this, json)
+            % With stream_options.include_usage=true, the server emits a
+            % trailing chunk whose "choices" is empty and whose "usage"
+            % carries prompt/completion/total counts (plus
+            % prompt_tokens_details.cached_tokens).
+            if isfield(json,'usage') && isstruct(json.usage) && ~isempty(fieldnames(json.usage))
+                this.Usage = struct("usage", json.usage);
+            end
+        end
+
+        function captureOllamaUsage(this, json)
+            % Ollama reports token counts as top-level fields on the final
+            % chunk (prompt_eval_count = input, eval_count = output). There
+            % is no cache concept.
+            u = struct();
+            if isfield(json,"prompt_eval_count")
+                u.prompt_eval_count = json.prompt_eval_count;
+            end
+            if isfield(json,"eval_count")
+                u.eval_count = json.eval_count;
+            end
+            if ~isempty(fieldnames(u))
+                this.Usage = u;
             end
         end
     end
