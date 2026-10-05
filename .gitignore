@@ -2,6 +2,10 @@
 AGENTS.md
 CLAUDE.md
 *.asv
-.claude/
+!.claude/
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/push-to-github/
 .env
 artifacts/
