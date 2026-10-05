@@ -28,13 +28,11 @@ classdef LocalLLMTool < aisdk.tool.internal.CallableTool
             fcnInfo = functions(fcnHandle);
             funcName = fcnInfo.function;
             if fcnInfo.type == "anonymous" && strlength(NVPairs.Name) == 0
-                error("aisdk:anonymousFunctionRequiresName", ...
-                    aisdk.internal.MessageCatalog.getMessage("aisdk:anonymousFunctionRequiresName"));
+                aisdk.internal.throwError("aisdk:anonymousFunctionRequiresName");
             end
 
             if fcnInfo.type == "nested" && (~isfield(NVPairs, "InputArguments") || ~isfield(NVPairs, "OutputArguments"))
-                error("aisdk:nestedFunctionRequiresExplicitDefinition", ...
-                    aisdk.internal.MessageCatalog.getMessage("aisdk:nestedFunctionRequiresExplicitDefinition"));
+                aisdk.internal.throwError("aisdk:nestedFunctionRequiresExplicitDefinition");
             end
 
             this.Function = fcnHandle;
@@ -64,11 +62,9 @@ classdef LocalLLMTool < aisdk.tool.internal.CallableTool
             if this.Workspace == "agent"
                 n = nargout(fcnHandle);
                 if n < 0
-                    error("aisdk:workspaceDoesNotSupportVarargout", ...
-                        aisdk.internal.MessageCatalog.getMessage("aisdk:workspaceDoesNotSupportVarargout"));
+                    aisdk.internal.throwError("aisdk:workspaceDoesNotSupportVarargout");
                 elseif n < 2
-                    error("aisdk:workspaceRequiresMultipleOutputs", ...
-                        aisdk.internal.MessageCatalog.getMessage("aisdk:workspaceRequiresMultipleOutputs"));
+                    aisdk.internal.throwError("aisdk:workspaceRequiresMultipleOutputs");
                 end
             end
 
@@ -89,13 +85,11 @@ classdef LocalLLMTool < aisdk.tool.internal.CallableTool
                 end
                 inputNames = arrayfun(@(s) string(s.Identifier.Name), inputs);
                 if ~isempty(inputNames) && any(inputNames == "varargin")
-                    error("aisdk:vararginInInputs", ...
-                        aisdk.internal.MessageCatalog.getMessage("aisdk:vararginInInputs"));
+                    aisdk.internal.throwError("aisdk:vararginInInputs");
                 end
                 this.InputArguments = aisdk.tool.LocalLLMTool.getParamsFromSignature(inputs);
             else
-                error("aisdk:cannotInferInputArguments", ...
-                    aisdk.internal.MessageCatalog.getMessage("aisdk:cannotInferInputArguments"));
+                aisdk.internal.throwError("aisdk:cannotInferInputArguments");
             end
 
             if isfield(NVPairs, "OutputArguments") && isa(NVPairs.OutputArguments, "aisdk.LLMToolArgument")
@@ -109,13 +103,11 @@ classdef LocalLLMTool < aisdk.tool.internal.CallableTool
                 end
                 outputNames = arrayfun(@(s) string(s.Identifier.Name), outputs);
                 if ~isempty(outputNames) && any(outputNames == "varargout")
-                    error("aisdk:varargoutInOutputs", ...
-                        aisdk.internal.MessageCatalog.getMessage("aisdk:varargoutInOutputs"));
+                    aisdk.internal.throwError("aisdk:varargoutInOutputs");
                 end
                 this.OutputArguments = aisdk.tool.LocalLLMTool.getParamsFromSignature(outputs);
             elseif nargout(fcnHandle) ~= 1
-                error("aisdk:unknownOutputCount", ...
-                    aisdk.internal.MessageCatalog.getMessage("aisdk:unknownOutputCount"));
+                aisdk.internal.throwError("aisdk:unknownOutputCount");
             else
                 this.OutputArguments = aisdk.LLMToolArgument.empty(1,0);
             end
@@ -204,7 +196,7 @@ classdef LocalLLMTool < aisdk.tool.internal.CallableTool
                 iInput = this.InputArguments(iArg);
                 if ~isfield(argsIn, iInput.Name)
                     if iInput.Required
-                        error("aisdk:requiredArgumentNotFound", aisdk.internal.MessageCatalog.getMessage("aisdk:requiredArgumentNotFound", iInput.Name));
+                        aisdk.internal.throwError("aisdk:requiredArgumentNotFound", iInput.Name);
                     end
                     continue
                 end
@@ -225,8 +217,7 @@ classdef LocalLLMTool < aisdk.tool.internal.CallableTool
             end
             names = [args.Name];
             if numel(names) ~= numel(unique(names))
-                error("aisdk:duplicateArgumentNames", ...
-                    aisdk.internal.MessageCatalog.getMessage("aisdk:duplicateArgumentNames", kind));
+                aisdk.internal.throwError("aisdk:duplicateArgumentNames", kind);
             end
         end
 
@@ -267,8 +258,7 @@ classdef LocalLLMTool < aisdk.tool.internal.CallableTool
                 case {"string","char"}
                     jsonType = "string";
                 otherwise
-                    error("aisdk:unsupportedMATLABType", ...
-                        aisdk.internal.MessageCatalog.getMessage("aisdk:unsupportedMATLABType", matlabType));
+                    aisdk.internal.throwError("aisdk:unsupportedMATLABType", matlabType);
             end
         end
 

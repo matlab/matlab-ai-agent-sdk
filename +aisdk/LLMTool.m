@@ -30,7 +30,6 @@ if isa(toolDefinition, "function_handle")
 elseif isa(toolDefinition, "mcpHTTPClient") || isa(toolDefinition, "aisdk.MCPClient")
     tools = aisdk.tool.MCPTool(toolDefinition, varargin{1:end});
 else
-    error("aisdk:invalidFunctionDefinition", ...
-        aisdk.internal.MessageCatalog.getMessage("aisdk:invalidFunctionDefinition"));
+    aisdk.internal.throwError("aisdk:invalidFunctionDefinition");
 end
 end

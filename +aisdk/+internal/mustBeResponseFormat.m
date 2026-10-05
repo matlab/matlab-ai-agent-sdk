@@ -6,11 +6,9 @@ function mustBeResponseFormat(format)
         mustBeTextScalar(format);
         if ~ismember(format,["text","json"]) && ...
             ~startsWith(format,asManyOfPattern(whitespacePattern)+"{")
-            error("aisdk:incorrectResponseFormat", ...
-                aisdk.internal.MessageCatalog.getMessage("aisdk:incorrectResponseFormat"));
+            aisdk.internal.throwError("aisdk:incorrectResponseFormat");
         end
     elseif ~isstruct(format) || isempty(format)
-        error("aisdk:incorrectResponseFormat", ...
-            aisdk.internal.MessageCatalog.getMessage("aisdk:incorrectResponseFormat"));
+        aisdk.internal.throwError("aisdk:incorrectResponseFormat");
     end
 end

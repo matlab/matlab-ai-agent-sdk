@@ -4,7 +4,6 @@ function mustBeValidToolCallID(val)
 %   Copyright 2026 The MathWorks, Inc.
 
     if ~(isstring(val) && isscalar(val))
-        error("aisdk:message:InvalidToolCallID", ...
-            aisdk.internal.MessageCatalog.getMessage("aisdk:message:InvalidToolCallID"));
+        aisdk.internal.throwError("aisdk:message:InvalidToolCallID");
     end
 end

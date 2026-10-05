@@ -47,7 +47,6 @@ end
 
 function mustBeTextContent(val)
     if ~(isstring(val) || ischar(val)) || (isstring(val) && ~isscalar(val))
-        error("aisdk:message:InvalidTextContent", ...
-            aisdk.internal.MessageCatalog.getMessage("aisdk:message:InvalidTextContent"));
+        aisdk.internal.throwError("aisdk:message:InvalidTextContent");
     end
 end

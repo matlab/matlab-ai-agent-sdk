@@ -3,10 +3,8 @@ function mustBeToolArguments(args)
 
 % Copyright 2026 The MathWorks, Inc.
     if isstruct(args) && ~isscalar(args)
-        error("aisdk:invalidToolArguments", ...
-            aisdk.internal.MessageCatalog.getMessage("aisdk:invalidToolArguments"));
+        aisdk.internal.throwError("aisdk:invalidToolArguments");
     elseif ~isstruct(args) && ~isa(args, "aisdk.LLMToolArgument")
-        error("aisdk:invalidToolArguments", ...
-            aisdk.internal.MessageCatalog.getMessage("aisdk:invalidToolArguments"));
+        aisdk.internal.throwError("aisdk:invalidToolArguments");
     end
 end

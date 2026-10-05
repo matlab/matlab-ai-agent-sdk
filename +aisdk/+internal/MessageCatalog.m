@@ -18,7 +18,9 @@ classdef MessageCatalog
                 messageId {mustBeNonzeroLengthText}
             end
             arguments(Repeating)
-                hole {mustBeNonzeroLengthText}
+                % Holes may be empty: a message forwarded from a server or
+                % from the MEX gateway can come in without any text.
+                hole {mustBeTextScalar}
             end
 
             msg = aisdk.internal.MessageCatalog.Catalog(messageId);
@@ -94,4 +96,8 @@ catalog("aisdk:mcpClient:connectionRefused") = "Connection refused. Check that t
 catalog("aisdk:mcpClient:connectionTimeout") = "Connection timed out. The server may be unreachable or the TimeOut value may be too low.";
 catalog("aisdk:mcpClient:stdioNotFound") = "The MCP server command was not found. Check that it is installed and on PATH.";
 catalog("aisdk:mcpClient:stdioPermission") = "Permission denied when starting the MCP server. Check the file permissions.";
+% The remaining messages come from outside MATLAB - the MEX gateway or the
+% MCP server - and are reported verbatim.
+catalog("aisdk:mcpClient:internalError") = "{1}";
+catalog("aisdk:mcpClient:serverError") = "{1}";
 end

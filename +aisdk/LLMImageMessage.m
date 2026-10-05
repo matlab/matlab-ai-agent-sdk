@@ -92,13 +92,11 @@ function img = resolveToImageArray(source, downloadFcn)
                 if e.identifier == "MATLAB:imagesci:imread:fileDoesNotExist"
                     rethrow(e);
                 end
-                error("aisdk:message:NotAnImage", "%s", ...
-                    aisdk.internal.MessageCatalog.getMessage("aisdk:message:NotAnImage", source));
+                aisdk.internal.throwError("aisdk:message:NotAnImage", source);
             end
         end
     else
-        error("aisdk:message:InvalidImageSource", ...
-            aisdk.internal.MessageCatalog.getMessage("aisdk:message:InvalidImageSource"));
+        aisdk.internal.throwError("aisdk:message:InvalidImageSource");
     end
 end
 
@@ -109,8 +107,7 @@ function img = readURL(url, downloadFcn)
         downloadFcn(tempFile, url);
         img = imread(tempFile);
     catch
-        error("aisdk:message:NotAnImage", "%s", ...
-            aisdk.internal.MessageCatalog.getMessage("aisdk:message:NotAnImage", url));
+        aisdk.internal.throwError("aisdk:message:NotAnImage", url);
     end
 end
 
@@ -124,7 +121,6 @@ function mustBeImageArray(val)
     okType = isnumeric(val) || islogical(val);
     okShape = ismatrix(val) || (ndims(val) == 3 && ismember(size(val,3), [1 3 4]));
     if ~(okType && okShape && ~isempty(val))
-        error("aisdk:message:InvalidImageContent", ...
-            aisdk.internal.MessageCatalog.getMessage("aisdk:message:InvalidImageContent"));
+        aisdk.internal.throwError("aisdk:message:InvalidImageContent");
     end
 end

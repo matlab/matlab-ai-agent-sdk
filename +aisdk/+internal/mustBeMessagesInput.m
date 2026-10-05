@@ -8,18 +8,15 @@ function mustBeMessagesInput(val)
     end
     if isstring(val)
         if ~isscalar(val)
-            error("aisdk:client:InvalidMessageInput", ...
-                aisdk.internal.MessageCatalog.getMessage("aisdk:client:InvalidMessageInput"));
+            aisdk.internal.throwError("aisdk:client:InvalidMessageInput");
         end
         return
     end
     if ischar(val)
         if ~isrow(val)
-            error("aisdk:client:InvalidMessageInput", ...
-                aisdk.internal.MessageCatalog.getMessage("aisdk:client:InvalidMessageInput"));
+            aisdk.internal.throwError("aisdk:client:InvalidMessageInput");
         end
         return
     end
-    error("aisdk:client:InvalidMessageInput", ...
-        aisdk.internal.MessageCatalog.getMessage("aisdk:client:InvalidMessageInput"));
+    aisdk.internal.throwError("aisdk:client:InvalidMessageInput");
 end

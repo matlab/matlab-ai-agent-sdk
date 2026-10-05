@@ -25,6 +25,12 @@ classdef tMessageCatalog < matlab.unittest.TestCase
             testCase.verifyEqual(msg, replace(messageWithPlaceholder, "{1}", "MY_API_KEY"));
         end
 
+        function getMessage_emptyHole_replacesPlaceholder(testCase)
+            msg = aisdk.internal.MessageCatalog.getMessage( ...
+                "aisdk:mcpClient:serverError", "");
+            testCase.verifyEqual(msg, "");
+        end
+
         function getMessage_unknownId_throwsError(testCase)
             testCase.verifyError( ...
                 @() aisdk.internal.MessageCatalog.getMessage( ...

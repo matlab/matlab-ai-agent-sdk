@@ -56,9 +56,7 @@ classdef ResponseStreamer < matlab.net.http.io.BinaryConsumer
                             this.Incomplete = str{i};
                             return;
                         end
-                        error("aisdk:stream:responseStreamer:InvalidInput", ...
-                            aisdk.internal.MessageCatalog.getMessage(...
-                                "aisdk:stream:responseStreamer:InvalidInput"));
+                        aisdk.internal.throwError("aisdk:stream:responseStreamer:InvalidInput");
                     end
                     captureOpenAIUsage(this, json);
                     if isfield(json,'choices')

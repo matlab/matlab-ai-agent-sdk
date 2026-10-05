@@ -154,9 +154,7 @@ classdef MCPClient < handle
             else
                 toolName = string(tool);
                 if mod(numel(varargin), 2) ~= 0
-                    error("aisdk:MCPClient:oddNameValuePairs", ...
-                        aisdk.internal.MessageCatalog.getMessage( ...
-                        "aisdk:mcpClient:oddNameValuePairs"));
+                    aisdk.internal.throwError("aisdk:mcpClient:oddNameValuePairs");
                 end
                 args = struct();
                 for i = 1:2:numel(varargin)
@@ -250,7 +248,8 @@ classdef MCPClient < handle
             switch string(mexErr.identifier)
                 case {"mcpclient_mex:badInput", "mcpclient_mex:badCommand", ...
                         "mcpclient_mex:internalError"}
-                    error("aisdk:MCPClient:internalError", "%s", mexErr.message);
+                    aisdk.internal.throwError("aisdk:mcpClient:internalError", ...
+                        mexErr.message);
                 case "mcpclient_mex:timeout"
                     aisdk.MCPClient.throwServerError(1005, mexErr.message);
                 otherwise
@@ -259,43 +258,32 @@ classdef MCPClient < handle
         end
 
         function throwServerError(code, rawMessage)
-            catalog = @aisdk.internal.MessageCatalog.getMessage;
             switch code
                 case 400
-                    error("aisdk:MCPClient:badRequest", "%s", ...
-                        catalog("aisdk:mcpClient:badRequest"));
+                    aisdk.internal.throwError("aisdk:mcpClient:badRequest");
                 case 401
-                    error("aisdk:MCPClient:unauthorized", "%s", ...
-                        catalog("aisdk:mcpClient:unauthorized"));
+                    aisdk.internal.throwError("aisdk:mcpClient:unauthorized");
                 case 403
-                    error("aisdk:MCPClient:forbidden", "%s", ...
-                        catalog("aisdk:mcpClient:forbidden"));
+                    aisdk.internal.throwError("aisdk:mcpClient:forbidden");
                 case 404
-                    error("aisdk:MCPClient:notFound", "%s", ...
-                        catalog("aisdk:mcpClient:notFound"));
+                    aisdk.internal.throwError("aisdk:mcpClient:notFound");
                 case 405
-                    error("aisdk:MCPClient:methodNotAllowed", "%s", ...
-                        catalog("aisdk:mcpClient:methodNotAllowed"));
+                    aisdk.internal.throwError("aisdk:mcpClient:methodNotAllowed");
                 case 502
-                    error("aisdk:MCPClient:badGateway", "%s", ...
-                        catalog("aisdk:mcpClient:badGateway"));
+                    aisdk.internal.throwError("aisdk:mcpClient:badGateway");
                 case 1003
-                    error("aisdk:MCPClient:hostNotFound", "%s", ...
-                        catalog("aisdk:mcpClient:hostNotFound"));
+                    aisdk.internal.throwError("aisdk:mcpClient:hostNotFound");
                 case 1004
-                    error("aisdk:MCPClient:connectionRefused", "%s", ...
-                        catalog("aisdk:mcpClient:connectionRefused"));
+                    aisdk.internal.throwError("aisdk:mcpClient:connectionRefused");
                 case 1005
-                    error("aisdk:MCPClient:connectionTimeout", "%s", ...
-                        catalog("aisdk:mcpClient:connectionTimeout"));
+                    aisdk.internal.throwError("aisdk:mcpClient:connectionTimeout");
                 case 1100
-                    error("aisdk:MCPClient:stdioNotFound", "%s", ...
-                        catalog("aisdk:mcpClient:stdioNotFound"));
+                    aisdk.internal.throwError("aisdk:mcpClient:stdioNotFound");
                 case 1101
-                    error("aisdk:MCPClient:stdioPermission", "%s", ...
-                        catalog("aisdk:mcpClient:stdioPermission"));
+                    aisdk.internal.throwError("aisdk:mcpClient:stdioPermission");
                 otherwise
-                    error("aisdk:MCPClient:serverError", "%s", rawMessage);
+                    aisdk.internal.throwError("aisdk:mcpClient:serverError", ...
+                        rawMessage);
             end
         end
 
@@ -319,14 +307,13 @@ classdef MCPClient < handle
                 connectionType = transport;
             end
 
-            catalog = @aisdk.internal.MessageCatalog.getMessage;
             if connectionType == "stdio"
                 if isUrl
                     % Handing a URL to the process launcher fails deep
                     % inside the middleware with an unhelpful "no such
                     % file or directory"; reject it here instead.
-                    error("aisdk:MCPClient:urlEndpointRequiresHttpTransport", ...
-                        "%s", catalog("aisdk:mcpClient:urlEndpointRequiresHttpTransport"));
+                    aisdk.internal.throwError( ...
+                        "aisdk:mcpClient:urlEndpointRequiresHttpTransport");
                 end
                 if isscalar(endpoint)
                     parts = split(endpoint);
@@ -340,13 +327,11 @@ classdef MCPClient < handle
                 stdioArgs = string.empty;
             else
                 if ~isscalar(endpoint)
-                    error("aisdk:MCPClient:nonScalarURL", ...
-                        "%s", catalog("aisdk:mcpClient:nonScalarURL"));
+                    aisdk.internal.throwError("aisdk:mcpClient:nonScalarURL");
                 end
                 if ~isUrl
-                    error("aisdk:MCPClient:httpTransportRequiresUrl", ...
-                        "%s", catalog("aisdk:mcpClient:httpTransportRequiresUrl", ...
-                        transport));
+                    aisdk.internal.throwError( ...
+                        "aisdk:mcpClient:httpTransportRequiresUrl", transport);
                 end
                 connectUrl = endpoint;
                 stdioArgs = string.empty;
@@ -357,8 +342,6 @@ end
 
 function mustBeValidToolPrefixOrEmpty(name)
     if name ~= "" && ~isvarname(char(name))
-        error("aisdk:MCPClient:invalidToolPrefix", ...
-            aisdk.internal.MessageCatalog.getMessage( ...
-            "aisdk:mcpClient:invalidToolPrefix"));
+        aisdk.internal.throwError("aisdk:mcpClient:invalidToolPrefix");
     end
 end

@@ -75,8 +75,7 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
             elseif isstring(input) || ischar(input)
                 message = aisdk.LLMTextMessage(string(input));
             else
-                error("aisdk:client:InvalidMessageInput", ...
-                    aisdk.internal.MessageCatalog.getMessage("aisdk:client:InvalidMessageInput"));
+                aisdk.internal.throwError("aisdk:client:InvalidMessageInput");
             end
         end
     end
@@ -98,7 +97,7 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
             if ~isempty(toolChoice)
                 mustBeTextScalar(toolChoice);
                 if isempty(functionNames) && ~ismember(toolChoice, ["auto", "none"])
-                    error("aisdk:mustSetFunctionsForCall", aisdk.internal.MessageCatalog.getMessage("aisdk:mustSetFunctionsForCall"));
+                    aisdk.internal.throwError("aisdk:mustSetFunctionsForCall");
                 end
                 if ~isempty(functionNames)
                     mustBeMember(toolChoice, ["none","auto","required", functionNames]);
@@ -135,8 +134,7 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
                     "description", tool.Description, ...
                     "parameters", tool.InputSchema);
             else
-                error("aisdk:unsupportedToolType", ...
-                    aisdk.internal.MessageCatalog.getMessage("aisdk:unsupportedToolType"));
+                aisdk.internal.throwError("aisdk:unsupportedToolType");
             end
             toolStruct = struct("type", "function", "function", funcStruct);
         end
@@ -191,8 +189,7 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
             if isempty(err)
                 err = "HTTP " + string(response.StatusCode) + ": " + jsonencode(response.Body.Data);
             end
-            error("aisdk:apiReturnedError", ...
-                aisdk.internal.MessageCatalog.getMessage("aisdk:apiReturnedError", err));
+            aisdk.internal.throwError("aisdk:apiReturnedError", err);
         end
     end
 

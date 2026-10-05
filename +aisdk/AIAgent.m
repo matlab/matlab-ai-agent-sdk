@@ -288,7 +288,6 @@ end
 
 function mustBeClient(value)
 if ~isa(value, 'aisdk.client.ClientBase')
-    error("aisdk:invalidClientType", ...
-        aisdk.internal.MessageCatalog.getMessage("aisdk:invalidClientType"));
+    aisdk.internal.throwError("aisdk:invalidClientType");
 end
 end

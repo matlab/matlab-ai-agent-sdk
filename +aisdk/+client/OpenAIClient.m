@@ -208,7 +208,9 @@ classdef OpenAIClient < aisdk.client.ClientBase
             catch ME
                 if ismember(ME.identifier, ...
                     ["MATLAB:webservices:UnknownHost","MATLAB:webservices:Timeout"])
-                    error(ME.identifier, ME.message);
+                    % Report the plain connection problem, without the chain
+                    % of causes from inside the web services stack.
+                    error(ME.identifier, "%s", ME.message);
                 end
                 throw(ME);
             end
@@ -236,8 +238,7 @@ classdef OpenAIClient < aisdk.client.ClientBase
                     end
                     args = jsondecode(tc.function.arguments);
                     if ~isstruct(args)
-                        error("aisdk:invalidToolCallArguments", ...
-                            aisdk.internal.MessageCatalog.getMessage("aisdk:invalidToolCallArguments", class(args)));
+                        aisdk.internal.throwError("aisdk:invalidToolCallArguments", class(args));
                     end
                     messages(end+1) = aisdk.LLMToolCallMessage(tc.function.name, args, ToolCallID=id); %#ok<AGROW>
                 end

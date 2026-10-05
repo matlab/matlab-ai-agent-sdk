@@ -6,8 +6,7 @@ function schema = jsonSchemaFromPrototype(prototype)
 % Copyright 2026 The MathWorks, Inc.
 
 if ~isstruct(prototype)
-    error("aisdk:incorrectResponseFormat", ...
-        aisdk.internal.MessageCatalog.getMessage("aisdk:incorrectResponseFormat"));
+    aisdk.internal.throwError("aisdk:incorrectResponseFormat");
 end
 
 % OpenAI requires top-level to be "type":"object"
@@ -37,8 +36,7 @@ function schema = recursiveSchemaFromPrototype(prototype)
     elseif ismissing(prototype)
         schema = struct("type","null");
     else
-        error("aisdk:unsupportedDatatypeInPrototype", ...
-            aisdk.internal.MessageCatalog.getMessage("aisdk:unsupportedDatatypeInPrototype", class(prototype)));
+        aisdk.internal.throwError("aisdk:unsupportedDatatypeInPrototype", class(prototype));
     end
 end
 

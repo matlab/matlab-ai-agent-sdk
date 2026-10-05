@@ -342,6 +342,24 @@ classdef tOpenAIClient < hconstructorCommon
                 "MATLAB:webservices:UnknownHost");
         end
 
+        function generate_connectionError_isReportedFromGenerate(testCase)
+            % A connection problem is reported from generate, so the user
+            % sees the call they made rather than either the caller of
+            % generate or the web services internals.
+            import matlab.unittest.fixtures.EnvironmentVariableFixture
+            testCase.applyFixture(EnvironmentVariableFixture("HTTPS_PROXY", "http://nosuchhost.example.com:1234"));
+            client = aisdk.client.OpenAIClient("gpt-4o", APIKey="fake-key");
+            err = MException.empty;
+            try
+                generate(client, "Hello");
+            catch err
+            end
+            testCase.assertNotEmpty(err, "Expected a connection error.");
+            testCase.verifyEqual(err.stack(1).name, 'OpenAIClient.generate');
+            testCase.verifyEmpty(err.cause, ...
+                "The web services cause chain should not be forwarded.");
+        end
+
     end
 
 end

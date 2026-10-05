@@ -104,8 +104,7 @@ classdef LLMTool < matlab.mixin.Heterogeneous & matlab.mixin.CustomDisplay
             end
             toolIndex = find(strcmp(name, [these.Name]), 1);
             if isempty(toolIndex)
-                error("aisdk:invalidFunctionCall", ...
-                    aisdk.internal.MessageCatalog.getMessage("aisdk:invalidFunctionCall", name));
+                aisdk.internal.throwError("aisdk:invalidFunctionCall", name);
             end
             tools = these(toolIndex);
         end
