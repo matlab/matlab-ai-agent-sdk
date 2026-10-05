@@ -260,4 +260,3 @@ output = evaluate(tool,inputArguments);
 [`aisdk.AIAgent`](aisdk.AIAgent.md) | [`MCPTool`](MCPTool.md) | [`aisdk.LLMTool`](aisdk.LLMTool.md) | [`evaluate`](evaluate.md)
 
 *Copyright 2026 The MathWorks, Inc.*
-

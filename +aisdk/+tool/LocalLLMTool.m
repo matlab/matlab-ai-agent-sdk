@@ -124,6 +124,12 @@ classdef LocalLLMTool < aisdk.tool.internal.CallableTool
 
     end
 
+    methods (Hidden)
+        function schema = inputSchema(this)
+            schema = aisdk.tool.internal.CallableTool.argumentsToSchema(this.InputArguments);
+        end
+    end
+
     methods (Access = protected)
 
         function sig = displaySignature(obj)

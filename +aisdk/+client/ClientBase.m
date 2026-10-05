@@ -123,19 +123,10 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
             %encodeTool Encode an LLMTool into OpenAI Chat Completions format.
             %   Produces the {type: "function", function: {name, description, parameters}}
             %   structure. Override in subclasses for APIs that require a different format.
-            if isa(tool, 'aisdk.tool.LocalLLMTool')
-                funcStruct = struct( ...
-                    "name", tool.Name, ...
-                    "description", tool.Description, ...
-                    "parameters", aisdk.client.ClientBase.argumentsToSchema(tool.InputArguments));
-            elseif isa(tool, 'aisdk.tool.MCPTool')
-                funcStruct = struct( ...
-                    "name", tool.Name, ...
-                    "description", tool.Description, ...
-                    "parameters", tool.InputSchema);
-            else
-                aisdk.internal.throwError("aisdk:unsupportedToolType");
-            end
+            funcStruct = struct( ...
+                "name", tool.Name, ...
+                "description", tool.Description, ...
+                "parameters", tool.inputSchema());
             toolStruct = struct("type", "function", "function", funcStruct);
         end
 
@@ -193,33 +184,4 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
         end
     end
 
-    methods (Access=private, Static)
-        function str = argumentsToSchema(args)
-            %argumentsToSchema Convert LLMToolArgument array to JSON Schema struct.
-            str = struct();
-            str.type = "object";
-            params = struct();
-            requiredParams = strings(1,0);
-            for i = 1:numel(args)
-                thisDescription = struct();
-                if strlength(args(i).DataType) > 0
-                    thisDescription.type = args(i).DataType;
-                end
-                if strlength(args(i).Description) > 0
-                    thisDescription.description = args(i).Description;
-                end
-                params.(args(i).Name) = thisDescription;
-                if args(i).Required
-                    requiredParams(end + 1) = args(i).Name; %#ok<AGROW>
-                end
-            end
-            str.properties = params;
-            if ~isempty(requiredParams)
-                str.required = requiredParams;
-            end
-            if isfield(str, 'required') && numel(str.required) == 1
-                str.required = {str.required};
-            end
-        end
-    end
 end

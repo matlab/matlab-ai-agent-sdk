@@ -56,6 +56,12 @@ classdef MCPTool < aisdk.tool.internal.CallableTool
 
     end
 
+    methods (Hidden)
+        function schema = inputSchema(this)
+            schema = this.InputSchema;
+        end
+    end
+
     methods (Access = protected)
         function sig = displaySignature(obj)
             sig = obj.Name + "(…)";

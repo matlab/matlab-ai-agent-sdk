@@ -1,4 +1,125 @@
 {
+    "aisdk.AIAgent": {
+        "inputs": [
+            {
+                "name": "client",
+                "kind": "required",
+                "type": "aisdk.client.ClientBase"
+            },
+            {
+                "name": "SystemPrompt",
+                "kind": "namevalue",
+                "type": [["string", "scalar"], ["char"]]
+            },
+            {
+                "name": "Tools",
+                "kind": "namevalue",
+                "type": "aisdk.tool.LLMTool"
+            },
+            {
+                "name": "Messages",
+                "kind": "namevalue",
+                "type": "aisdk.message.LLMMessage"
+            },
+            {
+                "name": "ResponseFormat",
+                "kind": "namevalue",
+                "type": [["choices={'text','json'}"], ["struct"], ["string", "scalar"]]
+            },
+            {
+                "name": "Workspace",
+                "kind": "namevalue",
+                "type": ["struct", "scalar"]
+            },
+            {
+                "name": "DisplayMode",
+                "kind": "namevalue",
+                "type": "choices={'off','detailed'}"
+            },
+            {
+                "name": "MaxIterations",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", ">0"]
+            },
+            {
+                "name": "ApprovalFcn",
+                "kind": "namevalue",
+                "type": "function_handle"
+            },
+            {
+                "name": "SkillDirectories",
+                "kind": "namevalue",
+                "type": [["folder"], ["string"]]
+            }
+        ]
+    },
+    "aisdk.AIAgent.loadSkill": {
+        "inputs": [
+            {
+                "name": "agent",
+                "kind": "required",
+                "type": "aisdk.AIAgent"
+            },
+            {
+                "name": "skill",
+                "kind": "required",
+                "type": "choices=aisdk.internal.skillCompletions(agent)"
+            }
+        ]
+    },
+    "aisdk.AIAgent.loadSkill": {
+        "inputs": [
+            {
+                "name": "agent",
+                "kind": "required",
+                "type": "aisdk.AIAgent"
+            },
+            {
+                "name": "skillResource",
+                "kind": "required",
+                "type": "choices=aisdk.internal.skillCompletions(agent)"
+            }
+        ]
+    },
+    "aisdk.AIAgent.run": {
+        "inputs": [
+            {
+                "name": "agent",
+                "kind": "required",
+                "type": "aisdk.AIAgent"
+            },
+            {
+                "name": "prompt",
+                "kind": "required",
+                "type": [["string", "scalar"], ["char", "row"], ["aisdk.message.LLMMessage"]]
+            },
+            {
+                "name": "Tools",
+                "kind": "namevalue",
+                "type": "aisdk.tool.LLMTool"
+            },
+            {
+                "name": "ToolChoice",
+                "kind": "namevalue",
+                "type": "choices=aisdk.internal.toolChoiceCompletions(agent)"
+            },
+            {
+                "name": "ResponseFormat",
+                "kind": "namevalue",
+                "type": [["choices={'text','json'}"], ["struct"], ["string", "scalar"]]
+            },
+            {
+                "name": "MaxIterations",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", ">0"]
+            },
+            {
+                "name": "DisplayMode",
+                "kind": "namevalue",
+                "type": "choices={'off','detailed'}"
+            }
+        ]
+    },
     "aisdk.MCPClient": {
         "inputs": [
             {
@@ -14,12 +135,12 @@
             {
                 "name": "ToolPrefix",
                 "kind": "namevalue",
-                "type": [["string", "scalar"]]
+                "type": ["string", "scalar"]
             },
             {
                 "name": "TimeOut",
                 "kind": "namevalue",
-                "type": [["numeric", "scalar", ">=0"]]
+                "type": ["numeric", "scalar", ">=0"]
             }
         ]
     },
@@ -31,7 +152,7 @@
                         {
                             "name": "toolDefinition",
                             "kind": "required",
-                            "type": [["function_handle"]]
+                            "type": "function_handle"
                         },
                         {
                             "name": "Name",
@@ -61,17 +182,17 @@
                         {
                             "name": "Annotations",
                             "kind": "namevalue",
-                            "type": [["struct", "scalar"]]
+                            "type": ["struct", "scalar"]
                         },
                         {
                             "name": "ApprovalRequest",
                             "kind": "namevalue",
-                            "type": [["choices={'never','once','always'}"]]
+                            "type": "choices={'never','once','always'}"
                         },
                         {
                             "name": "Workspace",
                             "kind": "namevalue",
-                            "type": [["choices={'none','agent'}"]]
+                            "type": "choices={'none','agent'}"
                         }
                     ],
                     [

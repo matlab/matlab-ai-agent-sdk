@@ -255,6 +255,20 @@ classdef tClientBase < matlab.unittest.TestCase
             end
         end
 
+        %% BuiltInTool encoding
+        function encodeTool_builtInTool_producesFunctionStructWithParameters(testCase)
+            findFcn = @(~) "/path/skill/SKILL.md";
+            readFcn = @(~) sprintf("---\nname: skill\ndescription: d\n---\nBody");
+            reg = aisdk.internal.SkillRegistry(pwd, ...
+                DiscoverSkillsFcn=findFcn, FileReadFcn=readFcn, LastModifiedFcn=@(~) 1);
+            tool = aisdk.tool.LoadSkillTool(reg);
+            schema = captureToolSchema(tool);
+            testCase.verifyEqual(schema.type, "object");
+            testCase.verifyTrue(isfield(schema.properties, "name"));
+            testCase.verifyEqual(schema.properties.name.type, "string");
+            testCase.verifyEqual(schema.required, {"name"});
+        end
+
         %% API key resolution
         function generate_explicitAPIKey_takesPriority(testCase)
             client = aisdk.client.OpenAIClient("gpt-4o", APIKey="my-explicit-key");

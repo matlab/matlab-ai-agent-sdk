@@ -212,6 +212,7 @@ agentWithWorkspace.Workspace.matrix = A;
 |----|----|
 | [aisdk.AIAgent](doc/functions/aisdk.AIAgent.md) | Build AI agent | 
 | [run](doc/functions/run.md) | Run AI agent | 
+| [loadSkill](doc/functions/loadSkill.md) | Load skill into agent | 
 | [resetApproval](doc/functions/resetApproval.md) | Reset approval status of agentic tools | 
 | [aisdk.LLMClient](doc/functions/aisdk.LLMClient.md) | Connect to third-party LLM API | 
 | [OpenAIClient](doc/functions/OpenAIClient.md) | Client for OpenAI API | 
@@ -220,7 +221,7 @@ agentWithWorkspace.Workspace.matrix = A;
 | [aisdk.LLMTool](doc/functions/aisdk.LLMTool.md) | Tool for AI agent | 
 | [LocalLLMTool](doc/functions/LocalLLMTool.md) | AI agent tool from MATLAB function | 
 | [MCPTool](doc/functions/MCPTool.md) | AI agent tool from MCP server | 
-| [MCPClient](doc/functions/aisdk.MCPClient.md) | Connect to MCP server | 
+| [aisdk.MCPClient](doc/functions/aisdk.MCPClient.md) | Connect to MCP server |
 | [select](doc/functions/select.md) | Select LLM tool from tool array | 
 | [evaluate](doc/functions/evaluate.md) | Evaluate LLM tool | 
 | [aisdk.LLMToolArgument](doc/functions/aisdk.LLMToolArgument.md) | Argument for LLM tool | 

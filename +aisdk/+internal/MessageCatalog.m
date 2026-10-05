@@ -107,6 +107,20 @@ catalog("aisdk:agent:denialCodeUserCanceled") = "user canceled";
 catalog("aisdk:agent:denialCodeApprovalUnavailable") = "approval unavailable";
 catalog("aisdk:agent:noApprovalToReset") = "Unable to reset approval for tool ""{1}"" because the tool is not in the UserApprovedTools property.";
 catalog("aisdk:uiconfirm:noUserAvailable") = "Unable to request approval for tool call in a batch job.";
+catalog("aisdk:skills:DirectoryNotFound") = "Unrecognized skills directory ""{1}"".";
+catalog("aisdk:skills:NoSkillsConfigured") = "Unable to load skills because the SkillDirectories property of the agent is empty.";
+catalog("aisdk:skills:DuplicateSkillName") = "Duplicate skill name ""{1}"" found in: {2}."; % DuplicateSkillName: {1} = frontmatter name, {2} = paths to both SKILL.md files.
+catalog("aisdk:skills:NameFolderMismatch") = "Invalid SKILL.md file. Frontmatter name ""{1}"" must match the folder name ""{2}"" in {3}."; % NameFolderMismatch: {1} = frontmatter name, {2} = parent folder name, {3} = SKILL.md path.
+catalog("aisdk:skills:SkillInRootDirectory") = "Invalid skill directory {1}. Each SKILL.md file must be inside a named subdirectory, for example, {1}/my-skill/SKILL.md.";
+catalog("aisdk:skills:InvalidFrontmatterName") = "Invalid SKILL.md file. Skill name in {1} must be between 1 and 64 characters long and contain only lowercase letters, digits, and single internal hyphens.";
+catalog("aisdk:skills:InvalidFrontmatterDescriptionLength") = "Invalid SKILL.md file. Skill description in {1} must contain at most 1024 characters.";
+
+% --- LLM messages ---
+catalog("aisdk:prompt:catalogPreamble") = "You have access to the following skills. Use the loadSkill tool to load a skill's full instructions when relevant to the current task. After loading a skill, load each referenced file that is relevant to the current task.";
+catalog("aisdk:tool:SkillNotFound") = "Unrecognized skill name ""{1}"".";
+catalog("aisdk:tool:ResourceNotFound") = "Unrecognized resource name ""{1}"" for skill ""{2}"".";
+catalog("aisdk:tool:AvailableSkills") = "Available skills are: {1}.";
+catalog("aisdk:tool:AvailableResources") = "For skill ""{1}"", resources must be one of: {2}.";
 catalog("aisdk:mcpClient:nonScalarURL") = "MCP server URL must be a string scalar or character vector.";
 catalog("aisdk:mcpClient:urlEndpointRequiresHttpTransport") = "To specify the MCP server as a URL, the transport protocol must be ""streamable-http"" or ""sse"".";
 catalog("aisdk:mcpClient:httpTransportRequiresUrl") = "When Transport=""{1}"", the endpoint must start with ""http://"" or ""https://"". To start a local command, specify Transport=""stdio"" instead.";

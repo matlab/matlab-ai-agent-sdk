@@ -16,8 +16,6 @@ MATLAB&#x00AE;.
 creates an `aisdk.AIAgent` object with the specified LLM client
 `client`.
 
-numinp
-
 `agent = aisdk.AIAgent(client,Name=Value)`
 specifies additional options using one or more name-value arguments. For example, to limit
 the maximum number of tool calling iterations to 10, set
@@ -51,7 +49,7 @@ of iterations to 10.
 
 These properties can be set using name-value arguments.
 
-[`SystemPrompt`](#systemprompt) | [`Tools`](#tools) | [`Messages`](#messages) | [`Workspace`](#workspace) | [`DisplayMode`](#displaymode) | [`MaxIterations`](#maxiterations) | [`ApprovalFcn`](#approvalfcn)
+[`SystemPrompt`](#systemprompt) | [`Tools`](#tools) | [`Messages`](#messages) | [`Workspace`](#workspace) | [`DisplayMode`](#displaymode) | [`MaxIterations`](#maxiterations) | [`ApprovalFcn`](#approvalfcn) | [`SkillDirectories`](#skilldirectories)
 ## Properties
 <a id="properties"></a>
 ### `Client` — LLM client
@@ -71,7 +69,7 @@ System prompt, specified as a string scalar.
 
 The system prompt is a natural language description that provides the framework in
 which a large language model generates its responses. The system prompt can include
-instructions about tone, communications style, language, and so on.
+instructions about tone, communication style, language, and so on.
 
 Data Types: `string`
 ### `Tools` — LLM tools
@@ -85,7 +83,7 @@ Data Types: `LocalLLMTool` | `MCPTool`
 ### `Messages` — Message history
 <a id="messages"></a>
 
-[] (default) | LLM message array
+`[]` (default) | LLM message array
 
 Message history, specified as an array of LLM messages.
 
@@ -253,6 +251,72 @@ end
 Example: `@myApprovalFcn`
 
 Data Types: `function_handle`
+### `SkillDirectories` — Skill directories
+<a id="skilldirectories"></a>
+
+`[]` (default) | string scalar | string array | character vector | cell array of character vectors
+
+Skill directories, specified as a string scalar, string array, character vector, or cell array of character vectors. 
+
+For example, if you have a skill directory of the
+form:
+
+```
+my-skill-directory/
+  my-favorite-skill/
+    SKILL.md
+    references/
+      my-supplemental-information.md
+  my-second-favorite-skill/
+    SKILL.md
+```
+Then to give the agent access to the skills, set `SkillDirectories` to `"my-skill-directory"`.
+
+The skill directory can contain one or more skill directories. For example, if you have a skill directory of the form:
+
+```
+my-skill-directory/
+  engineering-skills/
+    build-engine/
+      SKILL.md
+    test-battery/
+      SKILL.md
+  mathematics-skills/
+    find-counter-example/
+      SKILL.md
+    prove-p-equals-np/
+      SKILL.md
+```
+
+Then you can specify `SkillDirectories` as `"my-skill-directory"`, `"my-skill-directory/engineering-skills"`, 
+or `"my-skill-directory/mathematics-skills"`, depending on which skills you want to provide to the agent.
+
+When you specify the `SkillDirectories` property, the software also sets the [`Skills`](#skills) 
+property. Each subfolder that contains a `SKILL.md` file becomes an available skill.
+
+When you run an agent, the software adds the names and short descriptions of the available skills to the 
+system prompt. The agent can decide to load a skill into its message history. You can also choose to load
+a skill by using the [`loadSkill`](loadSkill.md) function.
+
+Example: `SkillDirectories="./my-skills"`
+
+Example: `SkillDirectories=["./skills", "./shared-skills"]`
+
+Data Types: `string` | `char` | `cell`
+
+### `Skills` — Names of skills the agent can load
+<a id="skills"></a>
+
+Read-only: `[]` (default) | string scalar | string array
+
+This property is read-only.
+
+Names of skills the agent can load, specified as a string scalar or string array.
+
+Specify the skills by setting the [`SkillDirectories`](#skilldirectories) name-value argument.
+
+Data Types: `string`
+
 ### `ContextUsage` — Fraction of model context used
 <a id="contextusage"></a>
 
@@ -264,13 +328,13 @@ Fraction of model context used, specified as `NaN` or as a positive
 scalar.
 
 The context usage increases during each run of the agent. When the context usage
-grows above 1, the model can not keep track of the beginning of the conversation and the
+grows above 1, the model cannot keep track of the beginning of the conversation and the
 response quality can degrade. Some models may error or display other unexpected
 behavior. To avoid this degradation, consider summarizing the conversation and starting
 a new agent when the context usage grows too large.
 
 The software calculates the context usage based on the
-`ContextSize` property of the underlying  LLM client
+`ContextSize` property of the underlying LLM client
 `client`. By default, the context size, and therefore the context
 usage, is `NaN`.
 
@@ -352,6 +416,7 @@ Data Types: `string`
 | Function | Description |
 | --- | --- |
 | [`run`](run.md) | Run AI agent |
+| [`loadSkill`](loadSkill.md) | Load skill into agent |
 | [`resetApproval`](resetApproval.md) | Reset tool approvals |
 
 ## Examples
@@ -466,9 +531,9 @@ ans =
   1×4 LLMMessage array with messages:
 
     1    User         Text         "How many times is the letter r in the word strawberry?"
-    2    Assistant    Tool Call    countLetters({"word":"strawberry","letter":"r"})
+    2    Assistant    Tool Call    count({"word":"strawberry","letter":"r"})
     3    Tool         Text         "{"numLetter":3}"
-    4    Assistant    Text         "The letter "r" appears 3 times in the word "strawberry."
+    4    Assistant    Text         "The letter "r" appears 3 times in the word "strawberry.""
 ```
 ### Configure Tool to Use Agent Workspace
 <a id="configure-tool-to-use-agent-workspace"></a>
@@ -579,6 +644,77 @@ the session. To require approval again, clear the accumulated approvals by using
 ```
 resetApproval(agent)
 ```
+
+### Run Agent With Skills
+<a id="run-agent-with-skills"></a>
+
+This example shows how to load a specific skill into the message
+history of an AI agent.
+
+Assume you have a skills directory of the
+form:
+
+```
+my-skill-directory/
+  my-favorite-skill/
+    SKILL.md
+    references/
+      my-supplemental-information.md
+  my-second-favorite-skill/
+    SKILL.md
+```
+
+Create the agent from an LLM client `client` by using the
+[`aisdk.AIAgent`](aisdk.AIAgent.md) function. Suppress the command line output of the agent by setting
+`DisplayMode` to `"off"`. Provide the agent with
+your skills by specifying the `SkillDirectories` name-value
+argument.
+
+```
+agent = aisdk.AIAgent(client,DisplayMode="off",SkillDirectories="./my-skill-directory");
+```
+
+Inspect the `Skills` property of the agent.
+
+```
+agent.Skills
+```
+
+```
+ans =
+
+  2×1 string array
+
+    "my-favorite-skill"
+    "my-second-favorite-skill"
+```
+
+Instruct the agent to perform a task by using the first
+skill.
+
+```
+run(agent,"Perform my favorite task by using my favorite skill.");
+```
+
+Inspect the message
+history.
+
+```
+agent.Messages
+```
+
+```
+ans =
+
+  1×4 LLMMessage array with messages:
+    1     User         Text         "Perform my favorite task by using my favorite skill."
+    2     Assistant    Tool Call    "loadSkill({"name":"my-favorite-skill"})"
+    3     Tool         Text         "# My Favorite Skill  This is the text at the start of my fav..."
+    4     Assistant    Text         "This is the agent's response."
+```
+
+If the agent has loaded the skill, then the message history contains a tool call to the `loadSkill` function and a tool response that contains the text of the skill. Whether an agent loads a skill depends on the underlying model, as well as the name and description of the skill. To ensure that an agent reads a skill, load the skill manually by using the `loadSkill` function.
+
 ## Algorithms
 <a id="algorithms"></a>
 
@@ -594,7 +730,8 @@ agent:
   - Model calls one or more tools. This step is called a tool calling
 iteration.
   - Model decides whether to call additional tools.
-  - Model provides answer.
+
+- Model provides answer.
 
 The user can then provide a follow-up prompt by using the `run`
 function and the software repeats the same steps to generate a new answer.
@@ -613,7 +750,6 @@ Reasoning and Acting in Language Models" Preprint, submitted Mar 10, 2023. https
 ## See Also
 <a id="see-also"></a>
 
-[`aisdk.LLMClient`](aisdk.LLMClient.md) | [`aisdk.LLMTool`](aisdk.LLMTool.md) | [`LocalLLMTool`](LocalLLMTool.md) | [`MCPTool`](MCPTool.md) | [`aisdk.LLMToolArgument`](aisdk.LLMToolArgument.md) | [`OpenAIClient`](OpenAIClient.md) | [`OllamaClient`](OllamaClient.md)
+[`aisdk.LLMClient`](aisdk.LLMClient.md) | [`aisdk.LLMTool`](aisdk.LLMTool.md) | [`LocalLLMTool`](LocalLLMTool.md) | [`MCPTool`](MCPTool.md) | [`aisdk.LLMToolArgument`](aisdk.LLMToolArgument.md) | [`OpenAIClient`](OpenAIClient.md) | [`OllamaClient`](OllamaClient.md) | ['loadSkill'](loadSkill.md)
 
 *Copyright 2026 The MathWorks, Inc.*
-

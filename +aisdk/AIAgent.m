@@ -11,6 +11,9 @@ classdef AIAgent < handle
 %   AGENT = AIAgent(CLIENT, SystemPrompt=SP, Tools=T, Messages=msgs)
 %   specifies system prompt, tools, and existing messages.
 %
+%   AGENT = AIAgent(CLIENT, SkillDirectories=D) specifies directories to
+%   search for skills. Load a skill with the loadSkill method.
+%
 %   AIAgent Properties:
 %       Client           - The LLM client used for API calls
 %       SystemPrompt     - System prompt
@@ -19,10 +22,13 @@ classdef AIAgent < handle
 %       Workspace        - Struct for passing data between tool calls
 %       DisplayMode      - Display mode ("off" or "detailed")
 %       ResponseFormat   - Format of response ("text", "json", struct, or JSON schema string)
+%       SkillDirectories - Directories to search for skills
+%       Skills           - Names of skills available to the agent (read-only)
 %       ContextUsage     - Fraction of context window used
 %
 %   AIAgent Methods:
 %       run              - Run agentic loop with tool calling until completion
+%       loadSkill        - Load skill content into the message history
 
 % Copyright 2024-2026 The MathWorks, Inc.
 
@@ -34,9 +40,21 @@ classdef AIAgent < handle
     properties (SetAccess=protected)
         %SystemPrompt   System prompt
         SystemPrompt = []
+    end
 
+    properties (Dependent)
         %Tools   Tools available to the agent during a run call.
         Tools (1,:) aisdk.tool.LLMTool
+    end
+
+    properties
+        %SkillDirectories   Directories to search for skills (scans up to two levels deep for SKILL.md).
+        SkillDirectories (1,:) string = string.empty(1,0)
+    end
+
+    properties (Dependent, SetAccess=private)
+        %Skills   Names of skills available to the agent.
+        Skills (:,1) string
     end
 
     properties
@@ -57,6 +75,11 @@ classdef AIAgent < handle
 
         %ApprovalFcn   Callback invoked to obtain a human approval decision.
         ApprovalFcn(1,1) function_handle = @aisdk.utils.uiconfirm
+    end
+
+    properties (Access=private)
+        UserTools (1,:) aisdk.tool.LLMTool
+        LoadSkillTool (1,:) aisdk.tool.LLMTool
     end
 
     properties (SetAccess=private)
@@ -90,6 +113,11 @@ classdef AIAgent < handle
         LastInputTokens(1,1) double = 0
     end
 
+    properties (Hidden)
+        %SkillRegistry   Internal skill registry. Set access is public for test injection.
+        SkillRegistry = []
+    end
+
     properties (Constant, Hidden)
         DefaultMaxIterations = 25
     end
@@ -106,6 +134,7 @@ classdef AIAgent < handle
                 nvp.DisplayMode              (1,1) string {mustBeMember(nvp.DisplayMode, ["off","detailed"])} = "detailed"
                 nvp.MaxIterations            (1,1) {mustBePositive} = aisdk.AIAgent.DefaultMaxIterations
                 nvp.ApprovalFcn                    (1,1) {mustBeA(nvp.ApprovalFcn,'function_handle')} = @aisdk.utils.uiconfirm
+                nvp.SkillDirectories         (1,:) string = string.empty(1,0)
             end
 
             this.Client = client;
@@ -128,6 +157,45 @@ classdef AIAgent < handle
                    this.SystemPrompt = systemPrompt;
                 end
             end
+
+            if ~isempty(nvp.SkillDirectories)
+                this.SkillDirectories = nvp.SkillDirectories;
+            end
+        end
+
+        function tools = get.Tools(this)
+            tools = [this.UserTools, this.LoadSkillTool];
+        end
+
+        function set.Tools(this, tools)
+            this.UserTools = tools;
+        end
+
+        function set.SkillDirectories(this, paths)
+            if isempty(paths)
+                registry = [];
+            else
+                registry = aisdk.internal.SkillRegistry(paths);
+            end
+            this.SkillRegistry = registry;
+            this.SkillDirectories = paths;
+        end
+
+        function skillNames = get.Skills(this)
+            if isempty(this.SkillRegistry)
+                skillNames = string.empty(0, 1);
+            else
+                skillNames = reshape(string([this.SkillRegistry.Skills.Name]), [], 1);
+            end
+        end
+
+        function set.SkillRegistry(this, reg)
+            this.SkillRegistry = reg;
+            if isempty(reg)
+                this.LoadSkillTool = aisdk.tool.LLMTool.empty(1,0);
+            else
+                this.LoadSkillTool = aisdk.tool.LoadSkillTool(reg);
+            end
         end
 
         function response = run(this, prompt, nvp)
@@ -139,7 +207,7 @@ classdef AIAgent < handle
             arguments
                 this (1,1) aisdk.AIAgent
                 prompt {aisdk.internal.mustBeMessagesInput}
-                nvp.Tools(1, :) aisdk.tool.LLMTool = this.Tools
+                nvp.Tools(1, :) aisdk.tool.LLMTool = this.UserTools
                 nvp.ToolChoice (1,:) {mustBeTextScalar} = "auto"
                 nvp.ResponseFormat      {aisdk.internal.mustBeResponseFormat} = this.ResponseFormat
                 nvp.MaxIterations (1,1) {mustBePositive} = this.MaxIterations
@@ -147,6 +215,9 @@ classdef AIAgent < handle
             end
 
             displayMode = nvp.DisplayMode;
+
+            this.refreshSkillsIfStale();
+            nvp.Tools = [nvp.Tools, this.LoadSkillTool];
 
             newMessages = aisdk.client.ClientBase.normalizeMessages(prompt);
             this.Messages = [this.Messages, newMessages];
@@ -157,9 +228,10 @@ classdef AIAgent < handle
             for iteration = 1:nvp.MaxIterations
                 this.print(displayMode,"[think]");
 
-                if ~isempty(this.SystemPrompt)
+                systemPromptText = this.assembleSystemPrompt();
+                if ~isempty(systemPromptText)
                     messagesWithSystem = [
-                        aisdk.LLMTextMessage(this.SystemPrompt, Role="system"), ...
+                        aisdk.LLMTextMessage(systemPromptText, Role="system"), ...
                         this.Messages];
                 else
                     messagesWithSystem = this.Messages;
@@ -307,6 +379,52 @@ classdef AIAgent < handle
             end
         end
 
+        function loadSkill(this, nameOrPath)
+            %loadSkill   Load a skill or skill resource into the message history.
+            %
+            %   Agents can decide to load skills based on the user prompt. Use
+            %   loadSkill to load one manually. Skills are reusable prompts
+            %   that explain how to perform a task or workflow. Loading them
+            %   only when needed conserves tokens.
+            %
+            %   loadSkill(AGENT, SKILL) loads the content of the skill's
+            %   SKILL.md file into the message history of AGENT. SKILL must
+            %   match the frontmatter name of a skill in SkillDirectories.
+            %
+            %   loadSkill(AGENT, SKILLRESOURCE) loads a supporting file into
+            %   the message history of AGENT. Specify SKILLRESOURCE as a skill
+            %   name followed by a path relative to its folder, for example
+            %   "livescript/references/guide.md".
+            %
+            %   Either syntax appends a tool call and a tool result to the
+            %   Messages property, matching what a model-initiated load
+            %   produces. Repeated calls are additive.
+            arguments
+                this (1,1) aisdk.AIAgent
+                nameOrPath (1,1) string
+            end
+
+            if isempty(this.SkillRegistry)
+                aisdk.internal.throwError("aisdk:skills:NoSkillsConfigured");
+            end
+
+            this.refreshSkillsIfStale();
+            skillBody = this.SkillRegistry.loadSkillImpl(nameOrPath);
+            args = struct('name', char(nameOrPath));
+            % Derived from the message count so repeated loads produce unique
+            % IDs — some providers reject duplicates. Deliberately excludes
+            % the skill name: a resource load would put "/" in the ID, which
+            % Bedrock's toolUseId pattern disallows. The name is already
+            % carried by the tool call's arguments.
+            callID = "skill_" + num2str(numel(this.Messages));
+            this.print(this.DisplayMode, "[call function loadSkill with inputs " + jsonencode(args) + "]");
+            this.print(this.DisplayMode, "[function return] " + string(jsonencode(skillBody)));
+            this.Messages(end+1) = aisdk.LLMToolCallMessage("loadSkill", ...
+                args, ToolCallID=callID);
+            this.Messages(end+1) = aisdk.LLMToolResultMessage(skillBody, ...
+                ToolCallID=callID, Name="loadSkill");
+        end
+
         function resetApproval(this, names)
             %resetApproval   Clear accumulated "allow from now on" approvals.
             %
@@ -354,6 +472,15 @@ classdef AIAgent < handle
     end
 
     methods (Access=private)
+        function refreshSkillsIfStale(this)
+            % Called by every entry point that reads the registry, so that
+            % skills edited or added after construction are picked up
+            % regardless of whether run or loadSkill sees them first.
+            if ~isempty(this.SkillRegistry) && this.SkillRegistry.isStale()
+                this.SkillRegistry.scan();
+            end
+        end
+
         function print(~, displayMode, msg)
             if displayMode == "detailed"
                 if isstruct(msg)
@@ -364,6 +491,20 @@ classdef AIAgent < handle
             end
         end
 
+
+        function txt = assembleSystemPrompt(this)
+            parts = string.empty;
+            if ~isempty(this.SystemPrompt)
+                parts(end+1) = this.SystemPrompt;
+            end
+            if ~isempty(this.SkillRegistry) && strlength(this.SkillRegistry.CatalogText) > 0
+                preamble = aisdk.internal.MessageCatalog.getMessage("aisdk:prompt:catalogPreamble");
+                catalogSection = "---" + newline + preamble + newline + newline + ...
+                    this.SkillRegistry.CatalogText;
+                parts(end+1) = catalogSection;
+            end
+            txt = join(parts, string([newline newline]));
+        end
     end
 
 

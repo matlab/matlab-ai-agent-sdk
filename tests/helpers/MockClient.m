@@ -34,6 +34,9 @@ classdef MockClient < aisdk.client.ClientBase
         % Handle-based store for messages passed to each generate call.
         GenerateInputsStore
 
+        % Handle-based store for tools passed to each generate call.
+        GenerateToolsStore
+
         % Log of ToolChoice values received on each generate call.
         % Uses a cell column stored in a containers.Map so it survives
         % value-class copying.
@@ -48,6 +51,7 @@ classdef MockClient < aisdk.client.ClientBase
             this.CallCounter = containers.Map('KeyType','char','ValueType','double');
             this.CallCounter('n') = 0;
             this.GenerateInputsStore = containers.Map('KeyType','double','ValueType','any');
+            this.GenerateToolsStore = containers.Map('KeyType','double','ValueType','any');
             this.ToolChoiceHistory = containers.Map('KeyType','char','ValueType','any');
             this.ToolChoiceHistory('log') = {};
         end
@@ -63,6 +67,10 @@ classdef MockClient < aisdk.client.ClientBase
             end
         end
 
+        function tools = getGenerateTools(this, callIndex)
+            tools = this.GenerateToolsStore(callIndex);
+        end
+
         function [text, messages, info] = generate(this, messagesIn, nvp)
             arguments
                 this
@@ -73,6 +81,7 @@ classdef MockClient < aisdk.client.ClientBase
             end
             this.CallCounter('n') = this.CallCounter('n') + 1;
             this.GenerateInputsStore(this.CallCounter('n')) = messagesIn;
+            this.GenerateToolsStore(this.CallCounter('n')) = nvp.Tools;
             history = this.ToolChoiceHistory('log');
             history{end+1} = nvp.ToolChoice;
             this.ToolChoiceHistory('log') = history;
