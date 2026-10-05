@@ -87,6 +87,7 @@ classdef tExamples < matlab.unittest.TestCase
         end
 
         function testSendImageMessagesToVisionModels(testCase)
+            testCase.assumeFail("BPed test (see issue 283): MATLAB:print:UnableToExport")
 
             testCase.assumeFalse( ...
                 isMATLABReleaseOlderThan("R2026b"), ...
