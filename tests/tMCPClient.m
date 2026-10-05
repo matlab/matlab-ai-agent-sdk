@@ -98,7 +98,7 @@ classdef tMCPClient < matlab.unittest.TestCase
         function tools_returnsTypedMCPToolVector(testCase)
             client = aisdk.MCPClient("mock", Transport="mock");
             tools = client.Tools;
-            testCase.verifyClass(tools, "aisdk.llms.tool.MCPTool");
+            testCase.verifyClass(tools, "aisdk.tool.MCPTool");
             testCase.verifyNotEmpty(tools);
             testCase.verifyEqual(tools(1).Name, "example-tool");
             testCase.verifyEqual(tools(1).Description, "An example tool for testing");

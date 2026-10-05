@@ -1,4 +1,4 @@
-classdef LLMToolResultMessage < aisdk.llms.message.LLMMessage
+classdef LLMToolResultMessage < aisdk.message.LLMMessage
 %LLMToolResultMessage The result of a tool call, returned to the model.
 %
 %   msg = aisdk.LLMToolResultMessage(RESULT) creates a tool result message.
@@ -30,18 +30,18 @@ classdef LLMToolResultMessage < aisdk.llms.message.LLMMessage
         Name = ""
 
         %TOOLCALLID   Identifier matching the original tool call.
-        ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = ""
+        ToolCallID {aisdk.internal.mustBeValidToolCallID} = ""
     end
 
     methods
         function this = LLMToolResultMessage(result, nvp)
             arguments
                 result(1,1) string
-                nvp.ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = ""
+                nvp.ToolCallID {aisdk.internal.mustBeValidToolCallID} = ""
                 nvp.Name(1,1) string = ""
             end
 
-            this@aisdk.llms.message.LLMMessage("tool", "text");
+            this@aisdk.message.LLMMessage("tool", "text");
             this.Result = result;
             this.Name = nvp.Name;
             this.ToolCallID = nvp.ToolCallID;

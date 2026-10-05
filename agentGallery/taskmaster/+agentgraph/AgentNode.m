@@ -29,7 +29,7 @@ classdef AgentNode < agentgraph.Node
                 this
                 nodePrompt (1,1) string
                 workspace struct
-                allTools (1,:) aisdk.llms.tool.LLMTool
+                allTools (1,:) aisdk.tool.LLMTool
                 client
                 observer = []
             end

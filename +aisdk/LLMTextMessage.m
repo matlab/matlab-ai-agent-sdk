@@ -1,4 +1,4 @@
-classdef LLMTextMessage < aisdk.llms.message.LLMMessage
+classdef LLMTextMessage < aisdk.message.LLMMessage
 %LLMTextMessage A plain text message in a conversation.
 %
 %   msg = aisdk.LLMTextMessage(text) creates a user text message.
@@ -27,7 +27,7 @@ classdef LLMTextMessage < aisdk.llms.message.LLMMessage
                 nvp.Role(1,1) string {mustBeMember(nvp.Role, ["system","user","assistant"])} = "user"
             end
 
-            this@aisdk.llms.message.LLMMessage(nvp.Role, "text");
+            this@aisdk.message.LLMMessage(nvp.Role, "text");
             this.Text = string(text);
         end
 
@@ -47,7 +47,7 @@ end
 
 function mustBeTextContent(val)
     if ~(isstring(val) || ischar(val)) || (isstring(val) && ~isscalar(val))
-        error("llms:message:InvalidTextContent", ...
-            aisdk.llms.internal.MessageCatalog.getMessage("llms:message:InvalidTextContent"));
+        error("aisdk:message:InvalidTextContent", ...
+            aisdk.internal.MessageCatalog.getMessage("aisdk:message:InvalidTextContent"));
     end
 end

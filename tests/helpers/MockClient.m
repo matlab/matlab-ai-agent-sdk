@@ -1,4 +1,4 @@
-classdef MockClient < aisdk.llms.client.ClientBase
+classdef MockClient < aisdk.client.ClientBase
 %MockClient A test double for LLM clients that returns scripted responses.
 %
 %   Set the GenerateOutputs property to a cell array of {text, messages, info}

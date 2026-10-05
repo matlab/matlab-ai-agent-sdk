@@ -1,4 +1,4 @@
-classdef LLMToolCallMessage < aisdk.llms.message.LLMMessage
+classdef LLMToolCallMessage < aisdk.message.LLMMessage
 %LLMToolCallMessage A request from the AI model to call a tool.
 %
 %   msg = aisdk.LLMToolCallMessage(NAME) creates a tool call message.
@@ -27,7 +27,7 @@ classdef LLMToolCallMessage < aisdk.llms.message.LLMMessage
         Name
 
         %TOOLCALLID   Unique identifier for this tool call.
-        ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = ""
+        ToolCallID {aisdk.internal.mustBeValidToolCallID} = ""
 
         %ARGUMENTS   Arguments the model is passing to the tool.
         Arguments(1,1) struct
@@ -56,19 +56,19 @@ classdef LLMToolCallMessage < aisdk.llms.message.LLMMessage
     methods
         function this = LLMToolCallMessage(name, arguments, nvp)
             arguments
-                name(1,1) string {aisdk.llms.internal.mustBeNonzeroLengthTextScalar}
+                name(1,1) string {aisdk.internal.mustBeNonzeroLengthTextScalar}
                 arguments(1,1) struct = struct()
-                nvp.ToolCallID {aisdk.llms.internal.mustBeValidToolCallID} = ""
+                nvp.ToolCallID {aisdk.internal.mustBeValidToolCallID} = ""
             end
 
-            this@aisdk.llms.message.LLMMessage("assistant", "tool-call");
+            this@aisdk.message.LLMMessage("assistant", "tool-call");
             this.Name = name;
             this.ToolCallID = nvp.ToolCallID;
             this.Arguments = arguments;
         end
 
         function this = set.Name(this, val)
-            aisdk.llms.internal.mustBeNonzeroLengthTextScalar(val);
+            aisdk.internal.mustBeNonzeroLengthTextScalar(val);
             this.Name = string(val);
         end
     end

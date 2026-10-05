@@ -10,7 +10,7 @@ function allTools = createSerdesTools()
     addpath(toolsDir);
 
     toolFiles = dir(fullfile(toolsDir, '*.m'));
-    allTools = aisdk.llms.tool.LLMTool.empty(1, 0);
+    allTools = aisdk.tool.LLMTool.empty(1, 0);
     for i = 1:numel(toolFiles)
         [~, toolName] = fileparts(toolFiles(i).name);
         try

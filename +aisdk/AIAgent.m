@@ -2,7 +2,7 @@ classdef AIAgent < handle
 %AIAgent Agent for AI chat completions with agentic tool-calling loop.
 %
 %   AGENT = AIAgent(CLIENT) creates an AIAgent with the specified client
-%   (aisdk.llms.client.OpenAIClient or aisdk.llms.client.OllamaClient).
+%   (aisdk.client.OpenAIClient or aisdk.client.OllamaClient).
 %
 %   AGENT = AIAgent(CLIENT, SystemPrompt=SP) specifies a system prompt.
 %
@@ -15,7 +15,7 @@ classdef AIAgent < handle
 %       Client           - The LLM client used for API calls
 %       SystemPrompt     - System prompt
 %       Tools            - Tools available to the agent during a run call
-%       Messages         - Array of aisdk.llms.message.LLMMessage objects
+%       Messages         - Array of aisdk.message.LLMMessage objects
 %       Workspace        - Struct for passing data between tool calls
 %       DisplayMode      - Display mode ("off" or "detailed")
 %       ResponseFormat   - Format of response ("text", "json", struct, or JSON schema string)
@@ -36,12 +36,12 @@ classdef AIAgent < handle
         SystemPrompt = []
 
         %Tools   Tools available to the agent during a run call.
-        Tools (1,:) aisdk.llms.tool.LLMTool
+        Tools (1,:) aisdk.tool.LLMTool
     end
 
     properties
-        %Messages   Array of aisdk.llms.message.LLMMessage objects
-        Messages(1,:) aisdk.llms.message.LLMMessage
+        %Messages   Array of aisdk.message.LLMMessage objects
+        Messages(1,:) aisdk.message.LLMMessage
 
         %Workspace   Struct for passing data between tool calls
         Workspace struct
@@ -50,7 +50,7 @@ classdef AIAgent < handle
         DisplayMode(1,1) string {mustBeMember(DisplayMode, ["off","detailed"])} = "detailed"
 
         %ResponseFormat   Response format, "text" or "json" or struct or JSON schema string.
-        ResponseFormat      {aisdk.llms.internal.mustBeResponseFormat} = "text"
+        ResponseFormat      {aisdk.internal.mustBeResponseFormat} = "text"
 
         %MaxIterations   Maximum tool-calling iterations per run call.
         MaxIterations(1,1) double {mustBePositive} = aisdk.AIAgent.DefaultMaxIterations
@@ -95,14 +95,14 @@ classdef AIAgent < handle
         function this = AIAgent(client, nvp)
             arguments
                 client                       (1,1) {mustBeClient}
-                nvp.SystemPrompt                   {aisdk.llms.internal.mustBeTextOrEmpty} = []
-                nvp.Tools                    (1,:) aisdk.llms.tool.LLMTool = aisdk.llms.tool.LLMTool.empty(1,0)
-                nvp.Messages                 (1,:) aisdk.llms.message.LLMMessage = aisdk.llms.message.LLMMessage.empty(1,0)
-                nvp.ResponseFormat                 {aisdk.llms.internal.mustBeResponseFormat} = "text"
+                nvp.SystemPrompt                   {aisdk.internal.mustBeTextOrEmpty} = []
+                nvp.Tools                    (1,:) aisdk.tool.LLMTool = aisdk.tool.LLMTool.empty(1,0)
+                nvp.Messages                 (1,:) aisdk.message.LLMMessage = aisdk.message.LLMMessage.empty(1,0)
+                nvp.ResponseFormat                 {aisdk.internal.mustBeResponseFormat} = "text"
                 nvp.Workspace                (1,1) struct = struct()
                 nvp.DisplayMode              (1,1) string {mustBeMember(nvp.DisplayMode, ["off","detailed"])} = "detailed"
                 nvp.MaxIterations            (1,1) {mustBePositive} = aisdk.AIAgent.DefaultMaxIterations
-                nvp.ApprovalFcn                    (1,1) {mustBeA(nvp.ApprovalFcn,'function_handle')} = @aisdk.llms.internal.uiconfirm
+                nvp.ApprovalFcn                    (1,1) {mustBeA(nvp.ApprovalFcn,'function_handle')} = @aisdk.internal.uiconfirm
             end
 
             this.Client = client;
@@ -114,7 +114,7 @@ classdef AIAgent < handle
             this.ApprovalFcn = nvp.ApprovalFcn;
 
             if isempty(nvp.Tools)
-                this.Tools = aisdk.llms.tool.LLMTool.empty(1,0);
+                this.Tools = aisdk.tool.LLMTool.empty(1,0);
             else
                 this.Tools = nvp.Tools;
             end
@@ -135,17 +135,17 @@ classdef AIAgent < handle
 
             arguments
                 this (1,1) aisdk.AIAgent
-                prompt {aisdk.llms.internal.mustBeMessagesInput}
-                nvp.Tools(1, :) aisdk.llms.tool.LLMTool = this.Tools
+                prompt {aisdk.internal.mustBeMessagesInput}
+                nvp.Tools(1, :) aisdk.tool.LLMTool = this.Tools
                 nvp.ToolChoice (1,:) {mustBeTextScalar} = "auto"
-                nvp.ResponseFormat      {aisdk.llms.internal.mustBeResponseFormat} = this.ResponseFormat
+                nvp.ResponseFormat      {aisdk.internal.mustBeResponseFormat} = this.ResponseFormat
                 nvp.MaxIterations (1,1) {mustBePositive} = this.MaxIterations
                 nvp.DisplayMode (1,1) string {mustBeMember(nvp.DisplayMode, ["off","detailed"])} = this.DisplayMode
             end
 
             displayMode = nvp.DisplayMode;
 
-            newMessages = aisdk.llms.client.ClientBase.normalizeMessages(prompt);
+            newMessages = aisdk.client.ClientBase.normalizeMessages(prompt);
             this.Messages = [this.Messages, newMessages];
 
             allTexts = string.empty(1,0);
@@ -287,8 +287,8 @@ classdef AIAgent < handle
 end
 
 function mustBeClient(value)
-if ~isa(value, 'aisdk.llms.client.ClientBase')
-    error("llms:invalidClientType", ...
-        aisdk.llms.internal.MessageCatalog.getMessage("llms:invalidClientType"));
+if ~isa(value, 'aisdk.client.ClientBase')
+    error("aisdk:invalidClientType", ...
+        aisdk.internal.MessageCatalog.getMessage("aisdk:invalidClientType"));
 end
 end

@@ -71,12 +71,12 @@ classdef tLLMToolArgument < matlab.unittest.TestCase
 
         function fromPrototypeNumericArray_errors(testCase)
             testCase.verifyError(@() aisdk.LLMToolArgument(struct("weights", [-0.1, 0.8, -0.1])), ...
-                "llms:arrayPrototypeNotSupported");
+                "aisdk:arrayPrototypeNotSupported");
         end
 
         function fromPrototypeLogicalArray_errors(testCase)
             testCase.verifyError(@() aisdk.LLMToolArgument(struct("flags", [true false true])), ...
-                "llms:arrayPrototypeNotSupported");
+                "aisdk:arrayPrototypeNotSupported");
         end
 
         function fromPrototypeInfersString(testCase)
@@ -120,35 +120,35 @@ classdef tLLMToolArgument < matlab.unittest.TestCase
 
         function errorOnNumericInput(testCase)
             testCase.verifyError(@() aisdk.LLMToolArgument(42), ...
-                "llmToolArgument:invalidInput");
+                "aisdk:llmToolArgument:invalidInput");
         end
 
         function errorOnLogicalInput(testCase)
             testCase.verifyError(@() aisdk.LLMToolArgument(true), ...
-                "llmToolArgument:invalidInput");
+                "aisdk:llmToolArgument:invalidInput");
         end
 
         function errorOnStringArray(testCase)
             testCase.verifyError(@() aisdk.LLMToolArgument(["a", "b"]), ...
-                "llmToolArgument:invalidInput");
+                "aisdk:llmToolArgument:invalidInput");
         end
 
         function errorOnStructArray(testCase)
             s = [struct("a", 1), struct("a", 2)];
             testCase.verifyError(@() aisdk.LLMToolArgument(s), ...
-                "llmToolArgument:invalidInput");
+                "aisdk:llmToolArgument:invalidInput");
         end
 
         function nonScalarRequired_errors(testCase)
             testCase.verifyError( ...
                 @() aisdk.LLMToolArgument("x", Required=[true, false]), ...
-                "llmToolArgument:nonScalarRequired");
+                "aisdk:llmToolArgument:nonScalarRequired");
         end
 
         function nonScalarNameValue_errors(testCase)
             testCase.verifyError( ...
                 @() aisdk.LLMToolArgument("x", NameValue=[true, false]), ...
-                "llmToolArgument:nonScalarNameValue");
+                "aisdk:llmToolArgument:nonScalarNameValue");
         end
 
         function nameValue_noExplicitRequired_defaultsToFalse(testCase)
@@ -170,17 +170,17 @@ classdef tLLMToolArgument < matlab.unittest.TestCase
 
         function errorOnComplexNumericInPrototype(testCase)
             testCase.verifyError(@() aisdk.LLMToolArgument(struct("z", 1+2i)), ...
-                "llms:unsupportedDatatypeInPrototype");
+                "aisdk:unsupportedDatatypeInPrototype");
         end
 
         function errorOnNestedStructInPrototype(testCase)
             testCase.verifyError(@() aisdk.LLMToolArgument(struct("s", struct("a", 1))), ...
-                "llms:unsupportedDatatypeInPrototype");
+                "aisdk:unsupportedDatatypeInPrototype");
         end
 
         function fromPrototypeNonBaseNumeric_errors(testCase)
             testCase.verifyError(@() aisdk.LLMToolArgument(struct("x", dlarray(0))), ...
-                "llms:unsupportedDatatypeInPrototype");
+                "aisdk:unsupportedDatatypeInPrototype");
         end
     end
 

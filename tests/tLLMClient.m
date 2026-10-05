@@ -5,8 +5,8 @@ classdef tLLMClient < matlab.unittest.TestCase
 
     properties (TestParameter)
         ApiConfig = struct( ...
-            "openai", struct("api", "openai", "model", "gpt-4o", "class", "aisdk.llms.client.OpenAIClient"), ...
-            "ollama", struct("api", "ollama", "model", "llama2", "class", "aisdk.llms.client.OllamaClient"));
+            "openai", struct("api", "openai", "model", "gpt-4o", "class", "aisdk.client.OpenAIClient"), ...
+            "ollama", struct("api", "ollama", "model", "llama2", "class", "aisdk.client.OllamaClient"));
     end
 
     methods (Test, TestTags = {'Unit'}, ParameterCombination="sequential")

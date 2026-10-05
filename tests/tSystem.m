@@ -140,7 +140,7 @@ classdef tSystem < matlab.unittest.TestCase
             tools = aisdk.LLMTool(mcpClient);
 
             testCase.verifyNumElements(tools, 2);
-            testCase.verifyClass(tools, "aisdk.llms.tool.MCPTool");
+            testCase.verifyClass(tools, "aisdk.tool.MCPTool");
             testCase.verifyEqual(tools(1).Name, "add");
             testCase.verifyEqual(tools(2).Name, "multiply");
 

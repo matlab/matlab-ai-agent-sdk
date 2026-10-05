@@ -42,7 +42,7 @@ classdef tExamples < matlab.unittest.TestCase
 
     methods
         function startCapture(testCase,testName)
-            aisdk.llms.client.internal.sendRequestWrapper("open", ...
+            aisdk.client.internal.sendRequestWrapper("open", ...
                 fullfile(testCase.TestDir,"recordings",testName));
         end
     end
@@ -56,7 +56,7 @@ classdef tExamples < matlab.unittest.TestCase
 
     methods(TestMethodTeardown)
         function closeCapture(~)
-            aisdk.llms.client.internal.sendRequestWrapper("close");
+            aisdk.client.internal.sendRequestWrapper("close");
         end
     end
 

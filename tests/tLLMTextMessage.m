@@ -42,13 +42,13 @@ classdef tLLMTextMessage < matlab.unittest.TestCase
         function constructorRejectsNonScalarStringArray_throwsError(testCase)
             testCase.verifyError( ...
                 @() aisdk.LLMTextMessage(["a","b"]), ...
-                "llms:message:InvalidTextContent");
+                "aisdk:message:InvalidTextContent");
         end
 
         function constructorRejectsNumericContent_throwsError(testCase)
             testCase.verifyError( ...
                 @() aisdk.LLMTextMessage(123), ...
-                "llms:message:InvalidTextContent");
+                "aisdk:message:InvalidTextContent");
         end
 
         function constructorRejectsRoleTool_throwsError(testCase)
@@ -72,14 +72,14 @@ classdef tLLMTextMessage < matlab.unittest.TestCase
             msg = aisdk.LLMTextMessage("hello");
             testCase.verifyError( ...
                 @() iSetText(msg, 42), ...
-                "llms:message:InvalidTextContent");
+                "aisdk:message:InvalidTextContent");
         end
 
         function settingText_toStringArray_throwsError(testCase)
             msg = aisdk.LLMTextMessage("hello");
             testCase.verifyError( ...
                 @() iSetText(msg, ["a","b"]), ...
-                "llms:message:InvalidTextContent");
+                "aisdk:message:InvalidTextContent");
         end
     end
 

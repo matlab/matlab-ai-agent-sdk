@@ -84,11 +84,11 @@ classdef LLMToolArgument
         function t = getType(x)
             if isa(x, 'double') || isa(x, 'single') || isinteger(x)
                 if ~isreal(x)
-                    error("llms:unsupportedDatatypeInPrototype", ...
-                        aisdk.llms.internal.MessageCatalog.getMessage("llms:unsupportedDatatypeInPrototype", class(x)));
+                    error("aisdk:unsupportedDatatypeInPrototype", ...
+                        aisdk.internal.MessageCatalog.getMessage("aisdk:unsupportedDatatypeInPrototype", class(x)));
                 elseif ~isscalar(x)
-                    error("llms:arrayPrototypeNotSupported", ...
-                        aisdk.llms.internal.MessageCatalog.getMessage("llms:arrayPrototypeNotSupported"));
+                    error("aisdk:arrayPrototypeNotSupported", ...
+                        aisdk.internal.MessageCatalog.getMessage("aisdk:arrayPrototypeNotSupported"));
                 elseif isfinite(x) && ceil(x) == x
                     t = "integer";
                 else
@@ -96,15 +96,15 @@ classdef LLMToolArgument
                 end
             elseif islogical(x)
                 if ~isscalar(x)
-                    error("llms:arrayPrototypeNotSupported", ...
-                        aisdk.llms.internal.MessageCatalog.getMessage("llms:arrayPrototypeNotSupported"));
+                    error("aisdk:arrayPrototypeNotSupported", ...
+                        aisdk.internal.MessageCatalog.getMessage("aisdk:arrayPrototypeNotSupported"));
                 end
                 t = "boolean";
             elseif ischar(x) || isstring(x)
                 t = "string";
             else
-                error("llms:unsupportedDatatypeInPrototype", ...
-                    aisdk.llms.internal.MessageCatalog.getMessage("llms:unsupportedDatatypeInPrototype", class(x)));
+                error("aisdk:unsupportedDatatypeInPrototype", ...
+                    aisdk.internal.MessageCatalog.getMessage("aisdk:unsupportedDatatypeInPrototype", class(x)));
             end
         end
     end
@@ -119,21 +119,21 @@ end
 
 function mustBeTextOrStruct(x)
 if ~((isstruct(x) && isscalar(x)) || ischar(x) || (isstring(x) && isscalar(x)))
-    error("llmToolArgument:invalidInput", ...
-        aisdk.llms.internal.MessageCatalog.getMessage("llmToolArgument:invalidInput"));
+    error("aisdk:llmToolArgument:invalidInput", ...
+        aisdk.internal.MessageCatalog.getMessage("aisdk:llmToolArgument:invalidInput"));
 end
 end
 
 function validateRequiredForDirectConstruction(value)
 if ~isempty(value) && ~isscalar(value)
-    error("llmToolArgument:nonScalarRequired", ...
-        aisdk.llms.internal.MessageCatalog.getMessage("llmToolArgument:nonScalarRequired"));
+    error("aisdk:llmToolArgument:nonScalarRequired", ...
+        aisdk.internal.MessageCatalog.getMessage("aisdk:llmToolArgument:nonScalarRequired"));
 end
 end
 
 function validateNameValueForDirectConstruction(value)
 if ~isscalar(value)
-    error("llmToolArgument:nonScalarNameValue", ...
-        aisdk.llms.internal.MessageCatalog.getMessage("llmToolArgument:nonScalarNameValue"));
+    error("aisdk:llmToolArgument:nonScalarNameValue", ...
+        aisdk.internal.MessageCatalog.getMessage("aisdk:llmToolArgument:nonScalarNameValue"));
 end
 end

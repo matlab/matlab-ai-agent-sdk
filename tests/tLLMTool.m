@@ -16,18 +16,18 @@ classdef tLLMTool < matlab.unittest.TestCase
     methods (Test, TestTags = {'Unit'})
         function createFromFunctionHandle(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers);
-            testCase.verifyClass(tool, "aisdk.llms.tool.LocalLLMTool");
+            testCase.verifyClass(tool, "aisdk.tool.LocalLLMTool");
             testCase.verifyEqual(tool.Name, "addTwoNumbers");
         end
 
         function createFromStringErrors(testCase)
             testCase.verifyError(@() aisdk.LLMTool("addTwoNumbers"), ...
-                "llms:invalidFunctionDefinition");
+                "aisdk:invalidFunctionDefinition");
         end
 
         function createFromCharVectorErrors(testCase)
             testCase.verifyError(@() aisdk.LLMTool('addTwoNumbers'), ...
-                "llms:invalidFunctionDefinition");
+                "aisdk:invalidFunctionDefinition");
         end
 
         function passesNameValueThrough(testCase)
@@ -65,14 +65,14 @@ classdef tLLMTool < matlab.unittest.TestCase
         function createFromZeroArgFunction(testCase)
             % tempdir: built-in with no input arguments
             tool = aisdk.LLMTool(@tempdir, Description="Get temp directory");
-            testCase.verifyClass(tool, "aisdk.llms.tool.LocalLLMTool");
+            testCase.verifyClass(tool, "aisdk.tool.LocalLLMTool");
             testCase.verifyEqual(tool.Name, "tempdir");
             testCase.verifyEmpty(tool.InputArguments);
         end
 
         function errorOnUnrecognizedInput(testCase)
             testCase.verifyError(@() aisdk.LLMTool(42), ...
-                "llms:invalidFunctionDefinition");
+                "aisdk:invalidFunctionDefinition");
         end
 
         function errorWhenNoArgs(testCase)
@@ -86,7 +86,7 @@ classdef tLLMTool < matlab.unittest.TestCase
 
             tools = aisdk.LLMTool(mockClient);
 
-            testCase.verifyClass(tools, "aisdk.llms.tool.MCPTool");
+            testCase.verifyClass(tools, "aisdk.tool.MCPTool");
             testCase.verifyNumElements(tools, 2);
             testCase.verifyEqual(tools(1).Name, "tool1");
             testCase.verifyEqual(tools(2).Name, "tool2");
@@ -104,7 +104,7 @@ classdef tLLMTool < matlab.unittest.TestCase
         function createFromMCPClient(testCase)
             client = aisdk.MCPClient("mock", Transport="mock");
             tools = aisdk.LLMTool(client);
-            testCase.verifyClass(tools, "aisdk.llms.tool.MCPTool");
+            testCase.verifyClass(tools, "aisdk.tool.MCPTool");
             testCase.verifyNotEmpty(tools);
             testCase.verifyEqual(tools(1).Name, "example-tool");
         end

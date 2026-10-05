@@ -34,7 +34,7 @@ classdef tLLMToolCallMessage < matlab.unittest.TestCase
         function constructorRejectsCharToolCallID(testCase)
             testCase.verifyError( ...
                 @() aisdk.LLMToolCallMessage("myTool", struct(), ToolCallID='someId'), ...
-                "llms:message:InvalidToolCallID");
+                "aisdk:message:InvalidToolCallID");
         end
 
         function constructorRejectsEmptyName(testCase)

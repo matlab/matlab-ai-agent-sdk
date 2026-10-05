@@ -115,7 +115,7 @@ classdef tAIAgent_ContextUsage < matlab.unittest.TestCase
             agent.run("Hi");
             testCase.assertEqual(agent.LastInputTokens, 100);
 
-            agent.Messages = aisdk.llms.message.LLMMessage.empty(1,0);
+            agent.Messages = aisdk.message.LLMMessage.empty(1,0);
 
             testCase.verifyEqual(agent.LastInputTokens, 100, ...
                 "Replacing Messages should not reset LastInputTokens.");

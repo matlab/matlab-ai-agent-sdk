@@ -58,5 +58,5 @@ agent.Messages %[output:0a396d58]
 %   data: {"dataType":"textualVariable","outputData":{"name":"response","value":"\"123 + 100100100 = 100100223\""}}
 %---
 %[output:0a396d58]
-%   data: {"dataType":"textualVariable","outputData":{"name":"ans","value":"  1×4 <a href=\"matlab:helpPopup('aisdk.llms.message.LLMMessage')\" style=\"font-weight:bold\">LLMMessage<\/a> array with messages:\n\n    1    User         Text         \"What's 123 + 100100100?\"\n    2    Assistant    Tool Call    \"addTwoNumbers({\"a\":123,\"b\":1.001001E+8})\"\n    3    Tool         Text         \"100100223\"\n    4    Assistant    Text         \"123 + 100100100 = 100100223\"\n"}}
+%   data: {"dataType":"textualVariable","outputData":{"name":"ans","value":"  1×4 <a href=\"matlab:helpPopup('aisdk.message.LLMMessage')\" style=\"font-weight:bold\">LLMMessage<\/a> array with messages:\n\n    1    User         Text         \"What's 123 + 100100100?\"\n    2    Assistant    Tool Call    \"addTwoNumbers({\"a\":123,\"b\":1.001001E+8})\"\n    3    Tool         Text         \"100100223\"\n    4    Assistant    Text         \"123 + 100100100 = 100100223\"\n"}}
 %---

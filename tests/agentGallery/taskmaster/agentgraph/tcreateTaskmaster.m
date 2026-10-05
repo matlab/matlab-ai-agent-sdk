@@ -68,7 +68,7 @@ function [client, taskmaster] = buildTaskmaster(generateOutputs)
     nodes(2).Description = "Second stage";
     edges = ["A","B"];
     graph = agentgraph.AgentGraph(nodes, edges);
-    allTools = aisdk.llms.tool.LLMTool.empty(1,0);
+    allTools = aisdk.tool.LLMTool.empty(1,0);
     workspace = struct();
 
     taskmaster = agentgraph.createTaskmaster(client, graph, allTools, workspace);

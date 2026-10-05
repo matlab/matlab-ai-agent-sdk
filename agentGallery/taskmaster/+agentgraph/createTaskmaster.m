@@ -17,7 +17,7 @@ function taskmaster = createTaskmaster(client, graph, allTools, workspace)
     arguments
         client
         graph (1,1) agentgraph.AgentGraph
-        allTools (1,:) aisdk.llms.tool.LLMTool
+        allTools (1,:) aisdk.tool.LLMTool
         workspace struct
     end
 

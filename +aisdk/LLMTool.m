@@ -14,7 +14,7 @@ function tools = LLMTool(toolDefinition, varargin)
 %       tool = LLMTool(@sin, Description="Compute sine")
 %       tool = LLMTool(@(x) x+1, Name="increment", Description="Add one")
 %
-%   See also: aisdk.llms.tool.LocalLLMTool, aisdk.llms.tool.MCPTool
+%   See also: aisdk.tool.LocalLLMTool, aisdk.tool.MCPTool
 
 % Copyright 2026 The MathWorks, Inc.
 
@@ -26,11 +26,11 @@ arguments (Repeating)
 end
 
 if isa(toolDefinition, "function_handle")
-    tools = aisdk.llms.tool.LocalLLMTool(toolDefinition, varargin{1:end});
+    tools = aisdk.tool.LocalLLMTool(toolDefinition, varargin{1:end});
 elseif isa(toolDefinition, "mcpHTTPClient") || isa(toolDefinition, "aisdk.MCPClient")
-    tools = aisdk.llms.tool.MCPTool(toolDefinition, varargin{1:end});
+    tools = aisdk.tool.MCPTool(toolDefinition, varargin{1:end});
 else
-    error("llms:invalidFunctionDefinition", ...
-        aisdk.llms.internal.MessageCatalog.getMessage("llms:invalidFunctionDefinition"));
+    error("aisdk:invalidFunctionDefinition", ...
+        aisdk.internal.MessageCatalog.getMessage("aisdk:invalidFunctionDefinition"));
 end
 end

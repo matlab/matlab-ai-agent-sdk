@@ -67,20 +67,20 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
         function constructorRejectsEmptyArray_throwsError(testCase)
             testCase.verifyError( ...
                 @() aisdk.LLMImageMessage(uint8([])), ...
-                "llms:message:InvalidImageContent");
+                "aisdk:message:InvalidImageContent");
         end
 
         function constructorRejectsInvalidDimensions_throwsError(testCase)
             img = uint8(ones(255, 4, 4, 2));
             testCase.verifyError( ...
                 @() aisdk.LLMImageMessage(img), ...
-                "llms:message:InvalidImageContent");
+                "aisdk:message:InvalidImageContent");
         end
 
         function constructorRejectsNonImageSource_throwsError(testCase)
             testCase.verifyError( ...
                 @() aisdk.LLMImageMessage({1,2,3}), ...
-                "llms:message:InvalidImageSource");
+                "aisdk:message:InvalidImageSource");
         end
 
         function constructorAcceptsFourChannel_storesContent(testCase)
@@ -101,7 +101,7 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
                 "resources", "fixtures", "not_an_image.html");
             testCase.verifyError( ...
                 @() aisdk.LLMImageMessage(fixture), ...
-                "llms:message:NotAnImage");
+                "aisdk:message:NotAnImage");
         end
 
         function constructorFromNonexistentFile_throwsError(testCase)
@@ -116,7 +116,7 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
                 @() testCase.verifyError( ...
                     @() aisdk.LLMImageMessage("https://example.com/not_real.jpg", ...
                         DownloadFcn=failingDownload), ...
-                    "llms:message:NotAnImage"));
+                    "aisdk:message:NotAnImage"));
         end
     end
 

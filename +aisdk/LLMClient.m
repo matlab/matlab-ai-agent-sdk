@@ -15,12 +15,12 @@ function client = LLMClient(api, modelName, varargin)
 %       client = LLMClient("openai", "gpt-4o", Temperature=0.7)
 %       client = LLMClient("ollama", "llama2", TopK=40)
 %
-%   See also: aisdk.llms.client.OpenAIClient, aisdk.llms.client.OllamaClient
+%   See also: aisdk.client.OpenAIClient, aisdk.client.OllamaClient
 
 % Copyright 2026 The MathWorks, Inc.
 
-%#function aisdk.llms.client.openai.createClient
-%#function aisdk.llms.client.ollama.createClient
+%#function aisdk.client.openai.createClient
+%#function aisdk.client.ollama.createClient
 
 arguments
     api       (1,1) string {mustBeProvider(api)}
@@ -31,11 +31,11 @@ arguments (Repeating)
     varargin
 end
 
-client = feval("aisdk.llms.client." + api + ".createClient", modelName, varargin{:});
+client = feval("aisdk.client." + api + ".createClient", modelName, varargin{:});
 end
 
 function mustBeProvider(api)
-    if ~isempty(which("aisdk.llms.client." + api + ".createClient"))
+    if ~isempty(which("aisdk.client." + api + ".createClient"))
         return
     end
     mustBeMember(api, ["openai", "ollama"]);

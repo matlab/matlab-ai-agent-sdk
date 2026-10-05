@@ -28,7 +28,7 @@ classdef MCPClient < handle
 %   construction, which affects later requests only.
 %
 %   After construction, the available tools are exposed as an array of
-%   aisdk.llms.tool.MCPTool objects in the Tools property, ready to pass
+%   aisdk.tool.MCPTool objects in the Tools property, ready to pass
 %   to an aisdk.AIAgent or aisdk.LLMClient.
 %
 %   Note: Using stdio transport executes an external process. Only connect
@@ -46,14 +46,14 @@ classdef MCPClient < handle
 % Copyright 2026 The MathWorks, Inc.
 
     properties (SetAccess=private, Transient)
-        Tools (1,:) aisdk.llms.tool.MCPTool
+        Tools (1,:) aisdk.tool.MCPTool
     end
 
     properties (SetAccess=private)
         ToolPrefix (1,1) string = ""
     end
 
-    properties (Access = {?aisdk.llms.tool.MCPTool}, Transient)
+    properties (Access = {?aisdk.tool.MCPTool}, Transient)
         % ServerTools Raw tool descriptions returned by the server.
         %   Consumed by the MCPTool constructor to build the public Tools
         %   array. Not part of the public API.
@@ -100,7 +100,7 @@ classdef MCPClient < handle
                 % than against an internal MCPClient helper.
                 throwAsCaller(err);
             end
-            obj.Tools = aisdk.llms.tool.MCPTool(obj);
+            obj.Tools = aisdk.tool.MCPTool(obj);
         end
 
         function delete(obj)
@@ -115,7 +115,7 @@ classdef MCPClient < handle
 
     % prefixedToolName is applied by the MCPTool constructor when building
     % the public Tools array; it is not part of the public API.
-    methods (Access = {?aisdk.llms.tool.MCPTool})
+    methods (Access = {?aisdk.tool.MCPTool})
         function prefixed = prefixedToolName(obj, rawName)
             if obj.ToolPrefix == ""
                 prefixed = string(rawName);
@@ -129,7 +129,7 @@ classdef MCPClient < handle
     % it is not part of the public API. tMCPClient exercises the
     % name-resolution and argument-marshalling paths that are not otherwise
     % reachable through the public Tools array.
-    methods (Access = {?aisdk.llms.tool.MCPTool, ?tMCPClient})
+    methods (Access = {?aisdk.tool.MCPTool, ?tMCPClient})
         function result = callTool(obj, tool, varargin)
             arguments
                 obj (1,1) aisdk.MCPClient
@@ -155,8 +155,8 @@ classdef MCPClient < handle
                 toolName = string(tool);
                 if mod(numel(varargin), 2) ~= 0
                     error("aisdk:MCPClient:oddNameValuePairs", ...
-                        aisdk.llms.internal.MessageCatalog.getMessage( ...
-                        "llms:mcpClient:oddNameValuePairs"));
+                        aisdk.internal.MessageCatalog.getMessage( ...
+                        "aisdk:mcpClient:oddNameValuePairs"));
                 end
                 args = struct();
                 for i = 1:2:numel(varargin)
@@ -177,7 +177,7 @@ classdef MCPClient < handle
         function obj = loadobj(obj)
             obj.connect();
             obj.ServerTools = obj.retrieveTools();
-            obj.Tools = aisdk.llms.tool.MCPTool(obj);
+            obj.Tools = aisdk.tool.MCPTool(obj);
         end
     end
 
@@ -259,41 +259,41 @@ classdef MCPClient < handle
         end
 
         function throwServerError(code, rawMessage)
-            catalog = @aisdk.llms.internal.MessageCatalog.getMessage;
+            catalog = @aisdk.internal.MessageCatalog.getMessage;
             switch code
                 case 400
                     error("aisdk:MCPClient:badRequest", "%s", ...
-                        catalog("llms:mcpClient:badRequest"));
+                        catalog("aisdk:mcpClient:badRequest"));
                 case 401
                     error("aisdk:MCPClient:unauthorized", "%s", ...
-                        catalog("llms:mcpClient:unauthorized"));
+                        catalog("aisdk:mcpClient:unauthorized"));
                 case 403
                     error("aisdk:MCPClient:forbidden", "%s", ...
-                        catalog("llms:mcpClient:forbidden"));
+                        catalog("aisdk:mcpClient:forbidden"));
                 case 404
                     error("aisdk:MCPClient:notFound", "%s", ...
-                        catalog("llms:mcpClient:notFound"));
+                        catalog("aisdk:mcpClient:notFound"));
                 case 405
                     error("aisdk:MCPClient:methodNotAllowed", "%s", ...
-                        catalog("llms:mcpClient:methodNotAllowed"));
+                        catalog("aisdk:mcpClient:methodNotAllowed"));
                 case 502
                     error("aisdk:MCPClient:badGateway", "%s", ...
-                        catalog("llms:mcpClient:badGateway"));
+                        catalog("aisdk:mcpClient:badGateway"));
                 case 1003
                     error("aisdk:MCPClient:hostNotFound", "%s", ...
-                        catalog("llms:mcpClient:hostNotFound"));
+                        catalog("aisdk:mcpClient:hostNotFound"));
                 case 1004
                     error("aisdk:MCPClient:connectionRefused", "%s", ...
-                        catalog("llms:mcpClient:connectionRefused"));
+                        catalog("aisdk:mcpClient:connectionRefused"));
                 case 1005
                     error("aisdk:MCPClient:connectionTimeout", "%s", ...
-                        catalog("llms:mcpClient:connectionTimeout"));
+                        catalog("aisdk:mcpClient:connectionTimeout"));
                 case 1100
                     error("aisdk:MCPClient:stdioNotFound", "%s", ...
-                        catalog("llms:mcpClient:stdioNotFound"));
+                        catalog("aisdk:mcpClient:stdioNotFound"));
                 case 1101
                     error("aisdk:MCPClient:stdioPermission", "%s", ...
-                        catalog("llms:mcpClient:stdioPermission"));
+                        catalog("aisdk:mcpClient:stdioPermission"));
                 otherwise
                     error("aisdk:MCPClient:serverError", "%s", rawMessage);
             end
@@ -319,14 +319,14 @@ classdef MCPClient < handle
                 connectionType = transport;
             end
 
-            catalog = @aisdk.llms.internal.MessageCatalog.getMessage;
+            catalog = @aisdk.internal.MessageCatalog.getMessage;
             if connectionType == "stdio"
                 if isUrl
                     % Handing a URL to the process launcher fails deep
                     % inside the middleware with an unhelpful "no such
                     % file or directory"; reject it here instead.
                     error("aisdk:MCPClient:urlEndpointRequiresHttpTransport", ...
-                        "%s", catalog("llms:mcpClient:urlEndpointRequiresHttpTransport"));
+                        "%s", catalog("aisdk:mcpClient:urlEndpointRequiresHttpTransport"));
                 end
                 if isscalar(endpoint)
                     parts = split(endpoint);
@@ -341,11 +341,11 @@ classdef MCPClient < handle
             else
                 if ~isscalar(endpoint)
                     error("aisdk:MCPClient:nonScalarURL", ...
-                        "%s", catalog("llms:mcpClient:nonScalarURL"));
+                        "%s", catalog("aisdk:mcpClient:nonScalarURL"));
                 end
                 if ~isUrl
                     error("aisdk:MCPClient:httpTransportRequiresUrl", ...
-                        "%s", catalog("llms:mcpClient:httpTransportRequiresUrl", ...
+                        "%s", catalog("aisdk:mcpClient:httpTransportRequiresUrl", ...
                         transport));
                 end
                 connectUrl = endpoint;
@@ -358,7 +358,7 @@ end
 function mustBeValidToolPrefixOrEmpty(name)
     if name ~= "" && ~isvarname(char(name))
         error("aisdk:MCPClient:invalidToolPrefix", ...
-            aisdk.llms.internal.MessageCatalog.getMessage( ...
-            "llms:mcpClient:invalidToolPrefix"));
+            aisdk.internal.MessageCatalog.getMessage( ...
+            "aisdk:mcpClient:invalidToolPrefix"));
     end
 end

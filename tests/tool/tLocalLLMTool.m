@@ -1,0 +1,781 @@
+classdef tLocalLLMTool < matlab.unittest.TestCase
+% Tests for aisdk.tool.LocalLLMTool.
+
+%   Copyright 2026 The MathWorks, Inc.
+
+    methods (TestClassSetup)
+        function addFunctionsToPath(testCase)
+            testsRoot = fileparts(fileparts(mfilename("fullpath")));
+            testCase.applyFixture(matlab.unittest.fixtures.PathFixture( ...
+                fullfile(testsRoot, "resources", "functions")));
+        end
+    end
+
+    properties (TestParameter)
+        VariableSizeKind = {"varargin", "varargout"}
+        AddTwoNumbersFunction = struct( ...
+            "PathFunction", @addTwoNumbers, ...
+            "LocalFunction", @localAdd, ...
+            "StaticClassMethod", @ToolTestHelper.addNumbers)
+    end
+
+    methods (Test, TestTags = {'Unit'})
+        function constructFromFunctionHandle(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            testCase.verifyEqual(tool.Name, "addTwoNumbers");
+        end
+
+        function constructFromStringErrors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool("addTwoNumbers"), ...
+                "MATLAB:validation:UnableToConvert");
+        end
+
+        function constructFromFunctionWithUntypedArgument_leavesDataTypeEmpty(testCase)
+            tool = aisdk.tool.LocalLLMTool(@untypedArgument);
+            testCase.verifyEqual(tool.InputArguments(1).DataType, "");
+        end
+
+        function extractsDescriptionFromMetadata(testCase, AddTwoNumbersFunction)
+            tool = aisdk.tool.LocalLLMTool( ...
+                AddTwoNumbersFunction, Name="addNumbers");
+            testCase.verifyEqual(tool.Description, "Add two numbers together.");
+        end
+
+        function extractsInputsFromMetadata(testCase, AddTwoNumbersFunction)
+            tool = aisdk.tool.LocalLLMTool( ...
+                AddTwoNumbersFunction, Name="addNumbers");
+            testCase.verifyLength(tool.InputArguments, 2);
+            testCase.verifyEqual([tool.InputArguments.Name], ["a", "b"]);
+            testCase.verifyEqual([tool.InputArguments.DataType], ["number", "number"]);
+        end
+
+        function extractsOutputsFromMetadata(testCase, AddTwoNumbersFunction)
+            tool = aisdk.tool.LocalLLMTool( ...
+                AddTwoNumbersFunction, Name="addNumbers");
+            testCase.verifyLength(tool.OutputArguments, 1);
+            testCase.verifyEqual(tool.OutputArguments.Name, "c");
+        end
+
+        function nameValueFunction_description_extractedFromMetadata(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbersUsingNVP);
+            testCase.verifySubstring(tool.Description, "Add two numbers together");
+        end
+
+        function detectsNVPInputs(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbersUsingNVP);
+            testCase.verifyLength(tool.InputArguments, 2);
+            testCase.verifyTrue(tool.InputArguments(1).NameValue);
+            testCase.verifyTrue(tool.InputArguments(2).NameValue);
+        end
+
+        function nvpArgsAreNotRequired(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbersUsingNVP);
+            testCase.verifyFalse(tool.InputArguments(1).Required);
+            testCase.verifyFalse(tool.InputArguments(2).Required);
+        end
+
+        function detectsPositionalInputs(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            testCase.verifyFalse(tool.InputArguments(1).NameValue);
+            testCase.verifyFalse(tool.InputArguments(2).NameValue);
+        end
+
+        function nvpArgsWithoutDefaultAreNotRequired(testCase)
+            tool = aisdk.tool.LocalLLMTool(@nvWithoutDefault);
+            testCase.verifyFalse(tool.InputArguments(1).Required);
+            testCase.verifyFalse(tool.InputArguments(2).Required);
+        end
+
+        function positionalArgsAreRequired(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            testCase.verifyTrue(tool.InputArguments(1).Required);
+            testCase.verifyTrue(tool.InputArguments(2).Required);
+        end
+
+        function mixedPositionalAndNVPRequired(testCase)
+            tool = aisdk.tool.LocalLLMTool(@greetUser);
+            testCase.verifyTrue(tool.InputArguments(1).Required);
+            testCase.verifyFalse(tool.InputArguments(2).Required);
+        end
+
+        function titleDefaultsToName(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            testCase.verifyEqual(tool.DisplayTitle, "addTwoNumbers");
+        end
+
+        function customTitle(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers, DisplayTitle="My Adder");
+            testCase.verifyEqual(tool.DisplayTitle, "My Adder");
+        end
+
+        function customName(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers, Name="myAdd");
+            testCase.verifyEqual(tool.Name, "myAdd");
+        end
+
+        function customDescriptionOverridesMetadata(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers, Description="Custom desc");
+            testCase.verifyEqual(tool.Description, "Custom desc");
+        end
+
+        function defaultAnnotations(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            testCase.verifyEqual(tool.Annotations, struct());
+        end
+
+        function customAnnotations(testCase)
+            ann = struct("category", "math");
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers, Annotations=ann);
+            testCase.verifyEqual(tool.Annotations, ann);
+        end
+
+        function approvalRequest_withDefault_isNever(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            testCase.verifyEqual(tool.ApprovalRequest, aisdk.tool.ApprovalRequest.never);
+        end
+
+        function approvalRequest_withCustomValue_setsEnum(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers, ApprovalRequest="always");
+            testCase.verifyEqual(tool.ApprovalRequest, aisdk.tool.ApprovalRequest.always);
+        end
+
+        function inputsFromPrototypeStruct(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers, ...
+                InputArguments=struct("a", 5, "b", 3));
+            testCase.verifyLength(tool.InputArguments, 2);
+            testCase.verifyEqual(tool.InputArguments(1).Name, "a");
+            testCase.verifyEqual(tool.InputArguments(1).DataType, "integer");
+        end
+
+        function inputsFromllmToolArgument(testCase)
+            args = [aisdk.LLMToolArgument("a", DataType="number", Description="First"), ...
+                  aisdk.LLMToolArgument("b", DataType="number", Description="Second")];
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers, InputArguments=args);
+            testCase.verifyLength(tool.InputArguments, 2);
+            testCase.verifyEqual(tool.InputArguments(1).Description, "First");
+        end
+
+        function outputsFromllmToolArgument(testCase)
+            args = aisdk.LLMToolArgument("result", DataType="number", Description="Sum");
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers, OutputArguments=args);
+            testCase.verifyLength(tool.OutputArguments, 1);
+            testCase.verifyEqual(tool.OutputArguments(1).Description, "Sum");
+        end
+
+        function outputsFromPrototypeStruct(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers, ...
+                OutputArguments=struct("result", 1.0));
+            testCase.verifyLength(tool.OutputArguments, 1);
+            testCase.verifyEqual(tool.OutputArguments.Name, "result");
+        end
+
+        function callWithPositionalArgs(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            output = tool.evaluate(struct("a", 3, "b", 4));
+            testCase.verifyEqual(output.c, 7);
+        end
+
+        function callWithNVPArgs(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbersUsingNVP);
+            output = tool.evaluate(struct("a", 10, "b", 20));
+            testCase.verifyEqual(output.c, 30);
+        end
+
+        function callSkipsOmittedOptionalArg(testCase)
+            tool = aisdk.tool.LocalLLMTool(@greetUser);
+            output = tool.evaluate(struct("name", "Alice"));
+            testCase.verifyEqual(output.msg, "Hello, Alice!");
+        end
+
+        function callErrorsOnMissingRequiredArg(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            testCase.verifyError(@() tool.evaluate(struct("a", 1)), ...
+                "aisdk:requiredArgumentNotFound");
+        end
+
+        function isLLMTool(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            testCase.verifyInstanceOf(tool, "aisdk.tool.LLMTool");
+        end
+
+        function isCallableTool(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            testCase.verifyInstanceOf(tool, "aisdk.tool.internal.CallableTool");
+        end
+
+        function select_existingName_returnsTool(testCase)
+            tool1 = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            tool2 = aisdk.tool.LocalLLMTool(@addTwoNumbersUsingNVP);
+            tools = [tool1, tool2];
+            found = tools.select("addTwoNumbersUsingNVP");
+            testCase.verifyEqual(found.Name, "addTwoNumbersUsingNVP");
+        end
+
+        function select_unknownName_throwsError(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            testCase.verifyError(@() tool.select("nonexistent"), ...
+                "aisdk:invalidFunctionCall");
+        end
+
+        function metadataDoubleTypeMapsToNumber(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            testCase.verifyEqual(tool.InputArguments(1).DataType, "number");
+            testCase.verifyEqual(tool.InputArguments(2).DataType, "number");
+        end
+
+        function heterogeneousConcatenation(testCase)
+            tool1 = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            tool2 = aisdk.tool.LocalLLMTool(@addTwoNumbersUsingNVP);
+            tools = [tool1, tool2];
+            testCase.verifyLength(tools, 2);
+            testCase.verifyClass(tools, "aisdk.tool.LocalLLMTool");
+        end
+
+        function constructFromEigWithMultipleOutputs(testCase)
+            tool = aisdk.tool.LocalLLMTool(@eig, ...
+                Description="Eigenvalue decomposition", ...
+                InputArguments=aisdk.LLMToolArgument("A", ...
+                    DataType="number", Description="Input matrix"), ...
+                OutputArguments=[...
+                    aisdk.LLMToolArgument("V", Description="Right eigenvectors"), ...
+                    aisdk.LLMToolArgument("D", Description="Eigenvalues"), ...
+                    aisdk.LLMToolArgument("W", Description="Left eigenvectors")]);
+            testCase.verifyEqual(tool.Name, "eig");
+            testCase.verifyEqual(tool.Description, "Eigenvalue decomposition");
+            testCase.verifyLength(tool.InputArguments, 1);
+            testCase.verifyEqual(tool.InputArguments(1).Name, "A");
+            testCase.verifyLength(tool.OutputArguments, 3);
+            testCase.verifyEqual(tool.OutputArguments(1).Name, "V");
+            testCase.verifyEqual(tool.OutputArguments(2).Name, "D");
+            testCase.verifyEqual(tool.OutputArguments(3).Name, "W");
+        end
+
+        function callEigWithMultipleOutputs(testCase)
+            tool = aisdk.tool.LocalLLMTool(@eig, ...
+                Description="Eigenvalue decomposition", ...
+                InputArguments=aisdk.LLMToolArgument("A", ...
+                    DataType="number", Description="Input matrix"), ...
+                OutputArguments=[...
+                    aisdk.LLMToolArgument("V", Description="Right eigenvectors"), ...
+                    aisdk.LLMToolArgument("D", Description="Eigenvalues"), ...
+                    aisdk.LLMToolArgument("W", Description="Left eigenvectors")]);
+
+            % Simulate args as decoded from LLM JSON:
+            % {"A": [[3,1,0],[0,3,1],[0,0,3]]}
+            args = jsondecode('{"A":[[3,1,0],[0,3,1],[0,0,3]]}');
+
+            output = tool.evaluate(args);
+            [expectedV, expectedD, expectedW] = eig([3 1 0; 0 3 1; 0 0 3]);
+            testCase.verifyEqual(output.V, expectedV, AbsTol=1e-14, RelTol=1e-10);
+            testCase.verifyEqual(output.D, expectedD, AbsTol=1e-14, RelTol=1e-10);
+            testCase.verifyEqual(output.W, expectedW, AbsTol=1e-14, RelTol=1e-10);
+        end
+
+        function callWithNoRegisteredOutputs(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            tool.OutputArguments = aisdk.LLMToolArgument.empty(1,0);
+            output = tool.evaluate(struct("a", 3, "b", 4));
+            testCase.verifyEqual(output, 7);
+        end
+
+        function callNVPWithNoRegisteredOutputs(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbersUsingNVP);
+            tool.OutputArguments = aisdk.LLMToolArgument.empty(1,0);
+            output = tool.evaluate(struct("a", 10, "b", 20));
+            testCase.verifyEqual(output, 30);
+        end
+
+        function callContextualWithNoRegisteredOutputs(testCase)
+            tool = aisdk.tool.LocalLLMTool(@contextualAdd, ...
+                Description="Add two numbers with context", ...
+                InputArguments=[...
+                    aisdk.LLMToolArgument("a", DataType="number"), ...
+                    aisdk.LLMToolArgument("b", DataType="number")], ...
+                OutputArguments=aisdk.LLMToolArgument.empty(1,0), ...
+                Workspace="agent");
+
+            args = struct("a", 3, "b", 4);
+
+            workspace = struct("called", false);
+            [output, workspace] = tool.evaluate(args, workspace);
+            testCase.verifyEqual(output, 7);
+            testCase.verifyTrue(workspace.called);
+        end
+
+        function callEigWithSingleOutput(testCase)
+            tool = aisdk.tool.LocalLLMTool(@eig, ...
+                Description="Eigenvalues of a matrix", ...
+                InputArguments=aisdk.LLMToolArgument("A", ...
+                    DataType="number", Description="Input matrix"), ...
+                OutputArguments=aisdk.LLMToolArgument("e", ...
+                    Description="Column vector containing the eigenvalues of the input matrix"));
+
+            args = jsondecode('{"A":[[3,1,0],[0,3,1],[0,0,3]]}');
+
+            output = tool.evaluate(args);
+            expected = eig([3 1 0; 0 3 1; 0 0 3]);
+            testCase.verifyEqual(output.e, expected);
+        end
+
+        function callContextualEigWithMultipleOutputs(testCase)
+            tool = aisdk.tool.LocalLLMTool(@contextualEig, ...
+                Description="Contextual eigenvalue decomposition", ...
+                InputArguments=aisdk.LLMToolArgument("A", ...
+                    DataType="number", Description="Input matrix"), ...
+                OutputArguments=[...
+                    aisdk.LLMToolArgument("V", Description="Right eigenvectors"), ...
+                    aisdk.LLMToolArgument("D", Description="Eigenvalues"), ...
+                    aisdk.LLMToolArgument("W", Description="Left eigenvectors")], ...
+                Workspace="agent");
+
+            args = jsondecode('{"A":[[3,1,0],[0,3,1],[0,0,3]]}');
+
+            workspace = struct("called", false);
+            [output, workspace] = tool.evaluate(args, workspace);
+            [expectedV, expectedD, expectedW] = eig([3 1 0; 0 3 1; 0 0 3]);
+            testCase.verifyEqual(output.V, expectedV, AbsTol=1e-14, RelTol=1e-10);
+            testCase.verifyEqual(output.D, expectedD, AbsTol=1e-14, RelTol=1e-10);
+            testCase.verifyEqual(output.W, expectedW, AbsTol=1e-14, RelTol=1e-10);
+            testCase.verifyTrue(workspace.called);
+        end
+
+        function anonymousFunction_withExplicitArguments_evaluatesCorrectly(testCase)
+            tool = aisdk.tool.LocalLLMTool(@(x,y) x+y, Name="myAdder", ...
+                InputArguments=[aisdk.LLMToolArgument("x", DataType="number"), ...
+                    aisdk.LLMToolArgument("y", DataType="number")], ...
+                OutputArguments=aisdk.LLMToolArgument("result", DataType="number"));
+            output = tool.evaluate(struct("x", 3, "y", 4));
+            testCase.verifyEqual(output.result, 7);
+        end
+
+        function anonymousFunction_nameValue_setsName(testCase)
+            tool = aisdk.tool.LocalLLMTool(@(x,y) x+y, Name="myAdder", ...
+                InputArguments=[aisdk.LLMToolArgument("x", DataType="number"), ...
+                    aisdk.LLMToolArgument("y", DataType="number")], ...
+                OutputArguments=aisdk.LLMToolArgument("result"));
+            testCase.verifyEqual(tool.Name, "myAdder");
+        end
+
+        function namedFunction_nameValue_overridesFuncName(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers, Name="customName");
+            testCase.verifyEqual(tool.Name, "customName");
+        end
+
+        function anonFunctionWithoutNameErrors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@(x,y) x+y), ...
+                "aisdk:anonymousFunctionRequiresName");
+        end
+
+        function duplicateInputNameErrors(testCase)
+            dupeInputs = [aisdk.LLMToolArgument("x", DataType="number"), ...
+                          aisdk.LLMToolArgument("x", DataType="number")];
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@addTwoNumbers, InputArguments=dupeInputs), ...
+                "aisdk:duplicateArgumentNames");
+        end
+
+        function duplicateOutputNameErrors(testCase)
+            dupeOutputs = [aisdk.LLMToolArgument("y", DataType="number"), ...
+                           aisdk.LLMToolArgument("y", DataType="number")];
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@addTwoNumbers, OutputArguments=dupeOutputs), ...
+                "aisdk:duplicateArgumentNames");
+        end
+
+        function constructor_invalidInputArguments_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@addTwoNumbers, InputArguments=42), ...
+                "aisdk:invalidToolArguments");
+        end
+
+        function constructor_invalidOutputArguments_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@addTwoNumbers, OutputArguments="bad"), ...
+                "aisdk:invalidToolArguments");
+        end
+
+        function constructor_invalidDefinition_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(42), ...
+                "MATLAB:validation:UnableToConvert");
+        end
+
+        function construct_noWorkspaceSpecified_defaultsToNone(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            testCase.verifyEqual(tool.Workspace, "none");
+        end
+
+        function construct_workspaceNone_setsNone(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers, Workspace="none");
+            testCase.verifyEqual(tool.Workspace, "none");
+        end
+
+        function construct_invalidWorkspace_errors(testCase)
+            testCase.verifyError(@() aisdk.tool.LocalLLMTool(@addTwoNumbers, ...
+                Workspace="invalid"), ...
+                "MATLAB:validators:mustBeMember");
+        end
+
+        function construct_workspaceAgent_withNoLLMVisibleOutput_errors(testCase)
+            testCase.verifyError(@() aisdk.tool.LocalLLMTool( ...
+                @singleOutputWorkspace, Name="myTool", ...
+                Description="Tool with only workspace output", ...
+                Workspace="agent"), ...
+                "aisdk:workspaceRequiresMultipleOutputs");
+        end
+
+        function construct_workspaceAgent_varargout_errors(testCase)
+            testCase.verifyError(@() aisdk.tool.LocalLLMTool( ...
+                @varargoutWorkspace, Name="varTool", ...
+                Description="Tool with varargout", ...
+                Workspace="agent"), ...
+                "aisdk:workspaceDoesNotSupportVarargout");
+        end
+
+        function constructor_nonexistentFunction_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@functionThatDoesNotExist), ...
+                "aisdk:cannotInferInputArguments");
+        end
+
+        function constructor_noMetadata_noInputArguments_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@(a,b) a+b, Name="add"), ...
+                "aisdk:cannotInferInputArguments");
+        end
+
+        function constructor_noMetadata_withExplicitArguments_succeeds(testCase)
+            args = aisdk.LLMToolArgument("a", DataType="number");
+            tool = aisdk.tool.LocalLLMTool(@(a) a*2, Name="double", ...
+                InputArguments=args, OutputArguments=aisdk.LLMToolArgument("result"));
+            testCase.verifyLength(tool.InputArguments, 1);
+        end
+
+        function constructor_noMetadata_noOutputArguments_nargoutNotOne_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@(a) a+1, Name="inc", ...
+                    InputArguments=aisdk.LLMToolArgument("a", DataType="number")), ...
+                "aisdk:unknownOutputCount");
+        end
+
+        function constructor_vararginInInputs_noInputArguments_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@typedWithVarargin), ...
+                "aisdk:vararginInInputs");
+        end
+
+        function constructor_vararginInInputs_withInputArguments_succeeds(testCase)
+            args = [aisdk.LLMToolArgument("x", DataType="number"), ...
+                    aisdk.LLMToolArgument("y", DataType="number")];
+            tool = aisdk.tool.LocalLLMTool(@typedWithVarargin, ...
+                InputArguments=args);
+            testCase.verifyLength(tool.InputArguments, 2);
+        end
+
+        function constructor_varargoutInOutputs_noOutputArguments_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@size, ...
+                    InputArguments=aisdk.LLMToolArgument("A", DataType="number")), ...
+                "aisdk:varargoutInOutputs");
+        end
+
+        function constructor_varargoutInOutputs_withOutputArguments_succeeds(testCase)
+            outs = [aisdk.LLMToolArgument("m"), aisdk.LLMToolArgument("n")];
+            tool = aisdk.tool.LocalLLMTool(@size, ...
+                InputArguments=aisdk.LLMToolArgument("A", DataType="number"), ...
+                OutputArguments=outs);
+            testCase.verifyLength(tool.OutputArguments, 2);
+        end
+
+        function constructor_logicalInput_mapsToBoolean(testCase)
+            tool = aisdk.tool.LocalLLMTool(@logicalInput);
+            testCase.verifyEqual(tool.InputArguments(1).DataType, "boolean");
+        end
+
+        function constructor_unknownType_errors(testCase)
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@tableInput), ...
+                "aisdk:unsupportedMATLABType");
+        end
+
+        function constructor_withNamespacedFunction_replacesDotsWithUnderscores(testCase)
+            tool = aisdk.tool.LocalLLMTool(@some.namespace.testFcn);
+            testCase.verifyEqual(tool.Name, "some_namespace_testFcn");
+        end
+
+        function constructor_nonScalarMetafunction_errors(testCase)
+            
+            testCase.assumeEmpty(which('metafunction'), ...
+                "Only applies on 25b and earlier (matlab.internal.metafunction path)");
+
+            testCase.assumeFalse( ...
+                isMATLABReleaseOlderThan("R2024b"), ...
+                "count metadata is scalar and cannot trigger this path.");
+            
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@count), ...
+                "aisdk:cannotInferInputArguments");
+        end
+
+        function constructor_nonScalarMetafunction_succeedsWithExplicitArgs(testCase)
+            % Only applies on 25b and earlier (matlab.internal.metafunction path)
+            testCase.assumeEmpty(which('metafunction'));
+            tool = aisdk.tool.LocalLLMTool(@count, ...
+                InputArguments=struct(input="str"), ...
+                OutputArguments=struct(n=0));
+            testCase.verifyEqual(tool.InputArguments.Name, "input");
+            testCase.verifyEqual(tool.OutputArguments.Name, "n");
+        end
+
+        function anonymousFunction_zeroInputsZeroOutputs_succeeds(testCase)
+            tool = aisdk.tool.LocalLLMTool(@() disp('Hello'), Name="greet", ...
+                InputArguments=struct(), OutputArguments=struct());
+            testCase.verifyEmpty(tool.InputArguments);
+            testCase.verifyEmpty(tool.OutputArguments);
+        end
+
+        function anonymousFunction_explicitArguments_overrideEmptyMetadata(testCase)
+            inputs = [aisdk.LLMToolArgument("x", DataType="number"), ...
+                    aisdk.LLMToolArgument("y", DataType="number")];
+            outputs = aisdk.LLMToolArgument("result", DataType="number");
+            tool = aisdk.tool.LocalLLMTool(@(x, y) x + y, Name="add", ...
+                InputArguments=inputs, OutputArguments=outputs);
+            testCase.verifyLength(tool.InputArguments, 2);
+            testCase.verifyEqual(tool.InputArguments(1).Name, "x");
+            testCase.verifyEqual(tool.InputArguments(2).Name, "y");
+            testCase.verifyLength(tool.OutputArguments, 1);
+            testCase.verifyEqual(tool.OutputArguments(1).Name, "result");
+        end
+
+        function staticMethod_name_replacesDotsWithUnderscores(testCase)
+            tool = aisdk.tool.LocalLLMTool(@ToolTestHelper.addNumbers);
+            testCase.verifyEqual(tool.Name, "ToolTestHelper_addNumbers");
+        end
+
+        function staticMethod_multipleOutputs_extractedFromMetadata(testCase)
+            tool = aisdk.tool.LocalLLMTool( ...
+                @ToolTestHelper.doAllMathsStatic, Name="doAllMathsStatic");
+            testCase.verifyLength(tool.OutputArguments, 4);
+            testCase.verifyEqual(tool.OutputArguments(1).Name, "added");
+            testCase.verifyEqual(tool.OutputArguments(2).Name, "subtracted");
+            testCase.verifyEqual(tool.OutputArguments(3).Name, "multiplied");
+            testCase.verifyEqual(tool.OutputArguments(4).Name, "divided");
+        end
+
+        function instanceMethod_requiresName(testCase)
+            obj = ToolTestHelper();
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@obj.multiply), ...
+                "aisdk:anonymousFunctionRequiresName");
+        end
+
+        function localFunction_name_extractedFromHandle(testCase)
+            tool = aisdk.tool.LocalLLMTool(@localAdd);
+            testCase.verifyEqual(tool.Name, "localAdd");
+        end
+
+        function construct_workspaceAgent_inputsInferredFromMetadata_stripsWorkspaceArg(testCase)
+            tool = aisdk.tool.LocalLLMTool(@contextualMultiply, Workspace="agent");
+            testCase.verifyLength(tool.InputArguments, 2);
+            testCase.verifyEqual(tool.InputArguments(1).Name, "x");
+            testCase.verifyEqual(tool.InputArguments(2).Name, "y");
+        end
+
+        function construct_workspaceAgent_outputsInferredFromMetadata_stripsWorkspaceArg(testCase)
+            tool = aisdk.tool.LocalLLMTool(@contextualMultiply, Workspace="agent");
+            testCase.verifyLength(tool.OutputArguments, 1);
+            testCase.verifyEqual(tool.OutputArguments(1).Name, "output");
+        end
+
+        function nestedFunction_withoutExplicitArgs_errors(testCase)
+            function [obs, ws] = storeValue(ws, value)
+                ws.storedValue = value;
+                obs = "Stored " + value;
+            end
+            testCase.verifyError(@() aisdk.tool.LocalLLMTool(@storeValue), ...
+                "aisdk:nestedFunctionRequiresExplicitDefinition");
+            testCase.verifyError(@() aisdk.tool.LocalLLMTool(@storeValue, ...
+                InputArguments=aisdk.LLMToolArgument("value", DataType="string")), ...
+                "aisdk:nestedFunctionRequiresExplicitDefinition");
+            testCase.verifyError(@() aisdk.tool.LocalLLMTool(@storeValue, ...
+                OutputArguments=aisdk.LLMToolArgument("obs", DataType="string")), ...
+                "aisdk:nestedFunctionRequiresExplicitDefinition");
+        end
+
+        function nestedFunction_nameInferredFromHandle(testCase)
+            function [obs, ws] = storeValue(ws, value)
+                ws.storedValue = value;
+                obs = "Stored " + value;
+            end
+            tool = aisdk.tool.LocalLLMTool(@storeValue, ...
+                InputArguments=aisdk.LLMToolArgument("value", DataType="string"), ...
+                OutputArguments=aisdk.LLMToolArgument("obs", DataType="string"));
+            testCase.verifyEqual(tool.Name, "storeValue");
+        end
+
+        %% convertInternalMeta / convertArgs (legacy path for <= R2025b)
+        % Mock matlab.internal.metafunction output by a struct with the
+        % same fields.
+
+        function convertInternalMeta_convertsScalarMetafunction(testCase)
+            m.Name = "myFunc";
+            m.Description = "A helper function";
+            m.Signature.Inputs(1).Kind = "positional";
+            m.Signature.Inputs(1).Name = "x";
+            m.Signature.Inputs(1).Description = "input value";
+            m.Signature.Inputs(1).DefaultValue = [];
+            m.Signature.Inputs(1).Validation.Class.Name = "double";
+            m.Signature.Outputs(1).Kind = "positional";
+            m.Signature.Outputs(1).Name = "y";
+            m.Signature.Outputs(1).Description = "output value";
+            m.Signature.Outputs(1).DefaultValue = [];
+            m.Signature.Outputs(1).Validation = [];
+
+            out = aisdk.tool.LocalLLMTool.convertInternalMeta(m);
+
+            testCase.verifyEqual(out.Name, "myFunc");
+            testCase.verifyEqual(out.Description, "A helper function");
+            testCase.verifyLength(out.Signature.Inputs, 1);
+            testCase.verifyEqual(out.Signature.Inputs.Identifier.Name, "x");
+            testCase.verifyTrue(out.Signature.Inputs.Required);
+            testCase.verifyFalse(out.Signature.Inputs.NameValue);
+            testCase.verifyLength(out.Signature.Outputs, 1);
+            testCase.verifyEqual(out.Signature.Outputs.Identifier.Name, "y");
+        end
+
+        function convertInternalMeta_nonScalar_returnsEmpty(testCase)
+            m(1).Name = "f1";
+            m(1).Description = "";
+            m(1).Signature.Inputs = [];
+            m(1).Signature.Outputs = [];
+            m(2).Name = "f2";
+            m(2).Description = "";
+            m(2).Signature.Inputs = [];
+            m(2).Signature.Outputs = [];
+
+            out = aisdk.tool.LocalLLMTool.convertInternalMeta(m);
+
+            testCase.verifyEmpty(out);
+        end
+
+        function convertArgs_nameValueArg_setsNameValueTrue(testCase)
+            a.Kind = "namevalue";
+            a.Name = "SomeNVArg";
+            a.Description = "A name-value argument";
+            a.DefaultValue = false;
+            a.Validation.Class.Name = "logical";
+
+            args = aisdk.tool.LocalLLMTool.convertArgs(a);
+
+            testCase.verifyEqual(args.Identifier.Name, "SomeNVArg");
+            testCase.verifyTrue(args.NameValue);
+            testCase.verifyFalse(args.Required);
+        end
+
+        function convertArgs_positionalWithNoDefault_isRequired(testCase)
+            a.Kind = "positional";
+            a.Name = "x";
+            a.Description = "";
+            a.DefaultValue = [];
+            a.Validation = [];
+
+            args = aisdk.tool.LocalLLMTool.convertArgs(a);
+
+            testCase.verifyTrue(args.Required);
+            testCase.verifyFalse(args.NameValue);
+        end
+
+        function convertArgs_positionalWithDefault_isNotRequired(testCase)
+            a.Kind = "positional";
+            a.Name = "x";
+            a.Description = "";
+            a.DefaultValue = 0;
+            a.Validation = [];
+
+            args = aisdk.tool.LocalLLMTool.convertArgs(a);
+
+            testCase.verifyFalse(args.Required);
+            testCase.verifyFalse(args.NameValue);
+        end
+
+        %% Display
+
+        function display_showsCorrectProperties(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            output = formattedDisplayText(tool);
+            testCase.verifySubstring(output, "Name");
+            testCase.verifySubstring(output, "Description");
+            testCase.verifySubstring(output, "InputArguments");
+            testCase.verifySubstring(output, "OutputArguments");
+            testCase.verifySubstring(output, "Workspace");
+            testCase.verifySubstring(output, "ApprovalRequest");
+            testCase.verifySubstring(output, "DisplayTitle");
+            testCase.verifySubstring(output, "Annotations");
+        end
+    end
+
+    methods (Test, TestTags = {'Unit'}, ParameterCombination = 'sequential')
+        function convertArgs_skipsVariableSizeArguments(testCase, VariableSizeKind)
+            a(1).Kind = "positional";
+            a(1).Name = "x";
+            a(1).Description = "";
+            a(1).DefaultValue = [];
+            a(1).Validation = [];
+            a(2).Kind = VariableSizeKind;
+            a(2).Name = VariableSizeKind;
+            a(2).Description = "";
+            a(2).DefaultValue = [];
+            a(2).Validation = [];
+
+            args = aisdk.tool.LocalLLMTool.convertArgs(a);
+
+            testCase.verifyLength(args, 1);
+            testCase.verifyEqual(args.Identifier.Name, "x");
+        end
+    end
+
+end
+
+function [V, D, W, workspace] = contextualEig(workspace, A)
+    [V, D, W] = eig(A);
+    workspace.called = true;
+end
+
+function [output, workspace] = contextualAdd(workspace, a, b)
+    output = a + b;
+    workspace.called = true;
+end
+
+function c = localAdd(a, b)
+% localAdd - - - - Add two numbers together.
+
+% Multiple dashes and spaces test that the prefix-stripping regex handles 
+% them correctly.
+    arguments
+        a (1,1) double
+        b (1,1) double
+    end
+    c = a + b;
+end
+
+function workspace = singleOutputWorkspace(workspace)
+    workspace.called = true;
+end
+
+function [c, varargout] = varargoutWorkspace(workspace, a, b)
+    c = a + b;
+    varargout{1} = workspace;
+end
+
+function [output, workspace] = contextualMultiply(workspace, x, y)
+% contextualMultiply - Multiply two numbers with context.
+    arguments
+        workspace (1,1) struct
+        x (1,1) double
+        y (1,1) double
+    end
+    output = x * y;
+    workspace.called = true;
+end

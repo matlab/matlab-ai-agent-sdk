@@ -39,7 +39,7 @@ classdef tAgentNode < matlab.unittest.TestCase
             node = agentgraph.AgentNode("n", SystemPrompt="test");
             ws = struct();
 
-            [result, ~] = node.execute("task", ws, aisdk.llms.tool.LLMTool.empty(1,0), client);
+            [result, ~] = node.execute("task", ws, aisdk.tool.LLMTool.empty(1,0), client);
 
             testCase.verifyEqual(result, "Hello!");
         end
@@ -56,7 +56,7 @@ classdef tAgentNode < matlab.unittest.TestCase
             node = agentgraph.AgentNode("n", SystemPrompt="test");
             ws = struct();
 
-            [result, ~] = node.execute("task", ws, aisdk.llms.tool.LLMTool.empty(1,0), client);
+            [result, ~] = node.execute("task", ws, aisdk.tool.LLMTool.empty(1,0), client);
 
             testCase.verifyEqual(result, string(jsonencode(response)));
         end
@@ -94,7 +94,7 @@ classdef tAgentNode < matlab.unittest.TestCase
             node = agentgraph.AgentNode("n", SystemPrompt="test");
             ws = struct();
 
-            [~, wsOut] = node.execute("task", ws, aisdk.llms.tool.LLMTool.empty(1,0), client);
+            [~, wsOut] = node.execute("task", ws, aisdk.tool.LLMTool.empty(1,0), client);
 
             testCase.verifyEqual(wsOut.tokenUsage.input, 100);
             testCase.verifyEqual(wsOut.tokenUsage.output, 20);
@@ -114,7 +114,7 @@ classdef tAgentNode < matlab.unittest.TestCase
             ws = struct();
             ws.tokenUsage = struct('input', 100, 'output', 20, 'total', 120, 'cached', 10);
 
-            [~, wsOut] = node.execute("task", ws, aisdk.llms.tool.LLMTool.empty(1,0), client);
+            [~, wsOut] = node.execute("task", ws, aisdk.tool.LLMTool.empty(1,0), client);
 
             testCase.verifyEqual(wsOut.tokenUsage.input, 150);
             testCase.verifyEqual(wsOut.tokenUsage.output, 30);
@@ -134,7 +134,7 @@ classdef tAgentNode < matlab.unittest.TestCase
             node = agentgraph.AgentNode("n", SystemPrompt="test");
             ws = struct();
 
-            node.execute("task", ws, aisdk.llms.tool.LLMTool.empty(1,0), client, obs);
+            node.execute("task", ws, aisdk.tool.LLMTool.empty(1,0), client, obs);
 
             testCase.verifyLength(obs.Log, 2);
             testCase.verifyEqual(obs.Log{1}{1}, 'nodeRunning');
@@ -149,7 +149,7 @@ classdef tAgentNode < matlab.unittest.TestCase
             ws = struct();
 
             testCase.verifyError( ...
-                @() node.execute("task", ws, aisdk.llms.tool.LLMTool.empty(1,0), client), ...
+                @() node.execute("task", ws, aisdk.tool.LLMTool.empty(1,0), client), ...
                 "MATLAB:badsubscript");
         end
 
@@ -161,7 +161,7 @@ classdef tAgentNode < matlab.unittest.TestCase
             ws = struct();
 
             try
-                node.execute("task", ws, aisdk.llms.tool.LLMTool.empty(1,0), client, obs);
+                node.execute("task", ws, aisdk.tool.LLMTool.empty(1,0), client, obs);
             catch
             end
 

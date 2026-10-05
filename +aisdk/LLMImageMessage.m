@@ -1,4 +1,4 @@
-classdef LLMImageMessage < aisdk.llms.message.LLMMessage
+classdef LLMImageMessage < aisdk.message.LLMMessage
 %LLMImageMessage An image message in a conversation.
 %
 %   msg = aisdk.LLMImageMessage(IMGARRAY) creates a user image message
@@ -45,7 +45,7 @@ classdef LLMImageMessage < aisdk.llms.message.LLMMessage
                 nvp.DownloadFcn function_handle = @websave
             end
 
-            this@aisdk.llms.message.LLMMessage("user", "image");
+            this@aisdk.message.LLMMessage("user", "image");
             this.Detail = nvp.Detail;
             this.DownloadFcn = nvp.DownloadFcn;
             this.Image = resolveToImageArray(content, this.DownloadFcn);
@@ -92,13 +92,13 @@ function img = resolveToImageArray(source, downloadFcn)
                 if e.identifier == "MATLAB:imagesci:imread:fileDoesNotExist"
                     rethrow(e);
                 end
-                error("llms:message:NotAnImage", "%s", ...
-                    aisdk.llms.internal.MessageCatalog.getMessage("llms:message:NotAnImage", source));
+                error("aisdk:message:NotAnImage", "%s", ...
+                    aisdk.internal.MessageCatalog.getMessage("aisdk:message:NotAnImage", source));
             end
         end
     else
-        error("llms:message:InvalidImageSource", ...
-            aisdk.llms.internal.MessageCatalog.getMessage("llms:message:InvalidImageSource"));
+        error("aisdk:message:InvalidImageSource", ...
+            aisdk.internal.MessageCatalog.getMessage("aisdk:message:InvalidImageSource"));
     end
 end
 
@@ -109,8 +109,8 @@ function img = readURL(url, downloadFcn)
         downloadFcn(tempFile, url);
         img = imread(tempFile);
     catch
-        error("llms:message:NotAnImage", "%s", ...
-            aisdk.llms.internal.MessageCatalog.getMessage("llms:message:NotAnImage", url));
+        error("aisdk:message:NotAnImage", "%s", ...
+            aisdk.internal.MessageCatalog.getMessage("aisdk:message:NotAnImage", url));
     end
 end
 
@@ -124,7 +124,7 @@ function mustBeImageArray(val)
     okType = isnumeric(val) || islogical(val);
     okShape = ismatrix(val) || (ndims(val) == 3 && ismember(size(val,3), [1 3 4]));
     if ~(okType && okShape && ~isempty(val))
-        error("llms:message:InvalidImageContent", ...
-            aisdk.llms.internal.MessageCatalog.getMessage("llms:message:InvalidImageContent"));
+        error("aisdk:message:InvalidImageContent", ...
+            aisdk.internal.MessageCatalog.getMessage("aisdk:message:InvalidImageContent"));
     end
 end

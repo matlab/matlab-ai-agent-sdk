@@ -24,7 +24,7 @@ classdef ToposortEngine < agentgraph.Engine
                 graph (1,1) agentgraph.AgentGraph
                 prompt (1,1) string
                 workspace struct
-                allTools (1,:) aisdk.llms.tool.LLMTool
+                allTools (1,:) aisdk.tool.LLMTool
                 client
                 nvp.GoalNode (1,1) string = ""
             end

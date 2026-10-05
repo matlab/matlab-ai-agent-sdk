@@ -470,7 +470,7 @@ classdef tAIAgent < matlab.unittest.TestCase
         function constructor_invalidClient_throwsError(testCase)
             testCase.verifyError( ...
                 @() aisdk.AIAgent("not a client"), ...
-                "llms:invalidClientType");
+                "aisdk:invalidClientType");
         end
 
         function run_withSystemPrompt_prependsSystemMessage(testCase)

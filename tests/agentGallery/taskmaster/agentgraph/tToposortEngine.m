@@ -24,7 +24,7 @@ classdef tToposortEngine < matlab.unittest.TestCase
             g = agentgraph.AgentGraph(nodes, edges);
             ws = struct('order', {{}});
 
-            [~, wsOut] = g.run([], "go", ws, aisdk.llms.tool.LLMTool.empty(1,0));
+            [~, wsOut] = g.run([], "go", ws, aisdk.tool.LLMTool.empty(1,0));
 
             testCase.verifyEqual(wsOut.order, {"A","B","C"});
         end
@@ -40,7 +40,7 @@ classdef tToposortEngine < matlab.unittest.TestCase
             g = agentgraph.AgentGraph(nodes, edges);
             ws = struct('order', {{}});
 
-            [~, wsOut] = g.run([], "go", ws, aisdk.llms.tool.LLMTool.empty(1,0));
+            [~, wsOut] = g.run([], "go", ws, aisdk.tool.LLMTool.empty(1,0));
 
             order = string(wsOut.order);
             posA = find(order == "A");
@@ -57,7 +57,7 @@ classdef tToposortEngine < matlab.unittest.TestCase
             nodes = agentgraph.FunctionNode("only", @(w) deal("single",w));
             g = agentgraph.AgentGraph(nodes, string.empty(0,2));
 
-            [result, ~] = g.run([], "go", struct(), aisdk.llms.tool.LLMTool.empty(1,0));
+            [result, ~] = g.run([], "go", struct(), aisdk.tool.LLMTool.empty(1,0));
 
             testCase.verifyEqual(result, "single");
         end
@@ -71,7 +71,7 @@ classdef tToposortEngine < matlab.unittest.TestCase
             edges = ["A","B"; "B","C"];
             g = agentgraph.AgentGraph(nodes, edges);
 
-            [result, ~] = g.run([], "go", struct(), aisdk.llms.tool.LLMTool.empty(1,0));
+            [result, ~] = g.run([], "go", struct(), aisdk.tool.LLMTool.empty(1,0));
 
             testCase.verifyEqual(result, "third");
         end
@@ -88,7 +88,7 @@ classdef tToposortEngine < matlab.unittest.TestCase
             edges = ["A","B"; "B","C"];
             g = agentgraph.AgentGraph(nodes, edges);
 
-            [~, wsOut] = g.run([], "go", struct(), aisdk.llms.tool.LLMTool.empty(1,0));
+            [~, wsOut] = g.run([], "go", struct(), aisdk.tool.LLMTool.empty(1,0));
 
             testCase.verifyEqual(wsOut.sum, 111);
         end
@@ -111,7 +111,7 @@ classdef tToposortEngine < matlab.unittest.TestCase
             edges = ["A","B"];
             g = agentgraph.AgentGraph(nodes, edges);
 
-            g.run(client, "original prompt", struct(), aisdk.llms.tool.LLMTool.empty(1,0));
+            g.run(client, "original prompt", struct(), aisdk.tool.LLMTool.empty(1,0));
 
             msgs = client.GenerateInputs{2};
             promptSent = msgs(end).Text;
@@ -129,7 +129,7 @@ classdef tToposortEngine < matlab.unittest.TestCase
             g = agentgraph.AgentGraph(nodes, edges);
             ws = struct('order', {{}});
 
-            [~, wsOut] = g.run([], "go", ws, aisdk.llms.tool.LLMTool.empty(1,0), GoalNode="B");
+            [~, wsOut] = g.run([], "go", ws, aisdk.tool.LLMTool.empty(1,0), GoalNode="B");
 
             testCase.verifyEqual(wsOut.order, {"A","B"});
         end
@@ -143,7 +143,7 @@ classdef tToposortEngine < matlab.unittest.TestCase
             g = agentgraph.AgentGraph(nodes, edges);
 
             testCase.verifyError( ...
-                @() g.run([], "go", struct(), aisdk.llms.tool.LLMTool.empty(1,0)), "test:fail");
+                @() g.run([], "go", struct(), aisdk.tool.LLMTool.empty(1,0)), "test:fail");
         end
     end
 end
