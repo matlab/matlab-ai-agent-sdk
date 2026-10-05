@@ -267,6 +267,20 @@ classdef tOllamaClient < hconstructorCommon
             testCase.verifyEqual(text.score, 9.5);
             testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
         end
+
+        %% generate — structured output with nothing to report
+        % A model that has nothing to list answers with an empty list. The result
+        % must still be a struct of the requested form, not an empty double.
+        function generate_structuredOutputEmptyList_returnsEmptyStruct(testCase)
+            import matlab.unittest.constraints.IsSameSetAs
+            response = makeOllamaTextResponse('{"result":[]}');
+            client = makeOllamaClientWithFakeHTTP(testCase, response);
+            proto = struct("plantName", {"appletree","pear"}, "fruit", {"apple","pear"});
+            text = generate(client, "What is harvested in August?", ResponseFormat=proto);
+            testCase.verifyClass(text, "struct");
+            testCase.verifyEmpty(text);
+            testCase.verifyThat(fieldnames(text), IsSameSetAs(fieldnames(proto)));
+        end
     end
 
     methods (Test, TestTags = {'Unit'}, ParameterCombination="sequential")

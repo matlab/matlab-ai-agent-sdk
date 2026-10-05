@@ -42,6 +42,27 @@ classdef tuseSameFieldTypes < matlab.unittest.TestCase
             testCase.verifyEqual(result(2).x, int32(2));
         end
 
+        function handlesEmptyData(testCase)
+            import matlab.unittest.constraints.IsSameSetAs
+            proto = struct("x", {int32(0), int32(0)}, "name", {"a", "b"});
+            result = aisdk.client.internal.useSameFieldTypes([], proto);
+            testCase.verifyClass(result, "struct");
+            testCase.verifyEmpty(result);
+            testCase.verifyThat(fieldnames(result), IsSameSetAs(fieldnames(proto)));
+        end
+
+        function handlesEmptyNestedStructArray(testCase)
+            import matlab.unittest.constraints.IsSameSetAs
+            data = struct("steps", [], "answer", 'yes');
+            proto = struct("steps", struct("explanation", {"a", "b"}), "answer", "");
+            result = aisdk.client.internal.useSameFieldTypes(data, proto);
+            testCase.verifyEqual(result.answer, "yes");
+            testCase.verifyClass(result.steps, "struct");
+            testCase.verifyEmpty(result.steps);
+            testCase.verifyThat(fieldnames(result.steps), ...
+                IsSameSetAs(fieldnames(proto.steps)));
+        end
+
         function handlesMissingPrototype(testCase)
             data = struct("val", []);
             proto = struct("val", missing);

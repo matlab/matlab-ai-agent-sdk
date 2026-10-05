@@ -32,6 +32,42 @@ classdef treformatOutput < matlab.unittest.TestCase
             testCase.verifyEqual(result(2).x, 2.5);
         end
 
+        function nonScalarPrototypeEmptyListReturnsEmptyStruct(testCase)
+            import matlab.unittest.constraints.IsSameSetAs
+            proto = struct("x", {0.0, 0.0}, "name", {"a", "b"});
+            result = aisdk.client.internal.reformatOutput('{"result":[]}', proto);
+            testCase.verifyClass(result, "struct");
+            testCase.verifyEmpty(result);
+            testCase.verifyThat(fieldnames(result), IsSameSetAs(fieldnames(proto)));
+        end
+
+        function nonScalarPrototypeNullListReturnsEmptyStruct(testCase)
+            import matlab.unittest.constraints.IsSameSetAs
+            proto = struct("x", {0.0, 0.0}, "name", {"a", "b"});
+            result = aisdk.client.internal.reformatOutput('{"result":null}', proto);
+            testCase.verifyClass(result, "struct");
+            testCase.verifyEmpty(result);
+            testCase.verifyThat(fieldnames(result), IsSameSetAs(fieldnames(proto)));
+        end
+
+        function nonScalarPrototypeNullReplyReturnsEmptyStruct(testCase)
+            import matlab.unittest.constraints.IsSameSetAs
+            proto = struct("x", {0.0, 0.0}, "name", {"a", "b"});
+            result = aisdk.client.internal.reformatOutput('null', proto);
+            testCase.verifyClass(result, "struct");
+            testCase.verifyEmpty(result);
+            testCase.verifyThat(fieldnames(result), IsSameSetAs(fieldnames(proto)));
+        end
+
+        function scalarPrototypeNullReplyReturnsEmptyStruct(testCase)
+            import matlab.unittest.constraints.IsSameSetAs
+            proto = struct("x", 0.0, "name", "a");
+            result = aisdk.client.internal.reformatOutput('null', proto);
+            testCase.verifyClass(result, "struct");
+            testCase.verifyEmpty(result);
+            testCase.verifyThat(fieldnames(result), IsSameSetAs(fieldnames(proto)));
+        end
+
         function invalidJSONErrors(testCase)
             proto = struct("x", 0.0);
             testCase.verifyError( ...

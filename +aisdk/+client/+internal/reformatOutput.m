@@ -13,7 +13,12 @@ function result = reformatOutput(result,responseFormat)
         end
     end
     if isstruct(responseFormat) && ~isscalar(responseFormat)
-        result = result.result;
+        % A model with nothing to list may answer "null" instead of wrapping
+        % an empty list; keep the empty result and let useSameFieldTypes
+        % below turn it into an empty struct of the expected form.
+        if ~isempty(result)
+            result = result.result;
+        end
     end
     if isstruct(responseFormat)
         result = aisdk.client.internal.useSameFieldTypes(result,responseFormat);

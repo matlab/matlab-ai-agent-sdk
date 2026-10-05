@@ -320,6 +320,20 @@ classdef tOpenAIClient < hconstructorCommon
             testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
         end
 
+        %% generate — structured output with nothing to report
+        % A model that has nothing to list answers with an empty list. The result
+        % must still be a struct of the requested form, not an empty double.
+        function generate_structuredOutputEmptyList_returnsEmptyStruct(testCase)
+            import matlab.unittest.constraints.IsSameSetAs
+            response = makeTextResponse('{"result":[]}');
+            client = makeClientWithFakeHTTP(testCase, response);
+            proto = struct("plantName", {"appletree","pear"}, "fruit", {"apple","pear"});
+            text = generate(client, "What is harvested in August?", ResponseFormat=proto);
+            testCase.verifyClass(text, "struct");
+            testCase.verifyEmpty(text);
+            testCase.verifyThat(fieldnames(text), IsSameSetAs(fieldnames(proto)));
+        end
+
         function generate_httpsProxyIsHonored(testCase)
             import matlab.unittest.fixtures.EnvironmentVariableFixture
             testCase.applyFixture(EnvironmentVariableFixture("HTTPS_PROXY", "http://nosuchhost.example.com:1234"));

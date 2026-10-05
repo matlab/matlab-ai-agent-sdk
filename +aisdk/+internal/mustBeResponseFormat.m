@@ -9,7 +9,7 @@ function mustBeResponseFormat(format)
             error("aisdk:incorrectResponseFormat", ...
                 aisdk.internal.MessageCatalog.getMessage("aisdk:incorrectResponseFormat"));
         end
-    elseif ~isstruct(format)
+    elseif ~isstruct(format) || isempty(format)
         error("aisdk:incorrectResponseFormat", ...
             aisdk.internal.MessageCatalog.getMessage("aisdk:incorrectResponseFormat"));
     end

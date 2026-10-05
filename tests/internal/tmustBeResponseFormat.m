@@ -37,6 +37,19 @@ classdef tmustBeResponseFormat < matlab.unittest.TestCase
                 "aisdk:incorrectResponseFormat");
         end
 
+        function rejectsEmptyStruct(testCase)
+            % A prototype without elements describes no output at all.
+            testCase.verifyError( ...
+                @() aisdk.internal.mustBeResponseFormat(struct([])), ...
+                "aisdk:incorrectResponseFormat");
+        end
+
+        function rejectsEmptyStructWithFields(testCase)
+            testCase.verifyError( ...
+                @() aisdk.internal.mustBeResponseFormat(struct("x", {})), ...
+                "aisdk:incorrectResponseFormat");
+        end
+
         function rejectsNumeric(testCase)
             testCase.verifyError( ...
                 @() aisdk.internal.mustBeResponseFormat(42), ...

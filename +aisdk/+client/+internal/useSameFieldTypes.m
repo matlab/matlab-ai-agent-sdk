@@ -6,6 +6,13 @@ function data = useSameFieldTypes(data,prototype)
 % Copyright 2026 The MathWorks, Inc.
 
 if ~isscalar(data)
+    if isempty(data)
+        % A model with nothing to report answers with an empty list, or with
+        % no data at all. The result still has to be a struct of the
+        % expected form.
+        data = emptyLike(prototype);
+        return
+    end
     data = arrayfun( ...
         @(d) aisdk.client.internal.useSameFieldTypes(d,prototype), data, ...
         UniformOutput=false);
@@ -20,7 +27,9 @@ function data = alignTypes(data, prototype)
 switch class(prototype)
     case "struct"
         prototype = prototype(1);
-        if isscalar(data)
+        if isempty(data)
+            data = emptyLike(prototype);
+        elseif isscalar(data)
             if isequal(sort(fieldnames(data)),sort(fieldnames(prototype)))
                 for field_c = fieldnames(data).'
                     field = field_c{1};
@@ -40,4 +49,9 @@ switch class(prototype)
     otherwise
         data = cast(data,"like",prototype);
 end
+end
+
+function data = emptyLike(prototype)
+% Empty struct array with the field names of prototype
+data = repmat(prototype(1),0,1);
 end
