@@ -5,7 +5,8 @@ classdef CallableTool < aisdk.tool.LLMTool
 
     properties
         %ApprovalRequest   Approval mode for user confirmation before calling.
-        ApprovalRequest(1,1) aisdk.tool.ApprovalRequest
+        ApprovalRequest(1,1) aisdk.tool.ApprovalRequest = ...
+            aisdk.tool.ApprovalRequest.once
     end
 
     properties (Access = protected)

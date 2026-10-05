@@ -51,7 +51,7 @@ of iterations to 10.
 
 These properties can be set using name-value arguments.
 
-[`SystemPrompt`](#systemprompt) | [`Tools`](#tools) | [`Messages`](#messages) | [`Workspace`](#workspace) | [`DisplayMode`](#displaymode) | [`MaxIterations`](#maxiterations)
+[`SystemPrompt`](#systemprompt) | [`Tools`](#tools) | [`Messages`](#messages) | [`Workspace`](#workspace) | [`DisplayMode`](#displaymode) | [`MaxIterations`](#maxiterations) | [`ApprovalFcn`](#approvalfcn)
 ## Properties
 <a id="properties"></a>
 ### `Client` — LLM client
@@ -207,6 +207,52 @@ then an agent can get stuck trying and failing to call the same tool repeatedly.
 For more information on the agentic loop, see [`Algorithms`](#algorithms).
 
 Data Types: `double`
+### `ApprovalFcn` — Tool approval function
+<a id="approvalfcn"></a>
+
+function handle
+
+Tool approval function, specified as a function handle.
+
+The software calls the tool approval function when the agent tries to call a tool that requires human approval.
+
+By default, the software opens a confirmation dialog that lets you approve or deny a tool call. If the tool's `ApprovalRequest` property is set to `"once"`, then you can also choose to approve the tool automatically for the remainder of the agent session.
+
+A custom approval function must fulfill these requirements:
+- The function must have two positional input arguments.
+- The first argument must be the tool.
+- The second argument must be the tool arguments returned by the tool call.
+- The function must have one output argument. The output argument must be a struct with these fields:
+  - `Approved` - `true` or `false`. This field indicates whether the tool is approved or not.
+  - `Permanent` - `true` or `false`. This field indicates whether the tool requires approval the next time the agent tries to call it.
+  - `Reason` - string scalar. This field explains the approval decision. The field must exist, but can be set to `""`.
+
+For example, this function requests human approval in the MATLAB Command Window. 
+```
+function result = myApprovalFcn(tool,toolArgument)
+
+prompt = "The agent wants to call the tool " + tool.Name + ...
+    " with arguments " + jsonencode(toolArgument) + ...
+    ". Do you approve this tool call? Y/N [Y]: ";
+txt = input(prompt,"s");
+if isempty(txt)
+    txt = "Y";
+end
+
+if strcmp(txt,"Y")
+    result.Approved = true;
+    result.Permanent = tool.ApprovalRequest == "once";
+else
+    result.Approved = false;
+    result.Permanent = false;
+end
+
+result.Reason = input("(Optional) Provide a reason: ","s");
+end
+```
+Example: `@myApprovalFcn`
+
+Data Types: `function_handle`
 ### `ContextUsage` — Fraction of model context used
 <a id="contextusage"></a>
 
@@ -284,12 +330,30 @@ to `NumTotalTokens`.
 `NumInputTokens` and `NumOutputTokens`.
 
 Data Types: `double`
+### `UserApprovedTools` — Names of tools permanently approved by the user
+<a id="userapprovedtools"></a>
+
+Read-only: string scalar | string vector
+
+This property is read-only.
+
+Names of tools permanently approved by the user, returned as a string scalar or string vector.
+
+Use the `UserApprovedTools` property to check which tools the agent can evaluate without needing additional human approval.
+
+When you permanently approve a tool that has `ApprovalRequest` set to `"once"`, the software adds the name of that tool to `UserApprovedTools`. When you reset the approval status of the agent's tools by using the `resetApproval` function, the software removes those tools from `UserApprovedTools`.
+
+If you save and load an agent, the software automatically resets the approval status of the agent's tools.
+
+Data Types: `string`
 ## Object Functions
 <a id="object-functions"></a>
 
 | Function | Description |
 | --- | --- |
 | [`run`](run.md) | Run AI agent |
+| [`resetApproval`](resetApproval.md) | Reset tool approvals |
+
 ## Examples
 <a id="examples"></a>
 ### Create Chat With LLM
@@ -462,6 +526,59 @@ variable called `matrix`. To allow an agent to use the tool
 ```
 agent.Workspace.matrix = randn(10);
 ```
+### Require Human Approval Before Running a Tool
+<a id="require-human-approval-before-running-a-tool"></a>
+
+This example shows how to keep a human in the loop by requiring approval before an agent
+runs a tool.
+
+Create a tool that can have side effects, such as one that deletes a file, from the
+`delete` function. Set the `ApprovalRequest` name-value argument to `"always"` so that the
+agent asks for approval every time it calls the tool.
+
+```
+tool = aisdk.LLMTool(@delete,ApprovalRequest="always");
+tool.InputArguments = aisdk.LLMToolArgument("filename",DataType="string");
+```
+
+Create the agent from an LLM client `client`.
+
+```
+agent = aisdk.AIAgent(client,Tools=tool);
+```
+
+Run the agent. Before the agent calls the tool, the default approval callback opens a
+confirmation dialog in which you can approve or deny the call.
+
+```
+run(agent,"Delete the file results.tmp.");
+```
+
+To approve tool calls without a dialog, for example to apply a fixed policy or to connect
+to an external approval service, provide your own approval callback by using the
+`ApprovalFcn` name-value argument. The callback receives the tool and the generated tool
+arguments and returns a structure with the fields `Approved`, `Permanent`, and `Reason`.
+
+```
+function result = approvePolicy(tool,toolArguments)
+% Approve every tool except delete.
+approved = tool.Name ~= "delete";
+result = struct("Approved",approved,"Permanent",false, ...
+    "Reason","Denied by policy: delete is not allowed.");
+end
+```
+
+```
+agent = aisdk.AIAgent(client,Tools=tool,ApprovalFcn=@approvePolicy);
+```
+
+When you set `ApprovalRequest` to `"once"`, the human can approve a tool for the rest of
+the session. To require approval again, clear the accumulated approvals by using the
+[`resetApproval`](resetApproval.md) function.
+
+```
+resetApproval(agent)
+```
 ## Algorithms
 <a id="algorithms"></a>
 
@@ -481,6 +598,13 @@ iteration.
 
 The user can then provide a follow-up prompt by using the `run`
 function and the software repeats the same steps to generate a new answer.
+
+## Version History
+
+> ### v0.3.0 Behavior Change
+> #### Renamed Property
+> Since v0.3.0, the `ApprovedTools` property is renamed to `UserApprovedTools`.
+
 ## References
 <a id="references"></a>
 

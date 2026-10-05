@@ -46,11 +46,11 @@ Data Types: `struct`
 <a id="approvalrequest"></a>
 
 
-`"never"`
-(default) | 
-`"always"`
-| 
 `"once"`
+(default) | 
+`"never"`
+| 
+`"always"`
 
 
 Option to request human approval, specified as `"never"`,
@@ -195,6 +195,18 @@ Evaluate the tool.
 inputArguments = struct(parameter1="test");
 output = evaluate(tool,inputArguments);
 ```
+
+## Version History
+
+> ### v0.3.0 Behavior Change
+> #### Request human approval by default
+> Since v0.3.0, the default value of the [`ApprovalRequest`](#approvalrequest) property is `"once"`. 
+> 
+> This means that, by default, the software requests human approval the first time the agent calls the tool. The user can choose to allow tool execution without additional approval
+requests for the remainder of the agent session.
+> 
+> Before v0.3.0, the default was `"never"`.
+
 ## See Also
 <a id="see-also"></a>
 

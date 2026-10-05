@@ -1,6 +1,8 @@
 function [response, streamedText] = sendRequestWrapper(parameters, token, varargin)
 % This function is undocumented and will change in a future release
 
+%   Copyright 2026 The MathWorks, Inc.
+
 % A wrapper around sendRequest to have a test seam
 persistent seenCalls
 if isempty(seenCalls)

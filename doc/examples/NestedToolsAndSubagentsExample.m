@@ -12,10 +12,10 @@ function [output, workspace] = toolProvider(workspace, type)
         type(1,1) string
     end
     if type == "string"
-        tools = aisdk.LLMTool(@concatenateStrings);
+        tools = aisdk.LLMTool(@concatenateStrings, ApprovalRequest="never");
     elseif type == "number"
-        tools = aisdk.LLMTool(@sumOfTwoNumbers);
-        tools(end+1) = aisdk.LLMTool(@getRandomInteger);
+        tools = aisdk.LLMTool(@sumOfTwoNumbers, ApprovalRequest="never");
+        tools(end+1) = aisdk.LLMTool(@getRandomInteger, ApprovalRequest="never");
     else
         output.error = "No suitable tools found";
         return;
@@ -66,8 +66,8 @@ function [observation, workspace] = subAgent(workspace, systemPrompt, prompt)
 end
 %%
 %[text] ## **Set up tools and the "system prompt" for the reAct loop**
-topLevelTools = aisdk.LLMTool(@toolProvider, Workspace="agent");
-topLevelTools(end+1) = aisdk.LLMTool(@subAgent, Workspace="agent");
+topLevelTools = aisdk.LLMTool(@toolProvider, Workspace="agent", ApprovalRequest="never");
+topLevelTools(end+1) = aisdk.LLMTool(@subAgent, Workspace="agent", ApprovalRequest="never");
 
 topLevelPrompt = "You are an assistant who has two sets of tools available for either string manipulations or arithmetic operations." + ...
         "You can acquire these tools using the toolProvider tool. " + ...

@@ -212,6 +212,7 @@ agentWithWorkspace.Workspace.matrix = A;
 |----|----|
 | [aisdk.AIAgent](doc/functions/aisdk.AIAgent.md) | Build AI agent | 
 | [run](doc/functions/run.md) | Run AI agent | 
+| [resetApproval](doc/functions/resetApproval.md) | Reset approval status of agentic tools | 
 | [aisdk.LLMClient](doc/functions/aisdk.LLMClient.md) | Connect to third-party LLM API | 
 | [OpenAIClient](doc/functions/OpenAIClient.md) | Client for OpenAI API | 
 | [OllamaClient](doc/functions/OllamaClient.md) | Client for Ollama API | 

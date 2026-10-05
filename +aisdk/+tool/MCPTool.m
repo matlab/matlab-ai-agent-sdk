@@ -49,7 +49,6 @@ classdef MCPTool < aisdk.tool.internal.CallableTool
                 if isfield(td, "outputSchema")
                     tool.OutputSchema = td.outputSchema;
                 end
-                tool.ApprovalRequest = aisdk.tool.ApprovalRequest.never;
                 tools{i} = tool;
             end
             this = [tools{:}];

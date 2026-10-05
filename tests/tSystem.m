@@ -42,7 +42,7 @@ classdef tSystem < matlab.unittest.TestCase
         end
 
         function run_withToolCall_returnsResponseAfterToolExecution(testCase)
-            tool = aisdk.LLMTool(@addTwoNumbers);
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
             agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
 
             response = run(agent, "What is 2 + 3?", ToolChoice="required");
@@ -67,7 +67,7 @@ classdef tSystem < matlab.unittest.TestCase
         %% Tools can wrap MATLAB functions
 
         function run_withNamedFunctionTool_returnsComputedResult(testCase)
-            tool = aisdk.LLMTool(@addTwoNumbers);
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
             agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
 
             run(agent, "Compute 7 + 11.", ToolChoice="required");
@@ -81,7 +81,8 @@ classdef tSystem < matlab.unittest.TestCase
             tool = aisdk.LLMTool(@(x) x^2, Name="squareNumber", ...
                 Description="Square a number", ...
                 InputArguments=struct(x=2), ...
-                OutputArguments=struct(result=4));
+                OutputArguments=struct(result=4), ...
+                ApprovalRequest="never");
             agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
 
             run(agent, "What is 5 squared?", ToolChoice="required");
@@ -92,7 +93,7 @@ classdef tSystem < matlab.unittest.TestCase
         end
 
         function run_withNamespacedFunctionTool_returnsComputedResult(testCase)
-            tool = aisdk.LLMTool(@some.namespace.testFcn);
+            tool = aisdk.LLMTool(@some.namespace.testFcn, ApprovalRequest="never");
             agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
 
             run(agent, "Increment 6 by one.", ToolChoice="required");
@@ -105,8 +106,8 @@ classdef tSystem < matlab.unittest.TestCase
         %% Agents can orchestrate multiple tools
 
         function run_withMultipleTools_returnsResponse(testCase)
-            addTool = aisdk.LLMTool(@addTwoNumbers);
-            greetTool = aisdk.LLMTool(@greetUser);
+            addTool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
+            greetTool = aisdk.LLMTool(@greetUser, ApprovalRequest="never");
             agent = aisdk.AIAgent(testCase.Client, ...
                 Tools=[addTool, greetTool], DisplayMode = "off");
 
@@ -138,6 +139,7 @@ classdef tSystem < matlab.unittest.TestCase
             mcpClient = mcpHTTPClientMock({addDef, multiplyDef}, @(~,varargin) "5");
 
             tools = aisdk.LLMTool(mcpClient);
+            [tools.ApprovalRequest] = deal("never");
 
             testCase.verifyNumElements(tools, 2);
             testCase.verifyClass(tools, "aisdk.tool.MCPTool");
@@ -162,7 +164,8 @@ classdef tSystem < matlab.unittest.TestCase
                         "type", "object"))}, ...
                 @(~, varargin) "42");
             mcpTool = aisdk.LLMTool(mcpClient);
-            localTool = aisdk.LLMTool(@greetUser);
+            mcpTool.ApprovalRequest = "never";
+            localTool = aisdk.LLMTool(@greetUser, ApprovalRequest="never");
 
             agent = aisdk.AIAgent(testCase.Client, ...
                 Tools=[mcpTool, localTool], DisplayMode="off");
@@ -180,6 +183,7 @@ classdef tSystem < matlab.unittest.TestCase
                     "inputSchema", struct("type", "object", "properties", struct()))}, ...
                 @(~, varargin) error("mcp:serverError", "server unavailable"));
             tool = aisdk.LLMTool(mcpClient);
+            tool.ApprovalRequest = "never";
 
             agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode="off");
 
@@ -197,6 +201,7 @@ classdef tSystem < matlab.unittest.TestCase
             mcpClient = aisdk.MCPClient("mock", Transport="mock", ...
                 ToolPrefix="server1");
             tools = mcpClient.Tools;
+            [tools.ApprovalRequest] = deal("never");
 
             tokens = struct("Tokens", struct( ...
                 "NumInputTokens", 10, "NumOutputTokens", 5, ...
@@ -221,6 +226,7 @@ classdef tSystem < matlab.unittest.TestCase
         function run_withMCPClientToolsNoPrefix_callsToolAndReturnsResult(testCase)
             mcpClient = aisdk.MCPClient("mock", Transport="mock");
             tools = mcpClient.Tools;
+            [tools.ApprovalRequest] = deal("never");
 
             tokens = struct("Tokens", struct( ...
                 "NumInputTokens", 10, "NumOutputTokens", 5, ...
@@ -245,6 +251,7 @@ classdef tSystem < matlab.unittest.TestCase
             srv1 = aisdk.MCPClient("mock", Transport="mock", ToolPrefix="srv1");
             srv2 = aisdk.MCPClient("mock", Transport="mock", ToolPrefix="srv2");
             tools = [srv1.Tools, srv2.Tools];
+            [tools.ApprovalRequest] = deal("never");
 
             tokens = struct("Tokens", struct( ...
                 "NumInputTokens", 10, "NumOutputTokens", 5, ...
@@ -266,7 +273,9 @@ classdef tSystem < matlab.unittest.TestCase
 
         function run_withRealLLMAndMCPClientTools_callsToolAndReturnsResult(testCase)
             mcpClient = aisdk.MCPClient("mock", Transport="mock");
-            agent = aisdk.AIAgent(testCase.Client, Tools=mcpClient.Tools, DisplayMode="off");
+            tools = mcpClient.Tools;
+            [tools.ApprovalRequest] = deal("never");
+            agent = aisdk.AIAgent(testCase.Client, Tools=tools, DisplayMode="off");
 
             run(agent, "Use the example-tool with param1 set to hello.", ...
                 ToolChoice="required");
@@ -329,7 +338,9 @@ classdef tSystem < matlab.unittest.TestCase
 
             toolResultMsgs = agent.Messages([agent.Messages.Role] == "tool");
             testCase.assertNotEmpty(toolResultMsgs, "Expected a tool result");
-            testCase.verifySubstring(toolResultMsgs(1).Result, "User denied this action.");
+            decoded = jsondecode(toolResultMsgs(1).Result);
+            testCase.verifyEqual(string(decoded.error), "user canceled");
+            testCase.verifyEqual(string(decoded.message), "User denied this action.");
         end
 
         %% Agents can delegate to subagents
@@ -337,7 +348,7 @@ classdef tSystem < matlab.unittest.TestCase
         function run_withSubagentTool_delegatesAndReturnsResult(testCase)
 
             function [obs, workspace] = runMathSubagent(workspace, prompt)
-                mathTool = aisdk.LLMTool(@addTwoNumbers);
+                mathTool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
                 sub = aisdk.AIAgent(testCase.Client, Tools=mathTool);
                 obs = run(sub, prompt, ToolChoice="required", DisplayMode = "off");
             end
@@ -347,7 +358,7 @@ classdef tSystem < matlab.unittest.TestCase
                 InputArguments=aisdk.LLMToolArgument("prompt", DataType="string", ...
                     Description="The math question"), ...
                 OutputArguments=struct(obs=""), ...
-                Workspace="agent");
+                Workspace="agent", ApprovalRequest="never");
             
             supervisor = aisdk.AIAgent(testCase.Client, ...
                 SystemPrompt="You are a supervisor. Delegate math questions using the runMathSubagent tool.", ...
@@ -376,7 +387,7 @@ classdef tSystem < matlab.unittest.TestCase
                 Description="Store a number in workspace", ...
                 InputArguments=struct("value", 42), ...
                 OutputArguments=struct(obs=""), ...
-                Workspace="agent");
+                Workspace="agent", ApprovalRequest="never");
 
             agent = aisdk.AIAgent(testCase.Client, ...
                 Tools=storeTool, Workspace=struct(), DisplayMode = "off");
@@ -389,7 +400,7 @@ classdef tSystem < matlab.unittest.TestCase
         %% Agents operate tools with configurable tool choice
 
         function run_withToolChoiceRequired_callsToolRegardlessly(testCase)
-            tool = aisdk.LLMTool(@addTwoNumbers);
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
             agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
 
             run(agent, "Hello, how are you?", ToolChoice="required");
@@ -400,7 +411,7 @@ classdef tSystem < matlab.unittest.TestCase
         end
 
         function run_withToolChoiceNone_doesNotCallAnyTool(testCase)
-            tool = aisdk.LLMTool(@addTwoNumbers);
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
             agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
 
             run(agent, "What is 2 + 3?", ToolChoice="none");
@@ -412,7 +423,8 @@ classdef tSystem < matlab.unittest.TestCase
 
         function run_withMaxIterationsReached_warnsAndPreservesHistory(testCase)
             tool = aisdk.LLMTool(@()"Page loaded. More pages available.", Name="fetchNextPage", ...
-                InputArguments=struct(), OutputArguments=struct(result=""));
+                InputArguments=struct(), OutputArguments=struct(result=""), ...
+                ApprovalRequest="never");
             agent = aisdk.AIAgent(testCase.Client, ...
                 SystemPrompt="Always fetch the next page.", Tools=tool, ...
                 MaxIterations=3, DisplayMode = "off");
@@ -492,7 +504,7 @@ classdef tSystem < matlab.unittest.TestCase
         %% SDK traces tool calls in message history
 
         function run_afterToolUse_tracksCallAndArguments(testCase)
-            tool = aisdk.LLMTool(@addTwoNumbers);
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
             agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
 
             run(agent, "Add 5 and 9.", ToolChoice="required");

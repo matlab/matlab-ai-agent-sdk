@@ -21,7 +21,7 @@ classdef LocalLLMTool < aisdk.tool.internal.CallableTool
                 NVPairs.InputArguments(1,:) {aisdk.internal.mustBeToolArguments}
                 NVPairs.OutputArguments(1,:) {aisdk.internal.mustBeToolArguments}
                 NVPairs.Annotations(1,1) struct = struct()
-                NVPairs.ApprovalRequest(1,1) aisdk.tool.ApprovalRequest = "never"
+                NVPairs.ApprovalRequest(1,1) aisdk.tool.ApprovalRequest
                 NVPairs.Workspace(1,1) string {mustBeMember(NVPairs.Workspace, ["none","agent"])}
             end
 
@@ -116,7 +116,10 @@ classdef LocalLLMTool < aisdk.tool.internal.CallableTool
             aisdk.tool.LocalLLMTool.checkDuplicateNames(this.OutputArguments, "output");
 
             this.Annotations = NVPairs.Annotations;
-            this.ApprovalRequest = NVPairs.ApprovalRequest;
+
+            if isfield(NVPairs, "ApprovalRequest")
+                this.ApprovalRequest = NVPairs.ApprovalRequest;
+            end
         end
 
     end

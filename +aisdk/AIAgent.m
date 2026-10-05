@@ -54,12 +54,12 @@ classdef AIAgent < handle
 
         %MaxIterations   Maximum tool-calling iterations per run call.
         MaxIterations(1,1) double {mustBePositive} = aisdk.AIAgent.DefaultMaxIterations
+
+        %ApprovalFcn   Callback invoked to obtain a human approval decision.
+        ApprovalFcn(1,1) function_handle = @aisdk.utils.uiconfirm
     end
 
     properties (SetAccess=private)
-        %ApprovedTools   List of tools approved 
-        ApprovedTools(1,:) string
-
         %NumInputTokens   Cumulative input (prompt) tokens across all generate calls.
         NumInputTokens(1,1) double = 0
 
@@ -73,6 +73,13 @@ classdef AIAgent < handle
         NumTotalTokens(1,1) double = 0
     end
 
+    properties (SetAccess=private, Transient)
+        %UserApprovedTools   Names of tools the user approved with "allow from
+        %   now on" for the current in-memory agent. Transient: approval state
+        %   does not persist across save/load, so a loaded agent prompts again.
+        UserApprovedTools(1,:) string
+    end
+
     properties (Dependent, SetAccess=private)
         %ContextUsage   Fraction of the context window used
         ContextUsage(1,1) double
@@ -81,10 +88,6 @@ classdef AIAgent < handle
     properties (Hidden, SetAccess=private)
         %LastInputTokens   Input tokens from the most recent generate call.
         LastInputTokens(1,1) double = 0
-    end
-
-    properties (Hidden)
-        ApprovalFcn
     end
 
     properties (Constant, Hidden)
@@ -102,7 +105,7 @@ classdef AIAgent < handle
                 nvp.Workspace                (1,1) struct = struct()
                 nvp.DisplayMode              (1,1) string {mustBeMember(nvp.DisplayMode, ["off","detailed"])} = "detailed"
                 nvp.MaxIterations            (1,1) {mustBePositive} = aisdk.AIAgent.DefaultMaxIterations
-                nvp.ApprovalFcn                    (1,1) {mustBeA(nvp.ApprovalFcn,'function_handle')} = @aisdk.internal.uiconfirm
+                nvp.ApprovalFcn                    (1,1) {mustBeA(nvp.ApprovalFcn,'function_handle')} = @aisdk.utils.uiconfirm
             end
 
             this.Client = client;
@@ -203,25 +206,67 @@ classdef AIAgent < handle
                             string(output), ToolCallID=tc.ToolCallID, Name=tc.Name);
                         continue
                     end
-                    if tool.ApprovalRequest == "once" && ismember(tc.Name, this.ApprovedTools)
+                    if tool.ApprovalRequest == "once" && ismember(tc.Name, this.UserApprovedTools)
                         % Already approved in a previous round
                     elseif tool.ApprovalRequest ~= "never"
-                        approval = this.ApprovalFcn(tool, tc.Arguments);
-                        if ~approval.Approved
-                            msg = "User denied tool execution of " + tc.Name;
-                            if strlength(approval.Reason) > 0
-                                msg = msg + ": " + approval.Reason;
+                        denialCode = aisdk.internal.MessageCatalog.getMessage( ...
+                            "aisdk:agent:denialCodeUserCanceled");
+                        decidedByUser = true;
+                        try
+                            approval = this.ApprovalFcn(tool, tc.Arguments);
+                        catch ME
+                            % A callback that cannot answer denies the call,
+                            % leaving history resumable. The denial did not
+                            % come from a human, so it is coded separately.
+                            denialCode = aisdk.internal.MessageCatalog.getMessage( ...
+                                "aisdk:agent:denialCodeApprovalUnavailable");
+                            decidedByUser = false;
+                            if strlength(ME.message) > 0
+                                reason = aisdk.internal.MessageCatalog.getMessage( ...
+                                    "aisdk:agent:approvalFcnFailed", ME.message);
+                            else
+                                reason = aisdk.internal.MessageCatalog.getMessage( ...
+                                    "aisdk:agent:approvalFcnFailedNoMessage");
                             end
-                            this.print(displayMode,"[denied] " + msg);
+                            approval = struct("Approved", false, "Permanent", false, ...
+                                "Reason", reason);
+                        end
+                        % Checked outside the guard above, so a malformed
+                        % decision stops the run instead of denying the call.
+                        aisdk.internal.mustBeApprovalDecision(approval);
+                        if ~approval.Approved
+                            denialMessage = approval.Reason;
+                            if isempty(denialMessage)
+                                denialMessage = "";
+                            end
+                            denialContent = string(jsonencode( ...
+                                struct("error", denialCode, "message", denialMessage)));
+                            if decidedByUser
+                                lineId = "aisdk:agent:approvalDisplayDenied";
+                                lineWithMessageId = "aisdk:agent:approvalDisplayDeniedWithMessage";
+                            else
+                                lineId = "aisdk:agent:approvalDisplayUnavailable";
+                                lineWithMessageId = "aisdk:agent:approvalDisplayUnavailableWithMessage";
+                            end
+                            this.print(displayMode, approvalDisplayLine( ...
+                                lineId, lineWithMessageId, tc.Name, denialMessage));
                             this.Messages(end+1) = aisdk.LLMToolResultMessage( ...
-                                msg, ToolCallID=tc.ToolCallID, Name=tc.Name);
+                                denialContent, ToolCallID=tc.ToolCallID, Name=tc.Name);
                             continue
                         end
-                        if approval.Permanent
-                            this.ApprovedTools(end+1) = tc.Name;
+                        % An "always" tool ignores Permanent, so the display
+                        % claims permanence only where it was accumulated.
+                        if approval.Permanent && tool.ApprovalRequest == "once"
+                            this.UserApprovedTools(end+1) = tc.Name;
+                            lineId = "aisdk:agent:approvalDisplayApprovedPermanently";
+                            lineWithMessageId = "aisdk:agent:approvalDisplayApprovedPermanentlyWithMessage";
+                        else
+                            lineId = "aisdk:agent:approvalDisplayApproved";
+                            lineWithMessageId = "aisdk:agent:approvalDisplayApprovedWithMessage";
                         end
+                        this.print(displayMode, approvalDisplayLine( ...
+                            lineId, lineWithMessageId, tc.Name, approval.Reason));
                         if strlength(approval.Reason) > 0
-                            this.print(displayMode,"[approved] " + approval.Reason);
                             approvalReasons(end+1) = tc.Name + ": " + approval.Reason; %#ok<AGROW>
                         end
                     end
@@ -262,6 +307,44 @@ classdef AIAgent < handle
             end
         end
 
+        function resetApproval(this, names)
+            %resetApproval   Clear accumulated "allow from now on" approvals.
+            %
+            %   resetApproval(AGENT) clears every accumulated approval, so
+            %   every tool whose effective policy is "once" prompts again on
+            %   its next call.
+            %
+            %   resetApproval(AGENT, NAMES) clears only the approvals for the
+            %   named tools. NAMES is a string scalar or vector. Every name
+            %   must appear in the UserApprovedTools property; a name that
+            %   does not is an error and no approval is cleared.
+
+            arguments
+                this  (1,1) aisdk.AIAgent
+                names (1,:) string = string.empty(1,0)
+            end
+
+            % A defaulted argument does not raise nargin, so nargin is the only
+            % way to tell resetApproval(agent) from resetApproval(agent, string.empty).
+            if nargin < 2
+                this.UserApprovedTools = string.empty(1,0);
+                return
+            end
+
+            % Every name is checked before the first removal, so a rejected
+            % call clears nothing.
+            for i = 1:numel(names)
+                if ~ismember(names(i), this.UserApprovedTools)
+                    error("aisdk:agent:noApprovalToReset", ...
+                        aisdk.internal.MessageCatalog.getMessage( ...
+                            "aisdk:agent:noApprovalToReset", names(i)));
+                end
+            end
+
+            this.UserApprovedTools = setdiff(this.UserApprovedTools, names, ...
+                "stable");
+        end
+
     end
 
     methods
@@ -284,6 +367,15 @@ classdef AIAgent < handle
     end
 
 
+end
+
+function line = approvalDisplayLine(lineId, lineWithMessageId, toolName, message)
+if strlength(message) > 0
+    line = aisdk.internal.MessageCatalog.getMessage(lineWithMessageId, ...
+        toolName, message);
+else
+    line = aisdk.internal.MessageCatalog.getMessage(lineId, toolName);
+end
 end
 
 function mustBeClient(value)

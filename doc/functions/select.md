@@ -46,7 +46,7 @@ tool =
 
      InputArguments: [1×3 aisdk.LLMToolArgument]
     OutputArguments: [1×1 aisdk.LLMToolArgument]
-    ApprovalRequest: Never
+    ApprovalRequest: once
                Name: "splitTextChunks"
        DisplayTitle: "splitTextChunks"
         Description: "Split documents recursively into text chunks"

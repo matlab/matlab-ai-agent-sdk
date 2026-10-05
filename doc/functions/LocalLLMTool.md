@@ -34,11 +34,11 @@ Data Types: `aisdk.LLMToolArgument`
 <a id="approvalrequest"></a>
 
 
-`"never"`
-(default) | 
-`"always"`
-| 
 `"once"`
+(default) | 
+`"never"`
+| 
+`"always"`
 
 
 Option to request human approval, specified as `"never"`,
@@ -188,7 +188,7 @@ tool =
       InputArguments: [1×3 aisdk.LLMToolArgument]
      OutputArguments: [1×1 aisdk.LLMToolArgument]
            Workspace: "none"
-     ApprovalRequest: never
+     ApprovalRequest: once
         DisplayTitle: "splitTextChunks"
          Annotations: [1×1 struct]
 ```
@@ -243,7 +243,7 @@ tool =
 
      InputArguments: [1×3 aisdk.LLMToolArgument]
     OutputArguments: [1×1 aisdk.LLMToolArgument]
-    ApprovalRequest: "never"
+    ApprovalRequest: "once"
                Name: "myFunction"
        DisplayTitle: "myFunction"
         Description: "Add two numbers with a twist"
@@ -305,6 +305,18 @@ variable called `matrix`. To allow an agent to use the tool
 ```
 agent.Workspace.matrix = randn(10);
 ```
+
+## Version History
+
+> ### v0.3.0 Behavior Change
+> #### Request human approval by default
+> Since v0.3.0, the default value of the [`ApprovalRequest`](#approvalrequest) property is `"once"`. 
+> 
+> This means that, by default, the software requests human approval the first time the agent calls the tool. The user can choose to allow tool execution without additional approval
+requests for the remainder of the agent session.
+> 
+> Before v0.3.0, the default was `"never"`.
+
 ## See Also
 <a id="see-also"></a>
 

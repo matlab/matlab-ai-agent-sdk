@@ -62,7 +62,7 @@ classdef tAIAgent_ContextUsage < matlab.unittest.TestCase
         function lastInputTokens_multiIterationRun_reflectsFinalGenerateCall(testCase)
             % A tool-calling run invokes generate twice; LastInputTokens
             % must reflect the second (final) call.
-            tool = aisdk.LLMTool(@addTwoNumbers);
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
             client = MockClient();
             client.GenerateOutputs = {
                 {"", aisdk.LLMToolCallMessage("addTwoNumbers", ...
@@ -190,7 +190,7 @@ classdef tAIAgent_ContextUsage < matlab.unittest.TestCase
         end
 
         function contextUsage_multiIterationRun_reflectsFinalGenerateCall(testCase)
-            tool = aisdk.LLMTool(@addTwoNumbers);
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
             client = MockClient();
             client.ContextSize = 1000;
             client.GenerateOutputs = {

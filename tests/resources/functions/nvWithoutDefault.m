@@ -1,5 +1,8 @@
 function out = nvWithoutDefault(options)
 %Adds x and y, where x is optional with no default
+
+% Copyright 2026 The MathWorks, Inc.
+
     arguments
         options.x (1,1) double
         options.y (1,1) double = 10

@@ -1,5 +1,6 @@
 classdef tuiconfirm < matlab.uitest.TestCase
-% Tests for aisdk.internal.ConfirmDialog and uiconfirm wrapper.
+% Tests for aisdk.internal.ConfirmDialog and the
+% aisdk.utils.uiconfirm wrapper around it.
 
 %   Copyright 2026 The MathWorks, Inc.
 
@@ -50,28 +51,50 @@ classdef tuiconfirm < matlab.uitest.TestCase
             testCase.verifyEqual(dlg.Result.Reason, "not safe");
         end
 
-        function onceMode_showsDontAskCheckbox(testCase)
+        function multilineReason_joinedWithNewlines(testCase)
+            dlg = makeDialog(testCase, "always");
+
+            % The feedback box is a multi-line uitextarea, whose Value is a
+            % cell array with one char row per line.
+            dlg.ReasonField.Value = {'first line'; 'second line'};
+            testCase.press(dlg.ApproveButton);
+
+            testCase.verifyClass(dlg.Result.Reason, "string");
+            testCase.verifyEqual(dlg.Result.Reason, ...
+                "first line" + newline + "second line");
+        end
+
+        function onceMode_showsApproveAlwaysButton(testCase)
             dlg = makeDialog(testCase, "once");
 
-            testCase.verifyNotEmpty(dlg.DontAskCheckbox);
+            testCase.verifyNotEmpty(dlg.ApproveAlwaysButton);
             testCase.press(dlg.ApproveButton);
 
             testCase.verifyFalse(dlg.Result.Permanent);
         end
 
-        function dontAskChecked_setsPermanent(testCase)
+        function approveAlways_setsPermanent(testCase)
             dlg = makeDialog(testCase, "once");
 
-            testCase.choose(dlg.DontAskCheckbox, true);
-            testCase.press(dlg.ApproveButton);
+            testCase.press(dlg.ApproveAlwaysButton);
 
+            testCase.verifyTrue(dlg.Result.Approved);
             testCase.verifyTrue(dlg.Result.Permanent);
         end
 
-        function alwaysMode_hasNoCheckbox(testCase)
+        function defaultButton_isDeny(testCase)
+            dlg = makeDialog(testCase, "once");
+
+            focused = dlg.focusDefaultButton();
+
+            testCase.verifySameHandle(focused, dlg.DenyButton, ...
+                "Deny must take the initial keyboard focus.");
+        end
+
+        function alwaysMode_hasNoApproveAlwaysButton(testCase)
             dlg = makeDialog(testCase, "always");
 
-            testCase.verifyEmpty(dlg.DontAskCheckbox);
+            testCase.verifyEmpty(dlg.ApproveAlwaysButton);
             testCase.press(dlg.ApproveButton);
         end
 
@@ -87,12 +110,38 @@ classdef tuiconfirm < matlab.uitest.TestCase
             labelTexts = string({labels.Text});
             testCase.verifyTrue(any(labelTexts == "getWeather"));
 
-            ta = findall(dlg.Figure, "Type", "uitextarea");
-            areaText = strjoin(ta.Value, newline);
+            areaText = strjoin(dlg.ArgumentsArea.Value, newline);
             testCase.verifySubstring(areaText, "London");
             testCase.verifySubstring(areaText, "celsius");
 
             testCase.press(dlg.ApproveButton);
+        end
+
+        function construction_headerUsesDisplayTitle(testCase)
+            tool = aisdk.LLMTool(@(x) x, Name="getWeather", ...
+                DisplayTitle="Get the weather", ...
+                InputArguments=aisdk.LLMToolArgument("x", DataType="number"), ...
+                OutputArguments=aisdk.LLMToolArgument("y", DataType="number"), ...
+                ApprovalRequest="always");
+            dlg = aisdk.internal.ConfirmDialog(tool, struct("x", 1));
+
+            labels = findall(dlg.Figure, "Type", "uilabel");
+            labelTexts = string({labels.Text});
+            testCase.verifyTrue(any(contains(labelTexts, "Get the weather")), ...
+                "Header should display the tool's DisplayTitle.");
+
+            testCase.press(dlg.ApproveButton);
+        end
+
+        function answeredDialog_closesItsFigure(testCase)
+            dlg = makeDialog(testCase, "always");
+            fig = dlg.Figure;
+            testCase.assertTrue(isvalid(fig));
+
+            testCase.press(dlg.ApproveButton);
+
+            testCase.verifyFalse(isvalid(fig), ...
+                "Answering the dialog must close its window.");
         end
 
         function emptyReason_returnsString(testCase)
@@ -119,7 +168,7 @@ classdef tuiconfirm < matlab.uitest.TestCase
                 ApprovalRequest="always");
             args = struct("x", 1);
 
-            result = aisdk.internal.uiconfirm(tool, args);
+            result = aisdk.utils.uiconfirm(tool, args);
 
             testCase.verifyTrue(isstruct(result));
             testCase.verifyTrue(result.Approved);
@@ -136,5 +185,15 @@ function dlg = makeDialog(testCase, approvalMode)
         ApprovalRequest=approvalMode);
     args = struct("x", 1);
     dlg = aisdk.internal.ConfirmDialog(tool, args);
+
+    % Answering the dialog closes its own figure; this catches the tests
+    % that leave it open.
+    testCase.addTeardown(@() closeIfOpen(dlg.Figure));
+end
+
+function closeIfOpen(fig)
+    if isvalid(fig)
+        delete(fig)
+    end
 end
 

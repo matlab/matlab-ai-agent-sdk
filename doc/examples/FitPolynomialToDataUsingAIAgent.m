@@ -78,7 +78,7 @@ workspace = initializeCandidatePolynomialDegrees(workspace,maxDegree);
 [workspace,observation] = computeCandidatePolynomials(workspace);
 end
 %[text] Finally, create an `openAIFunction` object that represents the `fitPolynomialsToData` function. 
-tools = aisdk.LLMTool(@fitPolynomialsToData, Workspace="agent");
+tools = aisdk.LLMTool(@fitPolynomialsToData, Workspace="agent", ApprovalRequest="never");
 %%
 %[text] ### Reject Statistically Unstable Polynomial Fits
 %[text] Use confidence bounds on coefficients to help you evaluate and compare fits. If the confidence bounds cross zero for a coefficient, this means you cannot be sure that it differs from zero. Therefore, reject fits with leading coefficients that have confidence bounds that cross zero.
@@ -98,7 +98,7 @@ function [observation, workspace] = rejectZeroCrossFits(workspace)
     observation = "Remaining degrees: " + jsonencode(polynomialDegrees(workspace.polynomials.IsCandidateFit)) + newline + "Log: " + log;
 end
 %[text] Create an `openAIFunction` object that represents the `rejectZeroCrossFits` function. To help the agent understand the purpose of the tool, provide a description.
-tools(end+1) = aisdk.LLMTool(@rejectZeroCrossFits, Workspace="agent");
+tools(end+1) = aisdk.LLMTool(@rejectZeroCrossFits, Workspace="agent", ApprovalRequest="never");
 %[text] ### Inspect Plots of Polynomial Fits Using Vision Model
 %[text] This is a simple sub-agent.
 %[text] The `visuallyInspectPlotsOfPolynomialFits` function generates extrapolated plots of the polynomial fits and saves them to a temporary directory using the `createAndSaveExtrapolatedFitPlot` function, defined at the bottom of this example. The function then uses an LLM able to understand images, GPT-4.1 mini, to look at all of the plots and reject fits that look unreasonable. 
@@ -140,7 +140,7 @@ end
 tools(end+1) = aisdk.LLMTool(@visuallyInspectPlotsOfPolynomialFits, ...
     Description="Given a list of polynomial degrees, generate plots of the data beyond the data range. Inspect the generated plots using a vision model. " + ...
         "Discard visually unreasonable fits, return remaining list of degrees.", ...
-    Workspace="agent");
+    Workspace="agent", ApprovalRequest="never");
 %%
 %[text] ### Assess Goodness-of-Fit Statistics
 %[text] The `checkGoodnessOfFit` function evaluates the quality of each polynomial fit using goodness-of-fit statistics:
@@ -161,7 +161,7 @@ function [observation, workspace] = checkGoodnessOfFit(workspace)
         newline + logPoorFit + newline + logNoImprovement;
 end
 %[text] Create an `openAIFunction` object that represents the `checkGoodnessOfFit` function. To help the agent understand the purpose of the tool, provide a description.
-tools(end+1) = aisdk.LLMTool(@checkGoodnessOfFit, Workspace="agent");
+tools(end+1) = aisdk.LLMTool(@checkGoodnessOfFit, Workspace="agent", ApprovalRequest="never");
 %%
 %[text] ## Use Agent to Find Best Fit
 %[text] Set up agent.

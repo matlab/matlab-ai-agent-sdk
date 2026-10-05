@@ -130,9 +130,9 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             testCase.verifyEqual(tool.Annotations, ann);
         end
 
-        function approvalRequest_withDefault_isNever(testCase)
+        function approvalRequest_withDefault_isOnce(testCase)
             tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
-            testCase.verifyEqual(tool.ApprovalRequest, aisdk.tool.ApprovalRequest.never);
+            testCase.verifyEqual(tool.ApprovalRequest, aisdk.tool.ApprovalRequest.once);
         end
 
         function approvalRequest_withCustomValue_setsEnum(testCase)
