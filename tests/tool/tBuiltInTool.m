@@ -1,5 +1,5 @@
 classdef tBuiltInTool < matlab.unittest.TestCase
-% Tests for aisdk.tool.internal.BuiltInTool.
+% Tests for aisdk.tool.BuiltInTool.
 
 %   Copyright 2026 The MathWorks, Inc.
 

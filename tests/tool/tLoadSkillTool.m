@@ -7,7 +7,7 @@ classdef tLoadSkillTool < matlab.unittest.TestCase
 
         function constructed_isBuiltInTool(testCase)
             tool = testCase.createTool();
-            testCase.verifyInstanceOf(tool, 'aisdk.tool.internal.BuiltInTool');
+            testCase.verifyInstanceOf(tool, 'aisdk.tool.BuiltInTool');
         end
 
         function constructed_hasNameLoadSkill(testCase)

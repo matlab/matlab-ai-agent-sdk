@@ -1,4 +1,4 @@
-classdef LoadSkillTool < aisdk.tool.internal.BuiltInTool
+classdef LoadSkillTool < aisdk.tool.BuiltInTool
 %LoadSkillTool Built-in tool that loads a skill's full instructions.
 
 % Copyright 2026 The MathWorks, Inc.
