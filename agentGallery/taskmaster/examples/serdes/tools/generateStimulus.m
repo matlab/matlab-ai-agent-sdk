@@ -3,6 +3,8 @@ function [observation, workspace] = generateStimulus(workspace, nvp)
 %   [OBSERVATION, WORKSPACE] = generateStimulus(WORKSPACE, ...) creates a
 %   time-domain stimulus signal for equalization or simulation workflows.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.PRBSOrder (1,1) double = 10        % PRBS polynomial order: 7, 10, 15, 23, or 31

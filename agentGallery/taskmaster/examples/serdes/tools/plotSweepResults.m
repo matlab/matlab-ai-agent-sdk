@@ -3,6 +3,8 @@ function [observation, workspace] = plotSweepResults(workspace, nvp)
 %   [OBSERVATION, WORKSPACE] = plotSweepResults(WORKSPACE, ...) creates bar,
 %   line, heatmap, or Pareto plots from iteration history or comparison results.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.PlotStyle (1,1) string = "bar"        % Plot style: "bar", "line", "stem", "heatmap" (for 2D sweep data), "impulse" (overlay impulse responses), or "stacked" (vertically stacked subplots, one per metric in Metrics)

@@ -1,14 +1,15 @@
-%% SerDes Graph Demo (goal-driven) — taskmaster re-drives a DAG to a goal
+%% SerDes Graph Demo (goal-driven) — a taskmaster routes into the DAG
 %
-% Unlike runDemoGraph.m (which runs the whole graph once, top to bottom), this
-% demo puts an LLM TASKMASTER above the graph. The taskmaster has one tool,
-% runToGoal(goalNode), that runs the goal node + its ancestors and returns the
-% resulting metrics. The taskmaster reads those metrics and decides whether to
-% re-drive (iterate the optimization) or advance the goal (e.g. on to plotting)
-% -- a runtime, metric-gated decision the fixed toposort flow cannot express.
-% agentgraph.createTaskmaster is domain-agnostic: it learns the graph's strategy
-% from each node's Description (set in graphConfig), so nothing SerDes-specific
-% is passed here -- only the user's goal, via the prompt below.
+% This demo puts an LLM TASKMASTER above the graph. The taskmaster has one tool,
+% runToTargetNode(TargetNode=...), which runs the target and its ancestors and returns the
+% resulting metrics. It decides at runtime which stage the request actually needs
+% -- or answers a question without running anything at all.
+%
+% agentgraph.taskmaster is domain-agnostic: its graph tool lists each node's role
+% from its Description (set in rxSignoffGraphDefinition). To nest a router,
+% place it in an AgentNode; see examples/nesting.
+
+% Copyright 2026 The MathWorks, Inc.
 
 %% ---- Setup ---------------------------------------------------------------
 % Put this example folder and the +agentgraph package (two levels up) on the
@@ -18,24 +19,25 @@ addpath(here, fullfile(here, "..", ".."));
 
 client = aisdk.LLMClient("openai", "gpt-4.1-mini");
 allTools = createSerdesTools();
+% Callers may pre-load a measured channel or configured system here.
 workspace = struct();
 
-[nodes, edges] = graphConfig();
-graph = agentgraph.AgentGraph(nodes, edges, Observer=@agentgraph.livePlot);
+[nodes, edges] = rxSignoffGraphDefinition(allTools, client);
+graph = agentgraph.AgentGraph(nodes, edges, Name="rxSignoff", ...
+    Observer=@agentgraph.livePlot);
 
-taskmaster = agentgraph.createTaskmaster(client, graph, allTools, workspace);
+% Zero-config: the routing prompt is the package default.
+top = agentgraph.taskmaster(graph, client, Workspace=workspace);
 
 %% ---- Run -----------------------------------------------------------------
 prompt = "On a 28 GBaud NRZ link with 5 dB channel loss and a receiver CTLE, " + ...
     "optimize the CTLE AC gain (0-15 dB) to maximize bestEH, produce the " + ...
     "final eye diagram, and report the best gain and the resulting eye height.";
 
-% Give the graph nodes the user's intent as their base prompt.
-taskmaster.Workspace.agentGraphPrompt = prompt;
-
 fprintf('Prompt: %s\n\n', prompt);
 tic;
-response = taskmaster.run(prompt);
+response = top.run(prompt);
+workspace = top.Workspace;
 elapsed = toc;
 
 %% ---- Output --------------------------------------------------------------
@@ -44,20 +46,16 @@ fprintf(' Taskmaster Result\n');
 fprintf('========================================\n');
 fprintf('%s\n', response);
 
-% Goal-drive trajectory.
-goalLog = taskmaster.Workspace.goalLog;
-fprintf('\n--- Goal-drive trajectory (%d drives) ---\n', numel(goalLog));
-for i = 1:numel(goalLog)
-    fprintf('  %d. goalNode=%-10s ran: %s\n', i, ...
-        goalLog{i}.goalNode, strjoin(goalLog{i}.ranNodes, ", "));
-end
-% Token usage: taskmaster (outer) + graph nodes (inner).
-tmTokens = taskmaster.NumTotalTokens;
-ws = taskmaster.Workspace;
-if isfield(ws, 'tokenUsage')
-    nodeTokens = ws.tokenUsage.total;
+% What actually ran, in run order, as recorded by the engine. Nothing ran if the
+% taskmaster answered the request as a question.
+trace = agentgraph.utils.nodeTrace(workspace, "rxSignoff");
+if ~isempty(trace)
+    fprintf('\n--- Nodes run ---\n  %s\n', ...
+        strjoin(trace, " -> "));
 else
-    nodeTokens = 0;
+    fprintf('\n--- No drive: answered directly ---\n');
 end
-fprintf('\n--- %.1f s | %d tokens (taskmaster: %d, nodes: %d) ---\n', ...
-    elapsed, tmTokens + nodeTokens, tmTokens, nodeTokens);
+
+% The public helper adds the top router's tokens to all graph-node tokens.
+fprintf('\n--- %.1f s | %d tokens ---\n', ...
+    elapsed, agentgraph.utils.totalTokens(top));

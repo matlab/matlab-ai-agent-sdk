@@ -6,6 +6,8 @@ function allTools = createSerdesTools()
 %   missing toolboxes are rethrown; other schema conversion failures (e.g.
 %   struct-typed args) are skipped with a warning.
 
+% Copyright 2026 The MathWorks, Inc.
+
     toolsDir = fullfile(fileparts(mfilename('fullpath')), "tools");
     addpath(toolsDir);
 
@@ -14,13 +16,14 @@ function allTools = createSerdesTools()
     for i = 1:numel(toolFiles)
         [~, toolName] = fileparts(toolFiles(i).name);
         try
-            allTools(end+1) = aisdk.LLMTool(str2func(toolName), Workspace="agent"); %#ok<AGROW>
+            allTools(end+1) = aisdk.LLMTool(str2func(toolName), ...
+                Workspace="agent", ApprovalRequest="never"); %#ok<AGROW>
         catch ex
             if startsWith(ex.identifier, "MATLAB:undefinedVarOrClass") ...
                     || startsWith(ex.identifier, "MATLAB:UndefinedFunction")
                 rethrow(ex);
             end
-            warning("agentgraph:ToolSkipped", ...
+            warning("serdes:toolSkipped", ...
                 "Skipping tool '%s': %s", toolName, ex.message);
         end
     end

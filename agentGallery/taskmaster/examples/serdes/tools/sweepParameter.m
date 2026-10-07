@@ -4,6 +4,8 @@ function [observation, workspace] = sweepParameter(workspace, nvp)
 %   two parameters over specified ranges, runs analysis at each point, and
 %   returns the metrics grid.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.Parameter (1,1) string   % Parameter name to sweep: "Modulation", "FFETapWeights", "CTLEACGain", "CTLEDCGain", "CTLEConfigSelect", "DFENumTaps", "ChannelLossdB", or "TxRiseTime" (in ps)

@@ -1,9 +1,11 @@
 %% SerDes Flat Agent Demo — Optimize CTLE Gain for Eye Height
 %
-%  A single AIAgent with the full tool set figures out the workflow on its own.
+%  A single AIAgent with the graph's tool set figures out the workflow itself.
 %
 %  Run: open in MATLAB and press F5, or:
 %    matlab -batch "run('agentGallery/taskmaster/examples/serdes/runDemoFlatAgent.m')"
+
+% Copyright 2026 The MathWorks, Inc.
 
 %% ---- Setup ---------------------------------------------------------------
 % Put this example folder and the +agentgraph package (two levels up) on the
@@ -13,15 +15,19 @@ addpath(here, fullfile(here, "..", ".."));
 
 client = aisdk.LLMClient("openai", "gpt-4.1-mini");
 allTools = createSerdesTools();
-workspace = struct();
+[graphNodes, ~] = rxSignoffGraphDefinition(allTools, client);
+graphToolNames = strings(1,0);
+for i = 1:numel(graphNodes)
+    graphToolNames = union(graphToolNames, [graphNodes(i).Agent.Tools.Name]);
+end
+agentTools = allTools(ismember([allTools.Name], graphToolNames));
 
 promptDir = fullfile(fileparts(mfilename('fullpath')), "prompts");
 systemPrompt = string(fileread(fullfile(promptDir, "agent.md")));
 
 agent = aisdk.AIAgent(client, ...
     SystemPrompt  = systemPrompt, ...
-    Tools         = allTools, ...
-    Workspace     = workspace, ...
+    Tools         = agentTools, ...
     DisplayMode   = "detailed", ...
     MaxIterations = 30);
 

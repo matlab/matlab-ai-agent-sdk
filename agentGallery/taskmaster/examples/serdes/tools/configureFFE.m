@@ -3,6 +3,8 @@ function [observation, workspace] = configureFFE(workspace, nvp)
 %   [OBSERVATION, WORKSPACE] = configureFFE(WORKSPACE, ...) sets parameters
 %   on the FFE block. If Side is not specified, defaults to Tx (most common).
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.Side (1,1) string = "Tx"              % Side to configure: "Tx" or "Rx"

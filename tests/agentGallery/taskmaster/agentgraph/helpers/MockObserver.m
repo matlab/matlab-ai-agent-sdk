@@ -1,5 +1,7 @@
-classdef MockObserver < agentgraph.GraphObserver
+classdef MockObserver < handle
 %MOCKOBSERVER  Test double that records all observer calls for assertion.
+
+% Copyright 2026 The MathWorks, Inc.
 
     properties
         Log cell = {}

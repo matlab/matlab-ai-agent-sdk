@@ -5,6 +5,8 @@ function [observation, workspace] = createSerdesSystem(workspace, nvp)
 %   Does not create Tx/Rx blocks — call setTransmitterArchitecture and
 %   setReceiverArchitecture next.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.DataRate double = []              % Data (bit) rate in bits/sec, e.g. 112e9 for "112 Gbps". For PAM4 this is 2x the baud rate. Use when the link is given in Gbps / Gb/s / data rate / line rate. Omit and use BaudRate if given in GBaud. Defaults to 28e9 if neither is given.
@@ -20,16 +22,8 @@ function [observation, workspace] = createSerdesSystem(workspace, nvp)
         workspace (1,1) struct
     end
 
-    cfg = struct();
-    if isfile("config.json")
-        cfg = jsondecode(fileread("config.json"));
-    end
-
-    % Modulation: agent NVP > config fallback
+    % Modulation defaults to NRZ.
     modulation = nvp.Modulation;
-    if isempty(modulation) && isfield(cfg, 'modulation')
-        modulation = cfg.modulation;
-    end
     if isempty(modulation)
         modulation = 2;
     end
@@ -37,14 +31,7 @@ function [observation, workspace] = createSerdesSystem(workspace, nvp)
     % Rate resolution: accept either BaudRate (symbol rate) or DataRate (bit rate).
     % SymbolTime = 1/baud; dataRate (bits/sec) = baud * log2(modulation).
     baudRate = nvp.BaudRate;
-    if isempty(baudRate) && isfield(cfg, 'BaudRate')
-        baudRate = cfg.BaudRate;
-    end
-
     dataRate = nvp.DataRate;
-    if isempty(dataRate) && isfield(cfg, 'DataRate')
-        dataRate = cfg.DataRate;
-    end
 
     if ~isempty(baudRate)
         % Baud-specified: symbol time is independent of modulation.
@@ -71,11 +58,8 @@ function [observation, workspace] = createSerdesSystem(workspace, nvp)
     end
     nyquistFreq = 1 / (2 * symbolTime);
 
-    % SamplesPerSymbol: agent NVP > config > default 16
+    % SamplesPerSymbol defaults to 16.
     samplesPerSymbol = nvp.SamplesPerSymbol;
-    if isempty(samplesPerSymbol) && isfield(cfg, 'samplesPerSymbol')
-        samplesPerSymbol = cfg.samplesPerSymbol;
-    end
     if isempty(samplesPerSymbol)
         samplesPerSymbol = 16;
     end
@@ -87,11 +71,8 @@ function [observation, workspace] = createSerdesSystem(workspace, nvp)
 
     sampleInterval = symbolTime / samplesPerSymbol;
 
-    % BERtarget: agent NVP > config > default 1e-6
+    % BERtarget defaults to 1e-6.
     berTarget = nvp.BERtarget;
-    if isempty(berTarget) && isfield(cfg, 'berTarget')
-        berTarget = cfg.berTarget;
-    end
     if isempty(berTarget)
         berTarget = 1e-6;
     end

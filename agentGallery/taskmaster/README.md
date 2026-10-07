@@ -1,107 +1,78 @@
-# Optimize SerDes Equalization with AI Agents
+# Orchestrate Graph-Based Workflows with Taskmaster Agent
 
-### Why graph-based AI agents?
+> **Naming note:** The `+agentgraph` package and `AgentGraph` class are due to be renamed. The names below reflect the current API.
 
-An AI agent is an LLM that can reason and call external tools. The simplest architecture hands the agent every tool at once (a "flat" tool set). Agents can handle repetitive multi-step workflows autonomously, but those with a flat tool set may call tools out of order or skip steps. Encoding the workflow into a graph constrains *what* is allowed to happen and in *what order* — giving you the productivity of an agent with the determinism of a script.
+Taskmaster is a custom graph-based agent architecture built with the AI Agent SDK. A taskmaster is an `aisdk.AIAgent` configured to route a request through an `AgentGraph`. The router selects a target node, and the graph runs that node and its prerequisites in dependency order. An agent at a node can still decide which of its tools to call, so the graph controls stage order without making agent decisions reproducible.
 
-This demo explores three levels of graph-based agent autonomy:
-
-1. **Flat Agent** — A single `AIAgent` with a single "flat" array of tools, with a simple agent loop that figures out the workflow on its own.
-2. **Agent Graph** — Four specialized agents, implemented as an `AgentNode` execute in fixed dependency order via a `ToposortEngine`. Each agent sees only the tools it needs. The execution order is deterministic and defined by the graph edges.
-3. **Taskmaster** — Same Agent Graph, but an LLM orchestrator (the Taskmaster) sits above it. The Taskmaster has one tool — `runToGoal(goalNode)` — which runs the goal node and all its ancestors.
-
-### The SerDes task
-
-**SerDes** (Serializer/Deserializer) links are the high-speed interconnects inside every modern chip-to-chip interface — PCIe, USB, Ethernet, DDR. At multi-gigabit data rates, the physical channel distorts signals, so designers add equalization (CTLE, FFE, DFE) to compensate for signal loss. The design task is to configure the channel model, choose equalizer parameters, run signal-integrity analysis, and iterate until the opening of the eye diagram meets spec. For background on the scripting workflow this demo automates, see [Surrogate Optimization and Scripting for SerDes System Design](https://www.mathworks.com/help/serdes/ug/surrogate-optimization-and-scripting-for-serdes-system-design.html).
-
-![1785934518355](image/README/1785934518355.png)
+Graphs can contain `AgentNode` and `FunctionNode` steps. See the [architecture guide](+agentgraph/ARCHITECTURE.md) for the graph and workspace model.
 
 ## Requirements
 
-To run this example, you need:
+- MATLAB R2025a or later.
+- The AI Agent SDK (`+aisdk` on the MATLAB path) and access to an LLM endpoint.
 
-- MATLAB R2025a or later (R2026a+ required for AMI export tools)
-- SerDes Toolbox — required by the tools
-- Signal Integrity Toolbox — required additionally by the `optimize` tool, which uses `gaSI`
-- AI Agent SDK (`+aisdk` on the MATLAB path)
-- Access to an LLM endpoint (default: OpenAI `gpt-4.1-mini`)
+The [SerDes example](examples/serdes/README.md) has additional toolbox requirements.
 
 ## Setup
 
-The AI Agent SDK connects to OpenAI by default. Set the `OPENAI_API_KEY` environment variable or save it to a `.env` file on the MATLAB path.
-
-To use a different provider, change the `LLMClient` constructor in `examples/serdes/runDemoFlatAgent.m` (or whichever demo script you are running):
+From the repository root, add the taskmaster package parent to the MATLAB path:
 
 ```matlab
-client = aisdk.LLMClient("ollama","qwen2.5:32b");
+addpath("agentGallery/taskmaster")
 ```
 
-## Run Example
+For the OpenAI examples, set `OPENAI_API_KEY` in the environment or in a `.env` file on the MATLAB path. You can use another provider by changing the `aisdk.LLMClient` constructor in an example script.
 
-Each script puts itself and the `+agentgraph` package on the path, so run it from anywhere — the paths below
-are relative to the repository root.
+## Create a taskmaster
 
-There are three ways to run this example:
-
-**Flat agent:** A single agent with all tools figures out the order on its own.
+Give the graph a name and give each routable node a description. The taskmaster factory returns an `aisdk.AIAgent`, so it uses the normal `run` and `Workspace` API:
 
 ```matlab
->> run agentGallery/taskmaster/examples/serdes/runDemoFlatAgent.m
+prepare = agentgraph.FunctionNode("prepare", ...
+    @(workspace) deal("Prepared", workspace), ...
+    Description="Prepare the input");
+measure = agentgraph.FunctionNode("measure", ...
+    @(workspace) deal("Measured", workspace), ...
+    Description="Measure the prepared input");
+
+graph = agentgraph.AgentGraph([prepare, measure], ...
+    ["prepare", "measure"], Name="example");
+client = aisdk.LLMClient("openai", "gpt-4.1-mini");
+top = agentgraph.taskmaster(graph, client);
+
+response = top.run("Measure the input.");
+workspace = top.Workspace;
 ```
 
-**Agent graph:** Four specialized agents — build, analyse, optimize, plot — execute in dependency order via a fixed graph traversal.
+The router offers `runToTargetNode(TargetNode=...)` to the model. If it selects `measure`, the graph runs `prepare` first. The function nodes above are small placeholders; the examples below show agents and tools in larger workflows.
+
+## Nest taskmasters
+
+To route through multiple graph levels, put a taskmaster in an `AgentNode` of an outer graph. See the [nested graphs example](examples/nesting/README.md) for a walkthrough.
+
+## Run and rerun
+
+When the router drives a graph, completed node results are cached in the agent workspace. A later drive can reuse them. Changing the prompt or application data does not automatically invalidate the cache. Clear affected results before asking the router to redo work:
 
 ```matlab
->> run agentGallery/taskmaster/examples/serdes/runDemoAgentGraph.m
+workspace = graph.clearCache(top.Workspace, Node="measure");
+top.Workspace = workspace;
+response = top.run("Measure the input again.");
 ```
 
-**Taskmaster:** Same graph, but the Taskmaster agent decides which goal node to drive and can re-iterate until metrics are met.
+`Node="measure"` clears that node and its downstream nodes at this graph level. `graph.clearCache(top.Workspace)` clears all cached nodes for every occurrence of that named graph in the workspace. Inner graphs keep their own caches; clear those with their own graph objects. Cache clearing leaves prompts, node traces, application data, and router conversation intact.
 
-```matlab
->> run agentGallery/taskmaster/examples/serdes/runDemoTaskmaster.m
-```
+A direct `graph.traverse(...)` call executes the selected nodes without reading or writing this routed cache. The router is prompted to drive at most once per user request; a follow-up drive starts with another `top.run(...)` call.
 
-All target the same outcome: optimal equalization and a statistical eye diagram. The graph demos add live observability (a GUI showing node progress) and restrict each agent to only the tools it needs.
+## Examples
 
-### Layout
+| Example | What it shows |
+| --- | --- |
+| [SerDes equalization](examples/serdes/README.md) | A flat agent and a taskmaster over a SerDes workflow. |
+| [Nested simulation](examples/nesting/README.md) | Two graph levels, each with a router. |
 
-The framework sits at the top; each domain it is demonstrated on gets a folder under `examples/`.
+## See also
 
-| File                                    | Purpose                                                                           |
-| --------------------------------------- | --------------------------------------------------------------------------------- |
-| `+agentgraph/`                          | Domain-agnostic graph framework — see [Architecture](+agentgraph/ARCHITECTURE.md) |
-| `prompts/`                              | Taskmaster system prompt used by the framework                                     |
-| `examples/serdes/runDemoFlatAgent.m`  | Single-agent demo script                                                          |
-| `examples/serdes/runDemoAgentGraph.m` | Fixed graph traversal (toposort, no orchestrator)                                 |
-| `examples/serdes/runDemoTaskmaster.m` | Graph + LLM Taskmaster orchestration                                              |
-| `examples/serdes/createSerdesTools.m` | Tool array factory (shared by all three scripts above)                            |
-| `examples/serdes/tools/`              | Individual tool wrapper functions                                                 |
-| `examples/serdes/graphConfig.m`       | Graph node definitions, edges, and per-node prompts                               |
-| `examples/serdes/prompts/`            | One system prompt per node                                                        |
-
-## Tools
-
-The `examples/serdes/tools/` directory contains 19 self-contained tool functions covering the full SerDes workflow:
-
-- **System setup** — `createSerdesSystem`, `configureChannel`, `configureAnalogModel`
-- **Equalization** — `configureCTLE`, `configureFFE`, `configureDFECDR`, `configureVGA`
-- **Analysis** — `runAnalysis`, `getAnalysisResults`, `generateStimulus`, `equalizeWaveform`, `measureWaveform`
-- **Optimization** — `sweepParameter`, `optimizeWithGA`
-- **Visualization** — `plotSerdesResults`, `plotSweepResults`
-- **Export** — `exportToSimulink`, `exportAMI`, `getSystemState`
-
-Each tool follows the same signature: `[observation, workspace] = toolName(workspace, ...)`. The workspace struct threads state between tools.
-
-### Swapping in your own tools
-
-To add or replace tools, drop a `.m` file into `examples/serdes/tools/` with the standard signature. `createSerdesTools` auto-discovers all `.m` files in that directory and registers them as `aisdk.LLMTool` objects. To restrict which tools a graph node sees, set `ToolNames` on the `AgentNode` in `graphConfig.m`.
-
-## Issues
-
-If you find bugs or unexpected behavior in the demo or tools, please open an issue.
-
-## See Also
-
-[+agentgraph Architecture](+agentgraph/ARCHITECTURE.md) | [aisdk.AIAgent](../../+aisdk/AIAgent.m) | [aisdk.LLMTool](../../+aisdk/LLMTool.m) | [aisdk.LLMClient](../../+aisdk/LLMClient.m)
+[Architecture](+agentgraph/ARCHITECTURE.md) · [aisdk.AIAgent](../../+aisdk/AIAgent.m) · [aisdk.LLMClient](../../+aisdk/LLMClient.m)
 
 *Copyright 2026 The MathWorks, Inc.*

@@ -4,6 +4,8 @@ function [observation, workspace] = getAnalysisResults(workspace, nvp)
 %   detailed results: adapted EQ parameters, pulse response, bathtub curves,
 %   or full metrics struct.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.Query (1,1) string = "metrics" % Query type: "metrics", "adaptedtaps", "adaptedctle", "pulse", "channelimpulse", "bathtub", or "history"

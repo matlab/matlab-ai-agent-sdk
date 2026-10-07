@@ -4,6 +4,8 @@ function [observation, workspace] = measureWaveform(workspace, nvp)
 %   diagram (eyeDiagramSI) or runs jitter decomposition on the equalized
 %   waveform stored in workspace.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.Type (1,1) string = "eye"  % Measurement type: "eye" or "jitter"

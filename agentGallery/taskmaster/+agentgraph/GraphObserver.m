@@ -1,6 +1,8 @@
 classdef (Abstract) GraphObserver < handle
 %GRAPHOBSERVER  Event interface for observing graph execution.
 
+% Copyright 2026 The MathWorks, Inc.
+
     methods (Abstract)
         nodeRunning(this, nodeName)
         nodeDone(this, nodeName, result)

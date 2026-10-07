@@ -3,6 +3,8 @@ function [observation, workspace] = getSystemState(workspace, nvp)
 %   [OBSERVATION, WORKSPACE] = getSystemState(WORKSPACE) reports the current
 %   state of the SerDes system: timing, architecture, channel, and metrics.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.Verbose (1,1) logical = false       % Include detailed block parameters: true or false

@@ -6,6 +6,8 @@ function [observation, workspace] = equalizeWaveform(workspace, nvp)
 %   FFE and CTLE accept full vectors; DFECDR/DFE process sample-by-sample
 %   with adaptive tap weights and CDR phase tracking.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.PreloadDFETaps (1,:) double = [] % Initial DFE tap weights vector, e.g. [0.1 0.05 0.02]

@@ -4,6 +4,8 @@ function [observation, workspace] = exportToSimulink(workspace, nvp)
 %   exportToSimulink on the analyzed SerdesSystem to create a Simulink model
 %   for time-domain simulation or AMI export.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.ModelName (1,1) string = "untitled"   % Simulink model name without extension (e.g., "mySerdes")

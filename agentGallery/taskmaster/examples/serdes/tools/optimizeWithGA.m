@@ -3,6 +3,8 @@ function [observation, workspace] = optimizeWithGA(workspace, nvp)
 %   [OBSERVATION, WORKSPACE] = optimizeWithGA(WORKSPACE, ...) runs GA
 %   optimization on specified block properties to maximize/minimize a metric.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.Objective (1,1) string = "maximize COM" % Goal: "maximize COM", "maximize EH", "maximize EW", or "minimize VEC"

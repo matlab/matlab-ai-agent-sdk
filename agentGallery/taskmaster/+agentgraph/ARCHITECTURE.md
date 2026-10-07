@@ -1,130 +1,105 @@
-# `+agentgraph` — Architecture Reference
+# Agent graph architecture
 
-> Source of truth for the domain-agnostic graph framework in `+agentgraph/`.
-> The SerDes demo wires this framework in `graphConfig.m` and `runDemoTaskmaster.m`.
+> **Naming note:** The `+agentgraph` package and `AgentGraph` class are due to be renamed. The names in this document reflect the current API.
 
----
+`AgentGraph` is a named DAG of `Node` objects. It executes a whole
+graph or a target node and its ancestors. A direct call uses the graph without a
+router:
 
-## 1. What this package is
-
-`+agentgraph` runs a **multi-agent, graph-structured** workflow. A user prompt
-is executed by walking a directed acyclic graph of nodes. Each node is either an
-LLM agent with a focused tool subset (`AgentNode`) or a deterministic function
-(`FunctionNode`). An optional **taskmaster** sits above the graph and picks which
-goal node to drive, reading metrics between iterations.
-
-The framework is **domain-agnostic** — it knows nothing about SerDes. All domain
-knowledge comes from:
-- Node definitions in `graphConfig.m` (tools, prompts, descriptions)
-- Tool factory (`createSerdesTools.m`, auto-discovers `tools/*.m`)
-- The workspace struct threaded through execution
-
----
-
-## 2. Class hierarchy
-
-```
-agentgraph.Node              (abstract: Name, Description, execute)
-  ├── agentgraph.AgentNode   (LLM agent with sliced tool subset)
-  └── agentgraph.FunctionNode (deterministic function handle, no LLM)
-
-agentgraph.Engine            (abstract: traverse strategy)
-  └── agentgraph.ToposortEngine (DAG guard → toposort → sequential run-loop)
-
-agentgraph.AgentGraph        (graph data + run delegation to Engine)
+```matlab
+[result, workspace] = graph.traverse(request, workspace, TargetNode="measure");
 ```
 
----
+Each node runs once in dependency order and receives the same workspace struct.
+`FunctionNode` executes a tool object or a function handle. `AgentNode` runs a
+configured `aisdk.AIAgent`; its `ClearHistory` setting controls whether messages
+are restored before each node execution.
 
-## 3. Key files
+## Routing and nesting
+
+`agentgraph.taskmaster(graph, client, ...)` returns an ordinary `aisdk.AIAgent`.
+Its `runToTargetNode(TargetNode=...)` tool is built by `graph.asTool()` and lists
+the graph's node descriptions. A target drive executes that node and its
+ancestors, reusing cached results when available. The router may also have
+ordinary tools. Its latest user request is passed to the graph when it calls
+the graph tool.
+
+```matlab
+inner = agentgraph.AgentGraph(nodes, edges, Name="inner");
+router = agentgraph.taskmaster(inner, client);
+```
+
+For a standalone route, call `router.run(request)` and read
+`router.Workspace`. Alternatively, put that router in an `AgentNode` in an
+outer graph. Here `report` runs after `analyse` and reads what the inner graph
+recorded in the workspace:
+
+```matlab
+analyse = agentgraph.AgentNode("analyse", router, ...
+    Description="Run the inner analysis", ClearHistory=false);
+report = agentgraph.FunctionNode("report", @reportAnalysis, ...
+    Description="Report which analysis nodes completed");
+outer = agentgraph.AgentGraph([analyse, report], ...
+    ["analyse", "report"], Name="outer");
+top = agentgraph.taskmaster(outer, client);
+response = top.run(request);
+workspace = top.Workspace;
+
+function [result, workspace] = reportAnalysis(workspace)
+    completed = agentgraph.utils.nodeTrace(workspace, "outer.analyse");
+    if isempty(completed)
+        result = "No analysis nodes ran.";
+    else
+        result = "Analysis nodes completed: " + join(completed, ", ");
+    end
+end
+```
+
+The `analyse` node binds a copy of the graph tool to its owning workspace path
+during execution. The original tool remains bound to `inner` for a direct
+router run. The `analyse -> report` edge sets their order; `reportAnalysis`
+receives the workspace, not `analyse`'s return value directly.
+The graph tool and its bound path are implementation details; the public setup
+is the factory, `AgentNode`, and `AgentGraph`.
+
+## Workspace and cache
+
+The workspace is the persisted graph state. Records live under
+`workspace.agentgraph`: a direct graph traversal uses its `Name`, while a nested
+drive uses its owning node path, such as `outer.analyse`. Each record stores the
+graph name and can store the driven request, completed node trace, and cached
+node results. Other
+workspace fields belong to application tools. Token usage from graph nodes
+accumulates in `workspace.tokenUsage`.
+
+`graph.clearCache(workspace)` removes that named graph's immediate cache layer
+at every occurrence in the workspace. `Node="B"` clears B and its downstream
+nodes at that layer. Enclosing and nested layers remain intact. Direct
+`graph.traverse(...)` executes selected nodes even when the workspace holds cached
+results; target drives through the graph tool reuse them.
+
+Use the read-only public helpers to inspect a workspace:
+
+```matlab
+levels = agentgraph.utils.graphLevels(workspace);
+trace = agentgraph.utils.nodeTrace(workspace, "outer.analyse");
+tokens = agentgraph.utils.totalTokens(top);
+```
+
+`totalTokens(top)` adds the top router's own tokens to those recorded in its
+workspace. `totalTokens(workspace)` returns only the workspace total. Do not
+pass a nested `AgentNode`'s agent to this helper, because its tokens are already
+included in the workspace.
+
+## Files
 
 | File | Responsibility |
-|------|----------------|
-| `AgentGraph.m` | Graph data (nodes, edges) + stateless helpers (`getNode`, `dependencyString`, `describeNodes`, `buildNodePrompt`, `executionOrder`). `run()` delegates to its `Engine`. |
-| `Engine.m` | Abstract traversal strategy: `traverse(graph, prompt, workspace, allTools, client)`. |
-| `ToposortEngine.m` | Default engine: `digraph → DAG guard → toposort → run-loop`; optional `GoalNode` for partial traversal (goal + ancestors only). |
-| `Node.m` | Abstract node base: `Name`, `Description`, `execute(...)` contract. |
-| `AgentNode.m` | LLM node. Slices global tools to its declared subset, spawns a fresh `AIAgent`, runs it. Calls observer hooks (`nodeRunning`, `nodeDone`, `nodeError`) with `drawnow` for live UI. |
-| `FunctionNode.m` | Deterministic node — a function handle, no LLM. |
-| `createTaskmaster.m` | Factory: builds an `AIAgent` with a single `runToGoal(goalNode)` tool. Domain-agnostic; learns graph strategy from each node's `Description`. |
-| `GraphObserver.m` | Abstract handle class defining the observer interface (7 methods: `nodeRunning`, `nodeDone`, `nodeError`, `toolStarted`, `toolResult`, `agentDecision`, `routerDecision`). |
-| `livePlot.m` | Minimal live visualizer: returns a duck-typed observer struct with function-handle fields. Uses `uifigure` + `uihtml` with inline SVG. |
-
----
-
-## 4. Two execution modes
-
-### Fixed-flow (`runDemoAgentGraph.m`)
-
-`AgentGraph.run()` → `ToposortEngine` runs every node in topo order, once.
-No decisions at runtime.
-
-### Goal-driven (`runDemoTaskmaster.m`)
-
-An LLM taskmaster wraps the graph. Its single tool `runToGoal(goalNode)` calls
-`graph.run(..., GoalNode=goalNode)` which runs only that node + its ancestors.
-The taskmaster reads the resulting observation, decides whether to re-drive
-(iterate optimization) or advance to a later goal. This is a runtime,
-metric-gated decision the fixed toposort cannot express.
-
----
-
-## 5. Prompt management
-
-Node prompts are example-specific and live in
-`agentGallery/taskmaster/examples/serdes/prompts/*.md`:
-
-| File | Node |
-|------|------|
-| `build.md` | build |
-| `analyse.md` | analyse |
-| `optimize.md` | optimize |
-| `plot.md` | plot |
-
-`graphConfig.m` loads these via `fileread`.
-
-The taskmaster prompt is domain-agnostic, so it sits with the framework in
-`agentGallery/taskmaster/prompts/taskmaster.md`. `createTaskmaster.m` loads it
-and replaces the `{{nodeRoles}}` placeholder with the graph's actual node
-descriptions.
-
----
-
-## 6. Observer protocol
-
-The formal interface is `agentgraph.GraphObserver` (abstract handle class):
-
-```matlab
-observer.nodeRunning(nodeName)
-observer.nodeDone(nodeName, result)
-observer.nodeError(nodeName, err)
-observer.toolStarted(nodeName, toolName, inputText)
-observer.toolResult(nodeName, toolName, isError, outputText)
-observer.agentDecision(nodeName, text)
-observer.routerDecision(fromName, chosenName, reason)
-```
-
-`livePlot.m` returns a duck-typed struct with function-handle fields implementing
-a subset of this interface. Both approaches work — nodes call methods on whatever
-`graph.Observer` is set to. `drawnow` is called after each hook in `AgentNode`
-to flush UI events before re-entering blocking LLM calls.
-
-The `Observer` NVP on the `AgentGraph` constructor accepts either a pre-built
-observer or a function handle that takes the graph and returns an observer:
-
-```matlab
-graph = agentgraph.AgentGraph(nodes, edges, Observer=@agentgraph.livePlot);
-```
-
----
-
-## 7. Tool auto-detection
-
-`createSerdesTools.m` auto-discovers all `.m` files in `tools/` and registers
-each as an `aisdk.LLMTool` using the SDK's introspection: the function's H1 line
-becomes the `Description` and its `arguments` block becomes `InputArguments`.
-Tools that fail schema conversion are skipped with a warning.
-
----
+| --- | --- |
+| `AgentGraph.m` | Graph definition, topological traversal, target tool, cache clearing |
+| `Node.m`, `FunctionNode.m`, `AgentNode.m` | Node execution contracts |
+| `taskmaster.m` | Construct and connect a router agent |
+| `+internal/GraphTargetTool.m` | Target selection tool and bound workspace path |
+| `+internal/Workspace.m` | Workspace record layout and cache access |
+| `+utils/` | Public workspace inspection helpers |
 
 *Copyright 2026 The MathWorks, Inc.*

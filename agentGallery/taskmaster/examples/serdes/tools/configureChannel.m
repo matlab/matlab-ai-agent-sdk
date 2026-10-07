@@ -4,6 +4,8 @@ function [observation, workspace] = configureChannel(workspace, nvp)
 %   channel using a loss model, S-parameter file, or raw impulse response.
 %   Source is determined by which NV pairs are provided.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.Source (1,1) string = ""                  % Channel source type: "loss", "sparameter", or "impulse"

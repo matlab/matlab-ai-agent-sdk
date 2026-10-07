@@ -1,6 +1,8 @@
 function [observation, workspace] = configureVGA(workspace, nvp)
 %configureVGA Configure a VGA (Variable Gain Amplifier) block.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.Side (1,1) string = ""            % "Tx" or "Rx"; auto-detected if omitted

@@ -4,6 +4,8 @@ function [observation, workspace] = exportAMI(workspace, nvp)
 %   serdes.AMIExport object for the exported Simulink model, configures
 %   export settings, and generates compiled AMI files.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.Dir (1,1) string = ""                         % Output directory path for AMI files

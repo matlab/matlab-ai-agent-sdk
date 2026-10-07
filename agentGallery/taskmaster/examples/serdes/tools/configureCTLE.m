@@ -3,6 +3,8 @@ function [observation, workspace] = configureCTLE(workspace, nvp)
 %   [OBSERVATION, WORKSPACE] = configureCTLE(WORKSPACE, ...) sets parameters
 %   on the CTLE block. Specification must be set before gain properties.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.Specification (1,1) string = ""       % "DC Gain and Peaking Gain" (default), "DC Gain and AC Gain", "AC Gain and Peaking Gain", or "GPZ Matrix"

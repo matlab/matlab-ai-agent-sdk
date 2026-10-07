@@ -4,6 +4,8 @@ function [observation, workspace] = configureAnalogModel(workspace, nvp)
 %   analog characteristics (rise time, parasitic capacitance, termination
 %   impedance) and jitter/noise sources for the specified side.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.Side (1,1) string = "Tx"              % Side to configure: "Tx" or "Rx"

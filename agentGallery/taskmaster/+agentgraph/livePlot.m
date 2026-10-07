@@ -1,5 +1,5 @@
 function app = livePlot(graph)
-%LIVEPLOT  Minimal live graph visualizer for an AgentGraph run.
+%LIVEPLOT  Minimal live graph visualizer for an AgentGraph traversal.
 %
 %   APP = AGENTGRAPH.LIVEPLOT(GRAPH) opens a uifigure showing the graph nodes
 %   as SVG circles connected by arrowed edges. Returns an object with methods
@@ -9,7 +9,9 @@ function app = livePlot(graph)
 %   Usage:
 %       app = agentgraph.livePlot(graph);
 %       graph.Observer = app;
-%       graph.run(client, prompt, workspace, tools);
+%       graph.traverse(prompt, workspace);   % each node owns its tools
+
+% Copyright 2026 The MathWorks, Inc.
 
     names = graph.executionOrder();
     edges = graph.Edges;

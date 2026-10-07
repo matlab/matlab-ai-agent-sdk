@@ -4,6 +4,8 @@ function [observation, workspace] = runAnalysis(workspace, nvp)
 %   from the configured Tx, Rx, and channel, runs analysis(), and reports
 %   key metrics (COM, EH, EW, VEC).
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.Tag (1,1) string = "" % Optional label for this analysis run (e.g., "baseline")
@@ -19,7 +21,7 @@ function [observation, workspace] = runAnalysis(workspace, nvp)
         return;
     end
     if ~isfield(workspace, 'channel')
-        observation = "Cannot run analysis: no channel configured. Call configureChannel first (defaults to 8 dB loss if no params given).";
+        observation = "Cannot run analysis: no channel configured. Call configureChannel first (its default loss is 8 dB).";
         return;
     end
 

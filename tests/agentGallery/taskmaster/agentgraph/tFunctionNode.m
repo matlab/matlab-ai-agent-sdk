@@ -1,5 +1,7 @@
 classdef tFunctionNode < matlab.unittest.TestCase
 
+% Copyright 2026 The MathWorks, Inc.
+
     methods (TestClassSetup)
         function addToPath(testCase)
             repoRoot = fileparts(fileparts(fileparts(fileparts(fileparts(mfilename("fullpath"))))));
@@ -7,10 +9,84 @@ classdef tFunctionNode < matlab.unittest.TestCase
                 fullfile(repoRoot, 'agentGallery', 'taskmaster')));
             testCase.applyFixture(matlab.unittest.fixtures.PathFixture( ...
                 fullfile(repoRoot, 'tests', 'agentGallery', 'taskmaster', 'agentgraph', 'helpers')));
+            testCase.applyFixture(matlab.unittest.fixtures.PathFixture( ...
+                fullfile(repoRoot, 'tests', 'resources', 'functions')));
         end
     end
 
     methods (Test, TestTags = {'Unit'})
+
+        function FunctionNode_withNonIdentifierName_throws(testCase)
+            testCase.verifyError(@() agentgraph.FunctionNode( ...
+                "not a name", @(w) deal("ok", w)), ...
+                "MATLAB:validators:mustBeValidVariableName");
+        end
+
+        %% Tool object form
+
+        function constructor_withTool_usesToolName(testCase)
+            tool = aisdk.LLMTool(@stampWorkspace, Workspace="agent");
+            node = agentgraph.FunctionNode(tool);
+
+            testCase.verifyEqual(node.Name, "stampWorkspace");
+            testCase.verifyEqual(node.Tool, tool);
+        end
+
+        function FunctionNode_withFunctionHandle_stillWorks(testCase)
+            node = agentgraph.FunctionNode("n", @(w) deal("ok",w));
+
+            testCase.verifyEmpty(node.Tool);
+        end
+
+        function FunctionNode_withDescription_storesIt(testCase)
+            % A handle-form node has no tool to take a description from, and a
+            % taskmaster routes on descriptions.
+            node = agentgraph.FunctionNode("n", @(w) deal("ok",w), ...
+                Description="Does the thing");
+
+            testCase.verifyEqual(node.Description, "Does the thing");
+        end
+
+        function constructor_withToolAndDescription_usesOverride(testCase)
+            tool = aisdk.LLMTool(@stampWorkspace, Workspace="agent");
+            node = agentgraph.FunctionNode(tool, Description="Graph-specific");
+
+            testCase.verifyEqual(node.Description, "Graph-specific");
+        end
+
+        function constructor_withTwoTools_throws(testCase)
+            tool = aisdk.LLMTool(@stampWorkspace, Workspace="agent");
+
+            testCase.verifyError(@() agentgraph.FunctionNode([tool tool]), ...
+                "agentgraph:invalidFunctionNodeArguments");
+        end
+
+        function constructor_withNameButNoFunction_throws(testCase)
+            testCase.verifyError(@() agentgraph.FunctionNode("stampWorkspace"), ...
+                "agentgraph:invalidFunctionNodeArguments");
+        end
+
+        function constructor_withToolWithoutWorkspace_throws(testCase)
+            tool = aisdk.LLMTool(@addTwoNumbers);
+            testCase.verifyError(@() agentgraph.FunctionNode(tool), ...
+                "agentgraph:toolNotWorkspaceAware");
+        end
+
+        function constructor_withRequiredToolInput_throws(testCase)
+            tool = aisdk.LLMTool(@stampWorkspaceRequired, Workspace="agent");
+            testCase.verifyError(@() agentgraph.FunctionNode(tool), ...
+                "agentgraph:toolHasRequiredArguments");
+        end
+
+        function execute_withTool_callsEvaluateAndThreadsWorkspace(testCase)
+            tool = aisdk.LLMTool(@stampWorkspace, Workspace="agent");
+            node = agentgraph.FunctionNode(tool);
+
+            [result, wsOut] = node.execute(struct());
+
+            testCase.verifyEqual(result, "stamped: stamped");
+            testCase.verifyEqual(wsOut.stamps, "stamped");
+        end
 
         function constructor_setsNameAndFcn(testCase)
             fcn = @(w) deal("ok",w);
@@ -24,7 +100,7 @@ classdef tFunctionNode < matlab.unittest.TestCase
             node = agentgraph.FunctionNode("n", @(w) deal("hello",w));
             ws = struct();
 
-            [result, ~] = node.execute("task", ws, [], []);
+            [result, ~] = node.execute(ws);
 
             testCase.verifyEqual(result, "hello");
         end
@@ -33,7 +109,7 @@ classdef tFunctionNode < matlab.unittest.TestCase
             node = agentgraph.FunctionNode("n", @(w) deal(42,w));
             ws = struct();
 
-            [result, ~] = node.execute("task", ws, [], []);
+            [result, ~] = node.execute(ws);
 
             testCase.verifyEqual(result, "42");
         end
@@ -43,7 +119,7 @@ classdef tFunctionNode < matlab.unittest.TestCase
             node = agentgraph.FunctionNode("n", fcn);
             ws = struct();
 
-            [~, wsOut] = node.execute("task", ws, [], []);
+            [~, wsOut] = node.execute(ws);
 
             testCase.verifyEqual(wsOut.counter, 1);
         end
@@ -53,7 +129,7 @@ classdef tFunctionNode < matlab.unittest.TestCase
             node = agentgraph.FunctionNode("n", @(w) deal("ok",w));
             ws = struct();
 
-            node.execute("task", ws, [], [], obs);
+            node.execute(ws, Observer=obs);
 
             testCase.verifyLength(obs.Log, 2);
             testCase.verifyEqual(obs.Log{1}{1}, 'nodeRunning');
@@ -68,7 +144,7 @@ classdef tFunctionNode < matlab.unittest.TestCase
             ws = struct();
 
             testCase.verifyError( ...
-                @() node.execute("task", ws, [], []), "test:boom");
+                @() node.execute(ws), "test:boom");
         end
 
         function execute_fcnThrows_withObserver_callsNodeError(testCase)
@@ -78,7 +154,7 @@ classdef tFunctionNode < matlab.unittest.TestCase
             ws = struct();
 
             try
-                node.execute("task", ws, [], [], obs);
+                node.execute(ws, Observer=obs);
             catch
             end
 
@@ -89,6 +165,6 @@ classdef tFunctionNode < matlab.unittest.TestCase
     end
 end
 
-function [result, ws] = throwBoom(~, ~) %#ok<STOUT>
+function [result, ws] = throwBoom(~) %#ok<STOUT>
     error("test:boom", "exploded");
 end

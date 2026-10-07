@@ -3,6 +3,8 @@ function [observation, workspace] = configureDFECDR(workspace, nvp)
 %   [OBSERVATION, WORKSPACE] = configureDFECDR(WORKSPACE, ...) sets parameters
 %   on the DFECDR (or standalone DFE) block.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.NumTaps double = []             % Number of DFE taps (e.g., 4). Creates zeros(1,N) tap weights

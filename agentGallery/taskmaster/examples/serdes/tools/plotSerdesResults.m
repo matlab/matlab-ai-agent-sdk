@@ -4,6 +4,8 @@ function [observation, workspace] = plotSerdesResults(workspace, nvp)
 %   of eye diagrams, pulse responses, impulse responses, waveforms, bathtub
 %   curves, or frequency responses. Output appears in MATLAB and is saved to PNG.
 
+% Copyright 2026 The MathWorks, Inc.
+
     arguments (Input)
         workspace struct
         nvp.Type (1,1) string = "eye"             % Plot type: "eye", "pulse", "impulse", "alignedpulse", "waveform", "frequency", or "bathtub"
