@@ -30,9 +30,7 @@ classdef LoadSkillTool < aisdk.tool.internal.BuiltInTool
     methods (Access = protected)
         function [output, workspace] = evaluateImpl(this, args, workspace)
             if ~isfield(args, 'name')
-                error("aisdk:requiredArgumentNotFound", ...
-                    aisdk.internal.MessageCatalog.getMessage( ...
-                    "aisdk:requiredArgumentNotFound", "name"));
+                aisdk.internal.throwError("aisdk:requiredArgumentNotFound", "name");
             end
             output = this.Registry.loadSkillImpl(args.name);
         end

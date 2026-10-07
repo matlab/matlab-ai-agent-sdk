@@ -453,9 +453,7 @@ classdef AIAgent < handle
             % call clears nothing.
             for i = 1:numel(names)
                 if ~ismember(names(i), this.UserApprovedTools)
-                    error("aisdk:agent:noApprovalToReset", ...
-                        aisdk.internal.MessageCatalog.getMessage( ...
-                            "aisdk:agent:noApprovalToReset", names(i)));
+                    aisdk.internal.throwError("aisdk:agent:noApprovalToReset", names(i));
                 end
             end
 

@@ -25,8 +25,7 @@ function result = uiconfirm(tool, toolArguments)
     % Non-interactive automation (-batch): a display may exist but no human
     % is present to answer, and the dialog would block the run.
     if batchStartupOptionUsed
-        error("aisdk:uiconfirm:noUserAvailable", ...
-            aisdk.internal.MessageCatalog.getMessage("aisdk:uiconfirm:noUserAvailable"));
+        aisdk.internal.throwError("aisdk:uiconfirm:noUserAvailable");
     end
 
     dlg = aisdk.internal.ConfirmDialog(tool, toolArguments);
