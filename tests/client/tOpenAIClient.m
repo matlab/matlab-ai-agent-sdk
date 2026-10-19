@@ -159,12 +159,25 @@ classdef tOpenAIClient < hconstructorCommon
             testCase.verifyClass(client, "aisdk.client.OpenAIClient");
         end
 
-        function generate_unauthorizedResponse_throwsApiReturnedError(testCase)
+        function generate_unauthorizedResponseWithoutAPIKey_throwsMissingAPIKey(testCase)
             envVar = "OPENAI_API_KEY";
             orig = getenv(envVar);
             setenv(envVar, "");
             addTeardown(testCase, @() setenv(envVar, orig));
             client = aisdk.client.OpenAIClient("gpt-4o");
+            client.sendRequestFcn = @fakeUnauthorized;
+            testCase.verifyError( ...
+                @() client.generate("hello"), ...
+                "aisdk:client:missingAPIKey");
+
+            function [response, streamedText] = fakeUnauthorized(~, ~, ~, ~, ~)
+                response = makeOpenAIErrorResponse(matlab.net.http.StatusCode.Unauthorized, "Invalid API key");
+                streamedText = "";
+            end
+        end
+
+        function generate_unauthorizedResponseWithAPIKey_throwsApiReturnedError(testCase)
+            client = aisdk.client.OpenAIClient("gpt-4o", APIKey="wrong-key");
             client.sendRequestFcn = @fakeUnauthorized;
             testCase.verifyError( ...
                 @() client.generate("hello"), ...

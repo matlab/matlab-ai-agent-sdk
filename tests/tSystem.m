@@ -458,6 +458,22 @@ classdef tSystem < matlab.unittest.TestCase
             testCase.verifyNonEmptyResponse(response);
         end
 
+        %% Clients can be saved and reused
+
+        function generate_afterSaveLoadAndSetAPIKey_returnsResponse(testCase)
+            client = aisdk.LLMClient("openai", "gpt-4.1-mini", Temperature=0);
+            file = [tempname, '.mat'];
+            addTeardown(testCase, @() delete(file));
+            save(file, "client");
+            loaded = load(file);
+            client = loaded.client;
+
+            client.APIKey = getenv("OPENAI_API_KEY");
+            response = generate(client, "Say hello.");
+
+            testCase.verifyNonEmptyResponse(response);
+        end
+
         %% SDK tracks token usage
 
         function run_afterCall_updatesTokenCounts(testCase)

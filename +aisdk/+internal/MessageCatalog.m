@@ -47,6 +47,7 @@ catalog = dictionary("string", "string");
 catalog("aisdk:keyMustBeSpecified") = "Unable to find API key. Either set environment variable {1} or specify name-value argument ""APIKey"".";
 catalog("aisdk:mustSetFunctionsForCall") = "When Tools is empty, ToolChoice must be ""none"" or ""auto"".";
 catalog("aisdk:apiReturnedError") = "Server returned error indicating: ""{1}""";
+catalog("aisdk:client:missingAPIKey") = "Server rejected the request: ""{1}"". Set the APIKey property of the client.";
 catalog("aisdk:apiReturnedIncompleteJSON") = "Model output is invalid JSON: {1}";
 catalog("aisdk:stream:responseStreamer:InvalidInput") = "Unable to stream model output.";
 catalog("aisdk:unsupportedDatatypeInPrototype") = "Invalid argument data type. Field values of struct must be numeric, string, logical, or categorical.";

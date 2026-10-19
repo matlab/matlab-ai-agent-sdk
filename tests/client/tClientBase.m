@@ -277,14 +277,31 @@ classdef tClientBase < matlab.unittest.TestCase
         end
 
         %% API key security
-        function apiKey_afterSaveAndLoad_isCleared(testCase)
+        function apiKey_afterSaveAndLoadWithEnvironmentVariableUnset_isEmpty(testCase)
+            import matlab.unittest.fixtures.EnvironmentVariableFixture
+            import matlab.unittest.fixtures.TemporaryFolderFixture
+            tempFixture = testCase.applyFixture(TemporaryFolderFixture);
             client = aisdk.client.OpenAIClient("gpt-4o", APIKey="secret-key");
-            file = [tempname, '.mat'];
-            addTeardown(testCase, @() delete(file));
+            file = fullfile(tempFixture.Folder, "client.mat");
             save(file, "client");
+            testCase.applyFixture(EnvironmentVariableFixture("OPENAI_API_KEY", ""));
+            unsetenv("OPENAI_API_KEY");
             loaded = load(file);
             params = captureClientParams(loaded.client);
             testCase.verifyEqual(params.apiKey, "");
+        end
+
+        function apiKey_afterSaveAndLoad_isReadFromEnvironment(testCase)
+            import matlab.unittest.fixtures.EnvironmentVariableFixture
+            import matlab.unittest.fixtures.TemporaryFolderFixture
+            tempFixture = testCase.applyFixture(TemporaryFolderFixture);
+            client = aisdk.client.OpenAIClient("gpt-4o", APIKey="secret-key");
+            file = fullfile(tempFixture.Folder, "client.mat");
+            save(file, "client");
+            testCase.applyFixture(EnvironmentVariableFixture("OPENAI_API_KEY", "env-key"));
+            loaded = load(file);
+            params = captureClientParams(loaded.client);
+            testCase.verifyEqual(params.apiKey, "env-key");
         end
 
         function apiKey_externalRead_errors(testCase)
@@ -294,15 +311,24 @@ classdef tClientBase < matlab.unittest.TestCase
                 "MATLAB:class:GetProhibited");
         end
 
-        function apiKey_externalWrite_errors(testCase)
+        function apiKey_setAfterConstruction_isUsedInRequest(testCase)
             client = aisdk.client.OpenAIClient("gpt-4o", APIKey="secret-key");
-            testCase.verifyError( ...
-                @() setAPIKey(client), ...
-                "MATLAB:class:SetProhibited");
+            client.APIKey = "new-key";
+            params = captureClientParams(client);
+            testCase.verifyEqual(params.apiKey, "new-key");
+        end
 
-            function setAPIKey(c)
-                c.APIKey = "hacked";
-            end
+        function apiKey_setAfterSaveAndLoad_isUsedInRequest(testCase)
+            import matlab.unittest.fixtures.TemporaryFolderFixture
+            tempFixture = testCase.applyFixture(TemporaryFolderFixture);
+            client = aisdk.client.OpenAIClient("gpt-4o", APIKey="secret-key");
+            file = fullfile(tempFixture.Folder, "client.mat");
+            save(file, "client");
+            loaded = load(file);
+            client = loaded.client;
+            client.APIKey = "secret-key";
+            params = captureClientParams(client);
+            testCase.verifyEqual(params.apiKey, "secret-key");
         end
     end
 

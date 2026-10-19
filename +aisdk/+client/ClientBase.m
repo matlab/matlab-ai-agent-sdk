@@ -33,7 +33,7 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
         ContextSize (1,1) double {aisdk.internal.mustBePositiveIntegerOrNaN} = NaN
     end
 
-    properties (Hidden, Access=protected, Transient)
+    properties (Hidden, GetAccess=protected, SetAccess=public, Transient)
         %APIKey   API key for authentication.
         APIKey    (1,1) string
     end
@@ -152,6 +152,16 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
         end
     end
 
+    methods (Static, Hidden)
+        function obj = loadobj(obj)
+            %loadobj   Read the API key from the {PROVIDER}_API_KEY
+            %   environment variable when loading a client.
+            if isa(obj, "aisdk.client.ClientBase")
+                obj.APIKey = obj.parseAPIKey();
+            end
+        end
+    end
+
     methods (Access=protected)
         function apiKey = parseAPIKey(this, nvp)
             %parseAPIKey Parse APIKey from nvp or environment variable.
@@ -160,6 +170,12 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
             %   returns the APIKey from the name-value pairs NVP,
             %   or reads it from the {PROVIDER}_API_KEY environment variable.
             %   Returns empty string if no API key is found.
+            %
+            %   APIKEY = parseAPIKey(OBJ) reads the environment variable only.
+            arguments
+                this
+                nvp (1,1) struct = struct()
+            end
 
             envVarName = upper(this.API) + "_API_KEY";
             if isfield(nvp, "APIKey") && strlength(nvp.APIKey) > 0
@@ -179,6 +195,9 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
             err = this.extractErrorMessage(response.Body.Data);
             if isempty(err)
                 err = "HTTP " + string(response.StatusCode) + ": " + jsonencode(response.Body.Data);
+            end
+            if response.StatusCode == "Unauthorized" && strlength(this.APIKey) == 0
+                aisdk.internal.throwError("aisdk:client:missingAPIKey", err);
             end
             aisdk.internal.throwError("aisdk:apiReturnedError", err);
         end
