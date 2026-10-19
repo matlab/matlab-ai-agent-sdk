@@ -12,7 +12,7 @@ classdef tLoadSkillTool < matlab.unittest.TestCase
 
         function constructed_hasNameLoadSkill(testCase)
             tool = testCase.createTool();
-            testCase.verifyEqual(tool.Name, "loadSkill");
+            testCase.verifyEqual(tool.Name, "aisdk_loadSkill");
         end
 
         function constructed_doesNotRequireApproval(testCase)

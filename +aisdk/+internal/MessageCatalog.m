@@ -54,6 +54,7 @@ catalog("aisdk:incorrectResponseFormat") = "Response format must be ""text"", ""
 catalog("aisdk:requiredArgumentNotFound") = "Model did not generate required input argument {1}.";
 catalog("aisdk:anonymousFunctionRequiresName") = "Unable to derive tool name from an anonymous function. Specify the Name name-value argument.";
 catalog("aisdk:duplicateArgumentNames") = "Argument names must be unique.";
+catalog("aisdk:duplicateToolNames") = "Tool name ""{1}"" is not unique.";
 catalog("aisdk:invalidToolCallArguments") = "Unable to convert tool arguments to struct: {1}";
 catalog("aisdk:arrayPrototypeNotSupported") = "Array prototypes are not supported. Use scalar values in prototypes.";
 catalog("aisdk:unsupportedMATLABType") = "Unable to convert data type ""{1}"" to JSON schema. Data type must be numeric, logical, string, or char.";
@@ -89,6 +90,8 @@ catalog("aisdk:confirmDialog:feedbackPlaceholder") = "(Optional message to the a
 catalog("aisdk:confirmDialog:approveButton") = "Approve";
 catalog("aisdk:confirmDialog:approveAlwaysButton") = "Always Approve";
 catalog("aisdk:confirmDialog:denyButton") = "Deny";
+catalog("aisdk:agent:reservedToolNamePrefix") = "Tool name must not start with ""aisdk_"".";
+catalog("aisdk:agent:reservedMCPToolNamePrefix") = "Tool name must not start with ""aisdk_"". Rename the tool or specify the ToolPrefix name-value argument.";
 catalog("aisdk:agent:approvalFcnFailed") = "Tool approval function returned an error: ""{1}"".";
 catalog("aisdk:agent:approvalFcnFailedNoMessage") = "Tool approval function returned an error.";
 catalog("aisdk:agent:approvalDecisionNotStruct") = "Tool approval function must return a scalar struct with fields ""Approved"", ""Permanent"", and ""Reason"". It returned a value of class ""{1}"".";
@@ -116,7 +119,7 @@ catalog("aisdk:skills:InvalidFrontmatterName") = "Invalid SKILL.md file. Skill n
 catalog("aisdk:skills:InvalidFrontmatterDescriptionLength") = "Invalid SKILL.md file. Skill description in {1} must contain at most 1024 characters.";
 
 % --- LLM messages ---
-catalog("aisdk:prompt:catalogPreamble") = "You have access to the following skills. Use the loadSkill tool to load a skill's full instructions when relevant to the current task. After loading a skill, load each referenced file that is relevant to the current task.";
+catalog("aisdk:prompt:catalogPreamble") = "You have access to the following skills. Use the aisdk_loadSkill tool to load a skill's full instructions when relevant to the current task. After loading a skill, load each referenced file that is relevant to the current task.";
 catalog("aisdk:tool:SkillNotFound") = "Unrecognized skill name ""{1}"".";
 catalog("aisdk:tool:ResourceNotFound") = "Unrecognized resource name ""{1}"" for skill ""{2}"".";
 catalog("aisdk:tool:AvailableSkills") = "Available skills are: {1}.";

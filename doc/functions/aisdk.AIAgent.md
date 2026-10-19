@@ -79,6 +79,8 @@ Data Types: `string`
 
 LLM tools, specified as one or more [`LocalLLMTool`](LocalLLMTool.md) objects, [`MCPTool`](MCPTool.md) objects, or a combination of both.
 
+Each tool must have a unique name.
+
 Data Types: `LocalLLMTool` | `MCPTool`
 ### `Messages` — Message history
 <a id="messages"></a>
@@ -708,12 +710,12 @@ ans =
 
   1×4 LLMMessage array with messages:
     1     User         Text         "Perform my favorite task by using my favorite skill."
-    2     Assistant    Tool Call    "loadSkill({"name":"my-favorite-skill"})"
+    2     Assistant    Tool Call    "aisdk_loadSkill({"name":"my-favorite-skill"})"
     3     Tool         Text         "# My Favorite Skill  This is the text at the start of my fav..."
     4     Assistant    Text         "This is the agent's response."
 ```
 
-If the agent has loaded the skill, then the message history contains a tool call to the `loadSkill` function and a tool response that contains the text of the skill. Whether an agent loads a skill depends on the underlying model, as well as the name and description of the skill. To ensure that an agent reads a skill, load the skill manually by using the `loadSkill` function.
+If the agent has loaded the skill, then the message history contains a call to the `aisdk_loadSkill` tool and a tool response that contains the text of the skill. Whether an agent loads a skill depends on the underlying model, as well as the name and description of the skill. To ensure that an agent reads a skill, load the skill manually by using the `loadSkill` function.
 
 ## Algorithms
 <a id="algorithms"></a>

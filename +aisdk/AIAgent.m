@@ -127,7 +127,7 @@ classdef AIAgent < handle
             arguments
                 client                       (1,1) {mustBeClient}
                 nvp.SystemPrompt                   {aisdk.internal.mustBeTextOrEmpty} = []
-                nvp.Tools                    (1,:) aisdk.tool.LLMTool = aisdk.tool.LLMTool.empty(1,0)
+                nvp.Tools                    (1,:) aisdk.tool.LLMTool {mustHaveUniqueToolNames, mustNotUseReservedToolNames} = aisdk.tool.LLMTool.empty(1,0)
                 nvp.Messages                 (1,:) aisdk.message.LLMMessage = aisdk.message.LLMMessage.empty(1,0)
                 nvp.ResponseFormat                 {aisdk.internal.mustBeResponseFormat} = "text"
                 nvp.Workspace                (1,1) struct = struct()
@@ -168,7 +168,9 @@ classdef AIAgent < handle
         end
 
         function set.Tools(this, tools)
-            this.UserTools = tools;
+            mustHaveUniqueToolNames(tools);
+            mustNotUseReservedToolNames(tools);
+            this.UserTools = withoutLoadSkillTools(tools);
         end
 
         function set.SkillDirectories(this, paths)
@@ -207,7 +209,7 @@ classdef AIAgent < handle
             arguments
                 this (1,1) aisdk.AIAgent
                 prompt {aisdk.internal.mustBeMessagesInput}
-                nvp.Tools(1, :) aisdk.tool.LLMTool = this.UserTools
+                nvp.Tools(1, :) aisdk.tool.LLMTool {mustHaveUniqueToolNames, mustNotUseReservedToolNames} = this.UserTools
                 nvp.ToolChoice (1,:) {mustBeTextScalar} = "auto"
                 nvp.ResponseFormat      {aisdk.internal.mustBeResponseFormat} = this.ResponseFormat
                 nvp.MaxIterations (1,1) {mustBePositive} = this.MaxIterations
@@ -217,7 +219,7 @@ classdef AIAgent < handle
             displayMode = nvp.DisplayMode;
 
             this.refreshSkillsIfStale();
-            nvp.Tools = [nvp.Tools, this.LoadSkillTool];
+            nvp.Tools = [withoutLoadSkillTools(nvp.Tools), this.LoadSkillTool];
 
             newMessages = aisdk.client.ClientBase.normalizeMessages(prompt);
             this.Messages = [this.Messages, newMessages];
@@ -417,12 +419,12 @@ classdef AIAgent < handle
             % Bedrock's toolUseId pattern disallows. The name is already
             % carried by the tool call's arguments.
             callID = "skill_" + num2str(numel(this.Messages));
-            this.print(this.DisplayMode, "[call function loadSkill with inputs " + jsonencode(args) + "]");
+            this.print(this.DisplayMode, "[call function aisdk_loadSkill with inputs " + jsonencode(args) + "]");
             this.print(this.DisplayMode, "[function return] " + string(jsonencode(skillBody)));
-            this.Messages(end+1) = aisdk.LLMToolCallMessage("loadSkill", ...
+            this.Messages(end+1) = aisdk.LLMToolCallMessage("aisdk_loadSkill", ...
                 args, ToolCallID=callID);
             this.Messages(end+1) = aisdk.LLMToolResultMessage(skillBody, ...
-                ToolCallID=callID, Name="loadSkill");
+                ToolCallID=callID, Name="aisdk_loadSkill");
         end
 
         function resetApproval(this, names)
@@ -521,4 +523,46 @@ function mustBeClient(value)
 if ~isa(value, 'aisdk.client.ClientBase')
     aisdk.internal.throwError("aisdk:invalidClientType");
 end
+end
+
+function mustHaveUniqueToolNames(tools)
+% An agent's tools are dispatched by Name (LLMTool.select picks the first
+% match), so two tools sharing a Name would silently shadow one and send the
+% model duplicate schemas. Reject such a set up front, naming the offender.
+% A LoadSkillTool is not counted, as the agent replaces it with its own.
+tools = withoutLoadSkillTools(tools);
+if isempty(tools)
+    return
+end
+names = [tools.Name];
+[~, firstIdx] = unique(names, "stable");
+isDuplicate = true(size(names));
+isDuplicate(firstIdx) = false;
+if any(isDuplicate)
+    dupName = names(find(isDuplicate, 1));
+    aisdk.internal.throwError("aisdk:duplicateToolNames", dupName);
+end
+end
+
+function mustNotUseReservedToolNames(tools)
+% Names starting with "aisdk_" are reserved for the tools the SDK provides,
+% such as "aisdk_loadSkill", which the skills catalog in the system prompt
+% tells the model to call. No other tool may take one, whether or not the
+% agent has skills. An MCP tool takes its name from the server, so its error
+% also points at ToolPrefix.
+for tool = tools
+    if startsWith(tool.Name, "aisdk_") && ~isa(tool, "aisdk.tool.BuiltInTool")
+        if isa(tool, "aisdk.tool.MCPTool")
+            aisdk.internal.throwError("aisdk:agent:reservedMCPToolNamePrefix");
+        else
+            aisdk.internal.throwError("aisdk:agent:reservedToolNamePrefix");
+        end
+    end
+end
+end
+
+function tools = withoutLoadSkillTools(tools)
+% The agent provides its own LoadSkillTool, built from its skills, so one
+% passed in (for example as part of another agent's Tools) is dropped.
+tools(arrayfun(@(tool) isa(tool, "aisdk.tool.LoadSkillTool"), tools)) = [];
 end

@@ -1273,6 +1273,89 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyEqual(log{1}, "greetUser");
             testCase.verifyEqual(log{2}, "auto");
         end
+
+        function constructor_duplicateToolNames_errors(testCase)
+            % Two tools advertising the same Name cannot both be dispatched
+            % (select picks the first match), so AIAgent rejects the set up
+            % front rather than silently shadowing one.
+            tool1 = aisdk.LLMTool(@addTwoNumbers);
+            tool2 = aisdk.LLMTool(@addTwoNumbers);   % same derived name
+            client = MockClient();
+            testCase.verifyError( ...
+                @() aisdk.AIAgent(client, Tools=[tool1, tool2], DisplayMode="off"), ...
+                "aisdk:duplicateToolNames");
+        end
+
+        function constructor_distinctToolNames_succeeds(testCase)
+            % Distinct names are the supported way to attach two instances of
+            % one tool type (e.g. per-directory approval strategies).
+            tool1 = aisdk.LLMTool(@addTwoNumbers);
+            tool2 = aisdk.LLMTool(@addTwoNumbers, Name="addAgain");
+            client = MockClient();
+            agent = aisdk.AIAgent(client, Tools=[tool1, tool2], DisplayMode="off");
+            testCase.verifyEqual([agent.Tools.Name], ["addTwoNumbers", "addAgain"]);
+        end
+
+        function run_duplicateToolNamesOverride_errors(testCase)
+            % The same uniqueness guard applies to a run-time Tools override.
+            tool = aisdk.LLMTool(@addTwoNumbers);
+            client = MockClient();
+            agent = aisdk.AIAgent(client, Tools=tool, DisplayMode="off");
+            dup = [aisdk.LLMTool(@addTwoNumbers), aisdk.LLMTool(@addTwoNumbers)];
+            testCase.verifyError( ...
+                @() agent.run("Hi", Tools=dup), ...
+                "aisdk:duplicateToolNames");
+        end
+
+        function setTools_duplicateToolNames_errors(testCase)
+            % Assigning to Tools after construction is held to the same rule.
+            agent = aisdk.AIAgent(MockClient(), DisplayMode="off");
+            dup = [aisdk.LLMTool(@addTwoNumbers), aisdk.LLMTool(@addTwoNumbers)];
+            testCase.verifyError(@() setTools(agent, dup), ...
+                "aisdk:duplicateToolNames");
+        end
+
+        function constructor_toolWithReservedPrefix_errors(testCase)
+            % Names starting with "aisdk_" are reserved for the tools the SDK
+            % provides, so no other tool may take one.
+            tool = aisdk.LLMTool(@addTwoNumbers, Name="aisdk_add");
+            testCase.verifyError( ...
+                @() aisdk.AIAgent(MockClient(), Tools=tool, DisplayMode="off"), ...
+                "aisdk:agent:reservedToolNamePrefix");
+        end
+
+        function setTools_toolWithReservedPrefix_errors(testCase)
+            agent = aisdk.AIAgent(MockClient(), DisplayMode="off");
+            tool = aisdk.LLMTool(@addTwoNumbers, Name="aisdk_add");
+            testCase.verifyError(@() setTools(agent, tool), ...
+                "aisdk:agent:reservedToolNamePrefix");
+        end
+
+        function run_toolWithReservedPrefixOverride_errors(testCase)
+            agent = aisdk.AIAgent(MockClient(), DisplayMode="off");
+            tool = aisdk.LLMTool(@addTwoNumbers, Name="aisdk_add");
+            testCase.verifyError(@() agent.run("Hi", Tools=tool), ...
+                "aisdk:agent:reservedToolNamePrefix");
+        end
+
+        function constructor_mcpToolWithReservedPrefix_errors(testCase)
+            % An MCP tool gets its own error, which points at ToolPrefix.
+            mock = mcpHTTPClientMock({struct("name", "aisdk_add", ...
+                "description", "Add", "inputSchema", struct())}, @(varargin) []);
+            tool = aisdk.LLMTool(mock);
+            testCase.verifyError( ...
+                @() aisdk.AIAgent(MockClient(), Tools=tool, DisplayMode="off"), ...
+                "aisdk:agent:reservedMCPToolNamePrefix");
+        end
+
+        function constructor_mcpClientToolWithReservedPrefix_errors(testCase)
+            % The same holds for tools from an aisdk.MCPClient, here
+            % given a reserved name by ToolPrefix.
+            client = aisdk.MCPClient("mock", Transport="mock", ToolPrefix="aisdk");
+            testCase.verifyError( ...
+                @() aisdk.AIAgent(MockClient(), Tools=client.Tools, DisplayMode="off"), ...
+                "aisdk:agent:reservedMCPToolNamePrefix");
+        end
     end
 
 end
@@ -1354,3 +1437,6 @@ function agent = agentWithTwoUserApprovedTools()
     agent.run("Do both.");
 end
 
+function setTools(agent, tools)
+    agent.Tools = tools;
+end
