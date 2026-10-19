@@ -59,6 +59,9 @@ classdef tAIAgent_ContextUsage < matlab.unittest.TestCase
                 "NumInputTokens should still be cumulative across runs.");
         end
 
+    end
+
+    methods (Test, TestTags = {'Integration'})
         function lastInputTokens_multiIterationRun_reflectsFinalGenerateCall(testCase)
             % A tool-calling run invokes generate twice; LastInputTokens
             % must reflect the second (final) call.
@@ -79,6 +82,9 @@ classdef tAIAgent_ContextUsage < matlab.unittest.TestCase
             testCase.verifyEqual(agent.LastInputTokens, 90);
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         function lastInputTokens_whenMessagesAppendedTo_isPreserved(testCase)
             % Externally mutating Messages does not reset LastInputTokens:
             % the previous count is a more helpful approximation of the
@@ -189,6 +195,9 @@ classdef tAIAgent_ContextUsage < matlab.unittest.TestCase
             testCase.verifyEqual(agent.ContextUsage, 0.75, "AbsTol", eps);
         end
 
+    end
+
+    methods (Test, TestTags = {'Integration'})
         function contextUsage_multiIterationRun_reflectsFinalGenerateCall(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
             client = MockClient();
@@ -207,6 +216,9 @@ classdef tAIAgent_ContextUsage < matlab.unittest.TestCase
             testCase.verifyEqual(agent.ContextUsage, 0.8, "AbsTol", eps);
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         function contextUsage_exceedsOne_whenInputExceedsContextSize(testCase)
             % ContextUsage is defined as a simple ratio, so >1 is valid
             % when the input token count exceeds the configured size.

@@ -76,6 +76,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyEqual(response, "Hello!");
         end
 
+    end
+
+    methods (Test, TestTags = {'Integration'})
         function responseConcatenatesTextAcrossToolCallRounds(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
 
@@ -125,6 +128,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifySubstring(toolResults(1).Result, "something went wrong");
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         function structuredOutputReturnedDirectly(testCase)
             structResult = struct("name", "Alice", "age", 30);
 
@@ -142,6 +148,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyEqual(response, structResult);
         end
 
+    end
+
+    methods (Test, TestTags = {'Integration'})
         function tokenCountsCumulativeAcrossRunsWithToolCalls(testCase)
             %   generate call 1: model returns tool call
             %   AIAgent executes tool, appends tool result
@@ -262,6 +271,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyEqual(string(decoded.message), reason);
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         function approval_deniedWithRequiredToolChoice_recordsDenialAndCompletes(testCase)
             % MockClient stand-in for tSystem.m::run_withApprovalDenied_recordsDenialInHistory:
             % a fast unit-level guard that a denial is recorded as the JSON tool result and
@@ -292,6 +304,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyEqual(string(decoded.message), reason);
         end
 
+    end
+
+    methods (Test, TestTags = {'Integration'})
         function approval_withNeverMode_neverInvokesApprovalFcn(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
 
@@ -314,6 +329,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyEqual(response, "5.");
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         function approval_withThrowingApprovalFcn_deniesAndCompletesRun(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="once");
 
@@ -490,6 +508,9 @@ classdef tAIAgent < matlab.unittest.TestCase
                     "aisdk:uiconfirm:noUserAvailable"));
         end
 
+    end
+
+    methods (Test, TestTags = {'Integration'})
         function approval_withAlwaysMode_asksOnEveryCall(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="always");
 
@@ -532,6 +553,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyEqual(callCount("callCount"), 1);
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         function approval_withOnceModeAndPermanent_parallelCallsInOneRound_autoApprovesRest(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="once");
 
@@ -615,6 +639,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyEqual(agent.UserApprovedTools, "addTwoNumbers");
         end
 
+    end
+
+    methods (Test, TestTags = {'Integration'})
         function approval_withOnceModeNotPermanent_asksAgainNextRound(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="once");
 
@@ -636,6 +663,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyEqual(callCount("callCount"), 2);
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         function approval_savedAndLoadedAgent_hasEmptyUserApprovedTools(testCase)
             % UserApprovedTools is Transient: approval state does not persist
             % across save/load, so a loaded agent prompts again.
@@ -835,6 +865,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             end
         end
 
+    end
+
+    methods (Test, TestTags = {'Integration'})
         function approval_withApprovedReason_insertsUserMessage(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="always");
 
@@ -927,6 +960,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyFalse(ismissing(response));
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         function run_noToolCallsEmptyText_returnsEmptyText(testCase)
             client = MockClient();
             client.GenerateOutputs = {
@@ -941,6 +977,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyEqual(response, "");
         end
 
+    end
+
+    methods (Test, TestTags = {'Integration'})
         function run_maxIterationsWithAccumulatedText_returnsJoinedText(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
 
@@ -962,6 +1001,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyEqual(response, "Working..." + newline + "Still going...");
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         function constructor_invalidClient_throwsError(testCase)
             testCase.verifyError( ...
                 @() aisdk.AIAgent("not a client"), ...
@@ -1001,6 +1043,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyNotEqual(firstMsg.Role, "system");
         end
 
+    end
+
+    methods (Test, TestTags = {'Integration'})
         function toolErrorReturnedAsObservation_forMCPTool(testCase)
             throwingMock = mcpHTTPClientMock({ ...
                 struct("name", "failingTool", "description", "Always fails", ...
@@ -1046,6 +1091,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifySubstring(toolResults(1).Result, "Error");
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         function displayMode_default_isDetailed(testCase)
             client = MockClient();
             agent = aisdk.AIAgent(client);
@@ -1089,6 +1137,9 @@ classdef tAIAgent < matlab.unittest.TestCase
                 "MATLAB:validators:mustBeMember");
         end
 
+    end
+
+    methods (Test, TestTags = {'Integration'})
         function displayMode_withDetailed_printsToolCallInfo(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
 
@@ -1107,6 +1158,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifySubstring(output, "addTwoNumbers");
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         function run_displayModeDetailed_overridesAgentOff(testCase)
             client = MockClient();
             client.GenerateOutputs = {
@@ -1248,6 +1302,9 @@ classdef tAIAgent < matlab.unittest.TestCase
         end
 
 
+    end
+
+    methods (Test, TestTags = {'Integration'})
         function toolChoice_withSpecificName_callsNamedToolAndCompletes(testCase)
             toolAdd = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
             toolGreet = aisdk.LLMTool(@greetUser, ApprovalRequest="never");
@@ -1274,6 +1331,9 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyEqual(log{2}, "auto");
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         function constructor_duplicateToolNames_errors(testCase)
             % Two tools advertising the same Name cannot both be dispatched
             % (select picks the first match), so AIAgent rejects the set up

@@ -110,6 +110,9 @@ classdef tClientBase < matlab.unittest.TestCase
             end
         end
 
+    end
+
+    methods (Test, TestTags = {'Integration'})
         function generate_namedToolChoiceNotInList_errors(testCase)
             client = aisdk.client.OpenAIClient("gpt-4o", APIKey="fake-key");
             client.sendRequestFcn = @fakeOk;
@@ -167,6 +170,9 @@ classdef tClientBase < matlab.unittest.TestCase
             end
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         function generate_autoToolChoiceWithNoTools_omitsField(testCase)
             captured = {};
             client = aisdk.client.OpenAIClient("gpt-4o", APIKey="fake-key");
@@ -183,6 +189,9 @@ classdef tClientBase < matlab.unittest.TestCase
             end
         end
 
+    end
+
+    methods (Test, TestTags = {'Integration'})
         function generate_namedToolChoice_requestsStruct(testCase)
             captured = {};
             client = aisdk.client.OpenAIClient("gpt-4o", APIKey="fake-key");
@@ -255,6 +264,9 @@ classdef tClientBase < matlab.unittest.TestCase
             end
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         %% BuiltInTool encoding
         function encodeTool_builtInTool_producesFunctionStructWithParameters(testCase)
             findFcn = @(~) "/path/skill/SKILL.md";

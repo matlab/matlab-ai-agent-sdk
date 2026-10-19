@@ -192,5 +192,18 @@ classdef tSendRequest < matlab.unittest.TestCase
                     "Body", struct("Data", '{"ok":true}'));
             end
         end
+
+        function sendRequestWrapper_delegatesToSendRequest(testCase)
+            response = aisdk.client.internal.sendRequestWrapper( ...
+                struct("model", "test"), "tok", ...
+                "https://fake/v1", 10, [], @fakeSend);
+
+            testCase.verifyEqual(string(response.Body.Data.result), "wrapped");
+
+            function response = fakeSend(~, ~, ~, ~)
+                response = struct("StatusCode", "OK", ...
+                    "Body", struct("Data", '{"result":"wrapped"}'));
+            end
+        end
     end
 end
