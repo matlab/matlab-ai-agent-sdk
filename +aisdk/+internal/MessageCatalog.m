@@ -59,6 +59,8 @@ catalog("aisdk:requiredArgumentNotFound") = "Model did not generate required inp
 catalog("aisdk:anonymousFunctionRequiresName") = "Unable to derive tool name from an anonymous function. Specify the Name name-value argument.";
 catalog("aisdk:duplicateArgumentNames") = "Argument names must be unique.";
 catalog("aisdk:duplicateToolNames") = "Tool name ""{1}"" is not unique.";
+catalog("aisdk:reservedToolName") = "Tool name ""{1}"" is reserved for a built-in tool. Choose a different name by specifying the Name name-value argument.";
+catalog("aisdk:reservedMCPToolName") = "Tool name ""{1}"" is reserved for a built-in tool.";
 catalog("aisdk:invalidToolCallArguments") = "Unable to convert tool arguments to struct: {1}";
 catalog("aisdk:arrayPrototypeNotSupported") = "Array prototypes are not supported. Use scalar values in prototypes.";
 catalog("aisdk:unsupportedMATLABType") = "Unable to convert data type ""{1}"" to JSON schema. Data type must be numeric, logical, string, or char.";
@@ -94,8 +96,6 @@ catalog("aisdk:confirmDialog:feedbackPlaceholder") = "(Optional message to the a
 catalog("aisdk:confirmDialog:approveButton") = "Approve";
 catalog("aisdk:confirmDialog:approveAlwaysButton") = "Always Approve";
 catalog("aisdk:confirmDialog:denyButton") = "Deny";
-catalog("aisdk:agent:reservedToolNamePrefix") = "Tool name must not start with ""aisdk_"".";
-catalog("aisdk:agent:reservedMCPToolNamePrefix") = "Tool name must not start with ""aisdk_"". Rename the tool or specify the ToolPrefix name-value argument.";
 catalog("aisdk:agent:approvalFcnFailed") = "Tool approval function returned an error: ""{1}"".";
 catalog("aisdk:agent:approvalFcnFailedNoMessage") = "Tool approval function returned an error.";
 catalog("aisdk:agent:approvalDecisionNotStruct") = "Tool approval function must return a scalar struct with fields ""Approved"", ""Permanent"", and ""Reason"". It returned a value of class ""{1}"".";
@@ -123,7 +123,7 @@ catalog("aisdk:skills:InvalidFrontmatterName") = "Invalid SKILL.md file. Skill n
 catalog("aisdk:skills:InvalidFrontmatterDescriptionLength") = "Invalid SKILL.md file. Skill description in {1} must contain at most 1024 characters.";
 
 % --- LLM messages ---
-catalog("aisdk:prompt:catalogPreamble") = "You have access to the following skills. Use the aisdk_loadSkill tool to load a skill's full instructions when relevant to the current task. After loading a skill, load each referenced file that is relevant to the current task.";
+catalog("aisdk:prompt:catalogPreamble") = "You have access to the following skills. Use the loadSkill tool to load a skill's full instructions when relevant to the current task. After loading a skill, load each referenced file that is relevant to the current task.";
 catalog("aisdk:tool:SkillNotFound") = "Unrecognized skill name ""{1}"".";
 catalog("aisdk:tool:ResourceNotFound") = "Unrecognized resource name ""{1}"" for skill ""{2}"".";
 catalog("aisdk:tool:AvailableSkills") = "Available skills are: {1}.";
@@ -131,6 +131,7 @@ catalog("aisdk:tool:AvailableResources") = "For skill ""{1}"", resources must be
 catalog("aisdk:mcpClient:nonScalarURL") = "MCP server URL must be a string scalar or character vector.";
 catalog("aisdk:mcpClient:urlEndpointRequiresHttpTransport") = "To specify the MCP server as a URL, the transport protocol must be ""streamable-http"" or ""sse"".";
 catalog("aisdk:mcpClient:httpTransportRequiresUrl") = "When Transport=""{1}"", the endpoint must start with ""http://"" or ""https://"". To start a local command, specify Transport=""stdio"" instead.";
+catalog("aisdk:mcpClient:reservedToolName") = "Tool name ""{1}"" is reserved for a built-in tool. Set the ToolPrefix property of the client.";
 catalog("aisdk:mcpClient:invalidToolPrefix") = "ToolPrefix must start with a letter and contain only letters, digits, and underscores.";
 catalog("aisdk:mcpClient:oddNameValuePairs") = "Arguments after the tool name must be name-value pairs.";
 catalog("aisdk:mcpClient:badRequest") = "The server rejected the connection with Bad Request. Check that the URL and transport type are correct: a server that expects streamable HTTP rejects SSE connections, and the other way round.";

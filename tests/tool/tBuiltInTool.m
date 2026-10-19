@@ -29,8 +29,8 @@ classdef tBuiltInTool < matlab.unittest.TestCase
             tool = testCase.createLoadSkillTool();
             arr = [tool, tool];
             output = evalc('disp(arr)');
-            testCase.verifySubstring(output, "built-in");
-            testCase.verifySubstring(output, "aisdk_loadSkill");
+            testCase.verifySubstring(output, "BuiltInTool");
+            testCase.verifySubstring(output, "loadSkill");
         end
     end
 

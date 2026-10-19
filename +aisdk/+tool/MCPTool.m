@@ -63,6 +63,12 @@ classdef MCPTool < aisdk.tool.internal.CallableTool
     end
 
     methods (Access = protected)
+        function errorID = reservedNameErrorID(~)
+            % The name comes from the server, so there is no Name to change.
+            % aisdk.MCPClient checks its tools itself and points at ToolPrefix.
+            errorID = "aisdk:reservedMCPToolName";
+        end
+
         function sig = displaySignature(obj)
             sig = obj.Name + "(…)";
         end

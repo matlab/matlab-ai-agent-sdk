@@ -43,7 +43,7 @@ classdef ttoolChoiceCompletions < matlab.unittest.TestCase
             agent = aisdk.AIAgent(MockClient(), SkillDirectories=tmpDir);
 
             testCase.verifyEqual(aisdk.internal.toolChoiceCompletions(agent), ...
-                ["auto", "none", "required", "aisdk_loadSkill"]);
+                ["auto", "none", "required", "loadSkill"]);
         end
 
         function notAnAgent_offersKeywords(testCase, NotAnAgent)

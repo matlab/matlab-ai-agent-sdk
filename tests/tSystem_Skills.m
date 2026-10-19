@@ -69,14 +69,14 @@ classdef tSystem_Skills < matlab.unittest.TestCase
             agent = aisdk.AIAgent(testCase.Client, ...
                 SkillDirectories=testCase.SkillsRoot, DisplayMode="off");
 
-            run(agent, "Load the code-review skill.", ToolChoice="aisdk_loadSkill");
+            run(agent, "Load the code-review skill.", ToolChoice="loadSkill");
 
             % ToolChoice only forces the first call, and the loop keeps
             % running afterwards: the model often spends a later turn loading
             % a supporting file. Assert on the forced call, not the last one.
             results = testCase.getToolResults(agent);
             testCase.assertNotEmpty(results, ...
-                "The model should have called the aisdk_loadSkill tool.");
+                "The model should have called the loadSkill tool.");
             testCase.verifySubstring(results(1).Result, testCase.SkillBody);
         end
 
@@ -85,11 +85,11 @@ classdef tSystem_Skills < matlab.unittest.TestCase
                 SkillDirectories=testCase.SkillsRoot, DisplayMode="off");
 
             run(agent, "Load the skill resource named """ + testCase.ResourcePath + """.", ...
-                ToolChoice="aisdk_loadSkill");
+                ToolChoice="loadSkill");
 
             results = testCase.getToolResults(agent);
             testCase.assertNotEmpty(results, ...
-                "The model should have called the aisdk_loadSkill tool.");
+                "The model should have called the loadSkill tool.");
             testCase.verifySubstring(results(1).Result, testCase.ResourceContent);
         end
 

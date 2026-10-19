@@ -20,7 +20,9 @@ classdef MCPClient < handle
 %   followed by an underscore to all tool names exposed to the LLM. This
 %   disambiguates tools from multiple servers that share the same name.
 %   PREFIX must start with a letter and contain only a-z, A-Z, 0-9, and
-%   underscores.
+%   underscores. ToolPrefix is also settable after construction, which
+%   renames the tools in the Tools property. Tools taken from the client
+%   before keep their names.
 %
 %   CLIENT = aisdk.MCPClient(__, TimeOut=SECS) sets how long to wait for
 %   the server, both for the connection handshake and for each subsequent
@@ -49,15 +51,21 @@ classdef MCPClient < handle
         Tools (1,:) aisdk.tool.MCPTool
     end
 
-    properties (SetAccess=private)
-        ToolPrefix (1,1) string = ""
+    properties
+        ToolPrefix (1,1) string {mustBeValidToolPrefixOrEmpty} = ""
     end
 
-    properties (Access = {?aisdk.tool.MCPTool}, Transient)
+    properties (Access = {?aisdk.tool.MCPTool, ?tMCPClient}, Transient)
         % ServerTools Raw tool descriptions returned by the server.
         %   Consumed by the MCPTool constructor to build the public Tools
         %   array. Not part of the public API.
         ServerTools (1,:) cell
+    end
+
+    properties (Access=private, Transient)
+        % ReservedServerToolNames Server tool names that clash with a
+        %   built-in tool. While not empty, reading Tools errors.
+        ReservedServerToolNames (1,:) string
     end
 
     properties
@@ -100,7 +108,24 @@ classdef MCPClient < handle
                 % than against an internal MCPClient helper.
                 throwAsCaller(err);
             end
-            obj.Tools = aisdk.tool.MCPTool(obj);
+            obj.buildTools();
+        end
+
+        function set.ToolPrefix(obj, prefix)
+            obj.ToolPrefix = prefix;
+            % The constructor and load assign ToolPrefix before connecting,
+            % and build the tools themselves once connected.
+            if ~isempty(obj.ConnectionID) %#ok<MCSUP>
+                obj.buildTools();
+            end
+        end
+
+        function tools = get.Tools(obj)
+            if ~isempty(obj.ReservedServerToolNames)
+                aisdk.internal.throwError("aisdk:mcpClient:reservedToolName", ...
+                    obj.ReservedServerToolNames(1));
+            end
+            tools = obj.Tools;
         end
 
         function delete(obj)
@@ -175,7 +200,26 @@ classdef MCPClient < handle
         function obj = loadobj(obj)
             obj.connect();
             obj.ServerTools = obj.retrieveTools();
-            obj.Tools = aisdk.tool.MCPTool(obj);
+            obj.buildTools();
+        end
+    end
+
+    % buildTools is called by the constructor and loadobj; tMCPClient calls
+    % it after replacing ServerTools, as the mock server's tools are fixed.
+    methods (Access = {?tMCPClient})
+        function buildTools(obj)
+            % A server tool taking a reserved name would make the MCPTool
+            % constructor error. Keep the client usable instead and raise
+            % the error when the tools are read, pointing at ToolPrefix.
+            names = string(cellfun(@(t) obj.prefixedToolName(t.name), ...
+                obj.ServerTools, UniformOutput=false));
+            obj.ReservedServerToolNames = names(ismember(names, ...
+                aisdk.internal.reservedToolNames));
+            if isempty(obj.ReservedServerToolNames)
+                obj.Tools = aisdk.tool.MCPTool(obj);
+            else
+                obj.Tools = aisdk.tool.MCPTool.empty(1,0);
+            end
         end
     end
 

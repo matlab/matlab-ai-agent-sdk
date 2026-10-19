@@ -132,6 +132,10 @@ classdef LocalLLMTool < aisdk.tool.internal.CallableTool
 
     methods (Access = protected)
 
+        function errorID = reservedNameErrorID(~)
+            errorID = "aisdk:reservedToolName";
+        end
+
         function sig = displaySignature(obj)
         % Build a display signature like "toolName(arg1, <opt>, Name=Value)".
             maxSigChars = 60;

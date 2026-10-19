@@ -172,6 +172,22 @@ classdef tMCPTool < matlab.unittest.TestCase
             testCase.verifyEqual(tools.Description, "");
         end
 
+        function constructor_reservedName_errors(testCase)
+            % An external client such as mcpHTTPClient has no ToolPrefix, so
+            % there is no way around the clash to point at.
+            mockClient = makeMockClient({ ...
+                struct("name", "loadSkill", "description", "desc", "inputSchema", struct())});
+            testCase.verifyError( ...
+                @() aisdk.tool.MCPTool(mockClient), ...
+                "aisdk:reservedMCPToolName");
+        end
+
+        function setName_reservedName_errors(testCase)
+            tool = aisdk.tool.MCPTool();
+            testCase.verifyError(@() setName(tool, "loadSkill"), ...
+                "aisdk:reservedMCPToolName");
+        end
+
         function display_showsCorrectProperties(testCase)
             tool = aisdk.tool.MCPTool();
             tool.Name = "mcpTool";
@@ -207,4 +223,8 @@ function mockClient = makeMockClient(serverTools, callToolFcn)
         callToolFcn = @(name, varargin) "mock_result"
     end
     mockClient = struct("ServerTools", {serverTools}, "callTool", callToolFcn);
+end
+
+function setName(tool, name)
+    tool.Name = name;
 end

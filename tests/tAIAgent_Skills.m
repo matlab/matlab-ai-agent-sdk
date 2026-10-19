@@ -16,7 +16,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
         function constructWithoutSkillDirectories_hasNoLoadSkillTool(testCase)
             agent = aisdk.AIAgent(MockClient());
             testCase.verifyError( ...
-                @() agent.Tools.select("aisdk_loadSkill"), ...
+                @() agent.Tools.select("loadSkill"), ...
                 "aisdk:invalidFunctionCall");
         end
 
@@ -48,16 +48,16 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
                 fullfile(skillDir, "SKILL.md"));
 
             agent = aisdk.AIAgent(MockClient(), SkillDirectories=tmpDir);
-            tool = agent.Tools.select("aisdk_loadSkill");
-            testCase.verifyEqual(tool.Name, "aisdk_loadSkill");
+            tool = agent.Tools.select("loadSkill");
+            testCase.verifyEqual(tool.Name, "loadSkill");
         end
 
         function constructWithSkillRegistry_addsLoadSkillToTools(testCase)
             reg = testCase.createStubRegistry();
             agent = aisdk.AIAgent(MockClient());
             agent.SkillRegistry = reg;
-            tool = agent.Tools.select("aisdk_loadSkill");
-            testCase.verifyEqual(tool.Name, "aisdk_loadSkill");
+            tool = agent.Tools.select("loadSkill");
+            testCase.verifyEqual(tool.Name, "loadSkill");
         end
 
         function setSkillDirectoriesAfterConstruction_addsLoadSkillTool(testCase)
@@ -69,8 +69,8 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
 
             agent = aisdk.AIAgent(MockClient());
             agent.SkillDirectories = tmpDir;
-            tool = agent.Tools.select("aisdk_loadSkill");
-            testCase.verifyEqual(tool.Name, "aisdk_loadSkill");
+            tool = agent.Tools.select("loadSkill");
+            testCase.verifyEqual(tool.Name, "loadSkill");
         end
 
         function setSkillDirectoriesToInvalidPath_preservesPreviousConfiguration(testCase)
@@ -87,7 +87,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
                 "aisdk:skills:DirectoryNotFound");
             testCase.verifyEqual(agent.SkillDirectories, string(tmpDir));
             testCase.verifyEqual(agent.Skills, "my-skill");
-            testCase.verifyEqual(agent.Tools.select("aisdk_loadSkill").Name, "aisdk_loadSkill");
+            testCase.verifyEqual(agent.Tools.select("loadSkill").Name, "loadSkill");
         end
 
         %% Skills property
@@ -145,7 +145,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
             agent.SkillRegistry = testCase.createStubRegistry();
             run(agent, "hi");
             msgs = client.GenerateInputs{1};
-            testCase.verifySubstring(msgs(1).Text, "aisdk_loadSkill tool");
+            testCase.verifySubstring(msgs(1).Text, "loadSkill tool");
         end
 
         %% run -- LLM-triggered loadSkill
@@ -154,7 +154,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
             reg = testCase.createStubRegistry();
             client = MockClient();
             client.GenerateOutputs = {
-                testCase.toolCallResponse("aisdk_loadSkill", struct('name', 'valid-skill'), "call_1")
+                testCase.toolCallResponse("loadSkill", struct('name', 'valid-skill'), "call_1")
                 testCase.textResponse("Done.")
             };
             agent = aisdk.AIAgent(client, DisplayMode="off");
@@ -169,7 +169,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
             reg = testCase.createRegistryWithResource();
             client = MockClient();
             client.GenerateOutputs = {
-                testCase.toolCallResponse("aisdk_loadSkill", struct('name', 'valid-skill/references/guide.md'), "call_1")
+                testCase.toolCallResponse("loadSkill", struct('name', 'valid-skill/references/guide.md'), "call_1")
                 testCase.textResponse("Done.")
             };
             agent = aisdk.AIAgent(client, DisplayMode="off");
@@ -184,7 +184,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
             reg = testCase.createStubRegistry();
             client = MockClient();
             client.GenerateOutputs = {
-                testCase.toolCallResponse("aisdk_loadSkill", struct('name', 'nonexistent'), "call_1")
+                testCase.toolCallResponse("loadSkill", struct('name', 'nonexistent'), "call_1")
                 testCase.textResponse("Sorry.")
             };
             agent = aisdk.AIAgent(client, DisplayMode="off");
@@ -214,7 +214,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
             agent = aisdk.AIAgent(MockClient(), DisplayMode="detailed");
             agent.SkillRegistry = reg;
             output = evalc('agent.loadSkill("valid-skill")');
-            testCase.verifySubstring(output, "[call function aisdk_loadSkill");
+            testCase.verifySubstring(output, "[call function loadSkill");
             testCase.verifySubstring(output, "[function return]");
         end
 
@@ -262,8 +262,8 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
             msgs = agent.Messages;
             callMsg = msgs(arrayfun(@(m) isa(m, 'aisdk.LLMToolCallMessage'), msgs));
             resultMsg = msgs(arrayfun(@(m) isa(m, 'aisdk.LLMToolResultMessage'), msgs));
-            testCase.verifyEqual(callMsg.Name, "aisdk_loadSkill");
-            testCase.verifyEqual(resultMsg.Name, "aisdk_loadSkill");
+            testCase.verifyEqual(callMsg.Name, "loadSkill");
+            testCase.verifyEqual(resultMsg.Name, "loadSkill");
         end
 
         function loadSkill_withResourcePath_injectsResourceContent(testCase)
@@ -347,7 +347,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
 
             toolsUsed = client.getGenerateTools(1);
             toolNames = [toolsUsed.Name];
-            testCase.verifyTrue(ismember("aisdk_loadSkill", toolNames));
+            testCase.verifyTrue(ismember("loadSkill", toolNames));
             testCase.verifyTrue(ismember("myTool", toolNames));
         end
 
@@ -361,7 +361,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
 
             toolsUsed = client.getGenerateTools(1);
             toolNames = [toolsUsed.Name];
-            testCase.verifyTrue(ismember("aisdk_loadSkill", toolNames));
+            testCase.verifyTrue(ismember("loadSkill", toolNames));
         end
 
         %% Construction edge cases
@@ -374,7 +374,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
                 OutputArguments=aisdk.LLMToolArgument("out", DataType="string"));
             agent = aisdk.AIAgent(MockClient(), Tools=userTool);
             agent.SkillRegistry = reg;
-            testCase.verifyEqual(agent.Tools.select("aisdk_loadSkill").Name, "aisdk_loadSkill");
+            testCase.verifyEqual(agent.Tools.select("loadSkill").Name, "loadSkill");
             testCase.verifyEqual(agent.Tools.select("myTool").Name, "myTool");
         end
 
@@ -385,7 +385,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
             agent = aisdk.AIAgent(MockClient());
             agent.SkillRegistry = testCase.createStubRegistry();
             agent.Tools = [agent.Tools, testCase.createUserTool()];
-            testCase.verifyEqual([agent.Tools.Name], ["myTool", "aisdk_loadSkill"]);
+            testCase.verifyEqual([agent.Tools.Name], ["myTool", "loadSkill"]);
         end
 
         function construct_withToolsOfAgentWithSkills_dropsLoadSkillTool(testCase)
@@ -405,7 +405,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
             run(agent, "do something", Tools=agent.Tools);
 
             toolsUsed = client.getGenerateTools(1);
-            testCase.verifyEqual([toolsUsed.Name], ["myTool", "aisdk_loadSkill"]);
+            testCase.verifyEqual([toolsUsed.Name], ["myTool", "loadSkill"]);
         end
 
         function setSkillDirectoriesToEmpty_removesLoadSkillTool(testCase)
@@ -418,7 +418,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
             agent = aisdk.AIAgent(MockClient(), SkillDirectories=tmpDir);
             agent.SkillDirectories = string.empty(1, 0);
             testCase.verifyError( ...
-                @() agent.Tools.select("aisdk_loadSkill"), ...
+                @() agent.Tools.select("loadSkill"), ...
                 "aisdk:invalidFunctionCall");
         end
 
@@ -529,7 +529,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
             toolsUsed = client.getGenerateTools(2);
             toolNames = [toolsUsed.Name];
             testCase.verifyTrue(ismember("myTool", toolNames));
-            testCase.verifyTrue(ismember("aisdk_loadSkill", toolNames));
+            testCase.verifyTrue(ismember("loadSkill", toolNames));
         end
     end
 

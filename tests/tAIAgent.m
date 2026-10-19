@@ -1375,48 +1375,6 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyError(@() setTools(agent, dup), ...
                 "aisdk:duplicateToolNames");
         end
-
-        function constructor_toolWithReservedPrefix_errors(testCase)
-            % Names starting with "aisdk_" are reserved for the tools the SDK
-            % provides, so no other tool may take one.
-            tool = aisdk.LLMTool(@addTwoNumbers, Name="aisdk_add");
-            testCase.verifyError( ...
-                @() aisdk.AIAgent(MockClient(), Tools=tool, DisplayMode="off"), ...
-                "aisdk:agent:reservedToolNamePrefix");
-        end
-
-        function setTools_toolWithReservedPrefix_errors(testCase)
-            agent = aisdk.AIAgent(MockClient(), DisplayMode="off");
-            tool = aisdk.LLMTool(@addTwoNumbers, Name="aisdk_add");
-            testCase.verifyError(@() setTools(agent, tool), ...
-                "aisdk:agent:reservedToolNamePrefix");
-        end
-
-        function run_toolWithReservedPrefixOverride_errors(testCase)
-            agent = aisdk.AIAgent(MockClient(), DisplayMode="off");
-            tool = aisdk.LLMTool(@addTwoNumbers, Name="aisdk_add");
-            testCase.verifyError(@() agent.run("Hi", Tools=tool), ...
-                "aisdk:agent:reservedToolNamePrefix");
-        end
-
-        function constructor_mcpToolWithReservedPrefix_errors(testCase)
-            % An MCP tool gets its own error, which points at ToolPrefix.
-            mock = mcpHTTPClientMock({struct("name", "aisdk_add", ...
-                "description", "Add", "inputSchema", struct())}, @(varargin) []);
-            tool = aisdk.LLMTool(mock);
-            testCase.verifyError( ...
-                @() aisdk.AIAgent(MockClient(), Tools=tool, DisplayMode="off"), ...
-                "aisdk:agent:reservedMCPToolNamePrefix");
-        end
-
-        function constructor_mcpClientToolWithReservedPrefix_errors(testCase)
-            % The same holds for tools from an aisdk.MCPClient, here
-            % given a reserved name by ToolPrefix.
-            client = aisdk.MCPClient("mock", Transport="mock", ToolPrefix="aisdk");
-            testCase.verifyError( ...
-                @() aisdk.AIAgent(MockClient(), Tools=client.Tools, DisplayMode="off"), ...
-                "aisdk:agent:reservedMCPToolNamePrefix");
-        end
     end
 
     methods (Test, TestTags = {'Integration'})

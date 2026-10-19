@@ -104,6 +104,7 @@ These properties can be set using name-value arguments.
 
 AI agent tools, returned as one or more [`MCPTool`](MCPTool.md)
 objects.
+
 ### `Server` — MCP server
 <a id="server"></a>
 

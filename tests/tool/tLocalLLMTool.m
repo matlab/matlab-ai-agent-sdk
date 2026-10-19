@@ -362,6 +362,37 @@ classdef tLocalLLMTool < matlab.unittest.TestCase
             testCase.verifyEqual(tool.Name, "customName");
         end
 
+        function reservedName_errors(testCase)
+            % "loadSkill" is the name of the tool an agent adds for its skills.
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@addTwoNumbers, Name="loadSkill"), ...
+                "aisdk:reservedToolName");
+        end
+
+        function reservedFunctionName_errors(testCase)
+            % The check covers a name derived from the function, too.
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@loadSkill, ...
+                    InputArguments=aisdk.LLMToolArgument("x"), ...
+                    OutputArguments=aisdk.LLMToolArgument("y")), ...
+                "aisdk:reservedToolName");
+        end
+
+        function reservedFunctionName_errorPointsAtName(testCase)
+            % The user did not pick the name, so tell them how to change it.
+            testCase.verifyError( ...
+                @() aisdk.tool.LocalLLMTool(@loadSkill, ...
+                    InputArguments=aisdk.LLMToolArgument("x"), ...
+                    OutputArguments=aisdk.LLMToolArgument("y")), ...
+                "aisdk:reservedToolName");
+        end
+
+        function setName_reservedName_errors(testCase)
+            tool = aisdk.tool.LocalLLMTool(@addTwoNumbers);
+            testCase.verifyError(@() setName(tool, "loadSkill"), ...
+                "aisdk:reservedToolName");
+        end
+
         function anonFunctionWithoutNameErrors(testCase)
             testCase.verifyError( ...
                 @() aisdk.tool.LocalLLMTool(@(x,y) x+y), ...
@@ -778,4 +809,12 @@ function [output, workspace] = contextualMultiply(workspace, x, y)
     end
     output = x * y;
     workspace.called = true;
+end
+
+function y = loadSkill(x)
+    y = x;
+end
+
+function setName(tool, name)
+    tool.Name = name;
 end

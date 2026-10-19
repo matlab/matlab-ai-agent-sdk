@@ -85,6 +85,18 @@ classdef LLMTool < matlab.mixin.Heterogeneous & matlab.mixin.CustomDisplay
         end
     end
 
+    methods
+        function this = set.Name(this, name)
+            if ismember(name, aisdk.internal.reservedToolNames)
+                errorID = this.reservedNameErrorID();
+                if errorID ~= ""
+                    aisdk.internal.throwError(errorID, name);
+                end
+            end
+            this.Name = name;
+        end
+    end
+
     methods (Access=protected)
         function label = displayWorkspaceLabel(obj)
             label = """" + obj.Workspace + """";
@@ -94,6 +106,11 @@ classdef LLMTool < matlab.mixin.Heterogeneous & matlab.mixin.CustomDisplay
     methods (Abstract, Access=protected)
         sig = displaySignature(obj)
         label = displayTypeLabel(obj)
+
+        % Each kind of tool decides whether it may take one of
+        % aisdk.internal.reservedToolNames ("" to allow it) and, if not,
+        % which error tells the user how to avoid it.
+        errorID = reservedNameErrorID(obj)
     end
 
     methods (Sealed)

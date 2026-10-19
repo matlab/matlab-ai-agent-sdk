@@ -14,12 +14,17 @@ classdef (Abstract) BuiltInTool < aisdk.tool.internal.CallableTool
     end
 
     methods (Access = protected)
+        function errorID = reservedNameErrorID(~)
+            % Built-in tools are the ones the reserved names are kept for.
+            errorID = "";
+        end
+
         function sig = displaySignature(obj)
             sig = obj.Name;
         end
 
         function label = displayTypeLabel(~)
-            label = "built-in";
+            label = "BuiltInTool";
         end
 
         function label = displayWorkspaceLabel(~)

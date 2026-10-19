@@ -104,6 +104,26 @@ classdef tMCPClient < matlab.unittest.TestCase
             testCase.verifyEqual(tools(1).Description, "An example tool for testing");
         end
 
+        function tools_reservedServerToolName_errorsOnAccess(testCase)
+            % A server tool named like a built-in tool must not stop the
+            % client from being created, as ToolPrefix can still avoid the
+            % clash. The error comes when the tools are used.
+            client = aisdk.MCPClient("mock", Transport="mock");
+            client.ServerTools = {struct("name", "loadSkill", ...
+                "description", "desc", "inputSchema", struct())};
+            client.buildTools();
+            testCase.verifyError(@() client.Tools, ...
+                "aisdk:mcpClient:reservedToolName");
+        end
+
+        function tools_reservedServerToolNameWithToolPrefix_isPrefixed(testCase)
+            client = aisdk.MCPClient("mock", Transport="mock", ToolPrefix="srv");
+            client.ServerTools = {struct("name", "loadSkill", ...
+                "description", "desc", "inputSchema", struct())};
+            client.buildTools();
+            testCase.verifyEqual(client.Tools.Name, "srv_loadSkill");
+        end
+
         function tools_canBeCalled(testCase)
             client = aisdk.MCPClient("mock", Transport="mock");
             tools = client.Tools;
@@ -208,6 +228,36 @@ classdef tMCPClient < matlab.unittest.TestCase
             testCase.verifyError(...
                 @() aisdk.MCPClient("mock", Transport="mock", ...
                     ToolPrefix="2bad"), ...
+                "aisdk:mcpClient:invalidToolPrefix");
+        end
+
+        function setToolPrefix_renamesTools(testCase)
+            client = aisdk.MCPClient("mock", Transport="mock");
+            client.ToolPrefix = "srv";
+            testCase.verifyEqual(client.Tools(1).Name, "srv_example-tool");
+        end
+
+        function setToolPrefix_renamedToolCanBeCalled(testCase)
+            client = aisdk.MCPClient("mock", Transport="mock");
+            client.ToolPrefix = "srv";
+            result = client.Tools(1).evaluate(struct("param1", "hello", "param2", 42));
+            testCase.verifyEqual(result.content.text, 'Example result');
+        end
+
+        function setToolPrefix_resolvesReservedServerToolName(testCase)
+            % A client loaded from disk was created without a prefix, so
+            % setting one afterwards is the only way to reach its tools.
+            client = aisdk.MCPClient("mock", Transport="mock");
+            client.ServerTools = {struct("name", "loadSkill", ...
+                "description", "desc", "inputSchema", struct())};
+            client.buildTools();
+            client.ToolPrefix = "srv";
+            testCase.verifyEqual(client.Tools.Name, "srv_loadSkill");
+        end
+
+        function setToolPrefix_invalidChars_errors(testCase)
+            client = aisdk.MCPClient("mock", Transport="mock");
+            testCase.verifyError(@() setToolPrefix(client, "bad-name"), ...
                 "aisdk:mcpClient:invalidToolPrefix");
         end
 
@@ -494,4 +544,8 @@ classdef tMCPClient < matlab.unittest.TestCase
             end
         end
     end
+end
+
+function setToolPrefix(client, prefix)
+    client.ToolPrefix = prefix;
 end
