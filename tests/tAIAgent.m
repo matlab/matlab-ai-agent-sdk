@@ -1419,6 +1419,32 @@ classdef tAIAgent < matlab.unittest.TestCase
         end
     end
 
+    methods (Test, TestTags = {'Integration'})
+        function run_twoSequentialToolCalls(testCase)
+            stepOne = aisdk.LLMTool(@addTwoNumbers);
+            stepTwo = aisdk.LLMTool(@addTwoToNumber);
+            tokens = struct("Tokens", struct( ...
+                "NumInputTokens", 10, "NumOutputTokens", 5, ...
+                "NumTotalTokens", 15, "NumCachedInputTokens", 0));
+
+            client = MockClient();
+            client.GenerateOutputs = {
+                {"", aisdk.LLMToolCallMessage("addTwoNumbers", ...
+                    struct("a", 2, "b", 3), ToolCallID="call_1"), tokens}
+                {"", aisdk.LLMToolCallMessage("addTwoToNumber", ...
+                    struct("a", 5), ToolCallID="call_2"), tokens}
+                {"Both steps are complete.", ...
+                    aisdk.LLMTextMessage("Both steps are complete.", Role="assistant"), tokens}
+            };
+
+            agent = aisdk.AIAgent(client, Tools=[stepOne, stepTwo], DisplayMode="off");
+            agent.run("Run both the addTwoNumbers tool and the addTwoToNumber tool.");
+
+            toolResults = agent.Messages([agent.Messages.Role] == "tool");
+            testCase.verifyEqual([toolResults.Name], ["addTwoNumbers", "addTwoToNumber"]);
+        end
+    end
+
 end
 
 function result = countAndApprove(callCount)
