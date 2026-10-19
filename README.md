@@ -229,16 +229,15 @@ agentWithWorkspace.Workspace.matrix = A;
 
 ## Examples
 
-| Example                                                                              | Description                                                                                                                                                                                                                 |
-| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [SimpleMathAgent.m](doc/examples/SimpleMathAgent.m)                                     | Simple math agent example                                                      |
-| [CreateSimpleChatBotUsingAIAgent.m](doc/examples/CreateSimpleChatBotUsingAIAgent.m)     | Create interactive chatbot in Command Window                                   |
-| [AnalyzeTextUsingParallelToolCalls.m](doc/examples/AnalyzeTextUsingParallelToolCalls.m) | Extract structured data from text                                              |
-| [FitPolynomialToDataUsingAIAgent.m](doc/examples/FitPolynomialToDataUsingAIAgent.m)     | Build AI agent that fits polynomials to data (requires Curve Fitting Toolbox™) |
-| [NestedToolsAndSubagentsExample.m](doc/examples/NestedToolsAndSubagentsExample.m)       | Create tools that provide other tools                                          |
-| [SupervisorSubagentExample.m](doc/examples/SupervisorSubagentExample.m)                 | Supervisor pattern with sub-agents                                             |
-| [MCPClientAndAgentTools.m](doc/examples/MCPClientAndAgentTools.m)                       | Connect agent to Model Context Protocol (MCP) server                           |
-| [SendImageMessagesToVisionModels.m](doc/examples/SendImageMessagesToVisionModels.m)     | Send image messages to vision models                                           |
+| Example                                                                                                                     | Description                                                                                                              |
+| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [SolveSimpleMathProblemUsingAIAgent.m](doc/examples/SolveSimpleMathProblemUsingAIAgent/SolveSimpleMathProblemUsingAIAgent.m) | Solve a simple math problem by using an AI agent                                                                         |
+| [CreateSimpleChatbot.m](doc/examples/CreateSimpleChatbot/CreateSimpleChatbot.m)                                             | Create a simple, interactive ChatBot in the MATLAB® Command Window                                                       |
+| [AnalyzeTextDataUsingLLMTool.m](doc/examples/AnalyzeTextDataUsingLLMTool/AnalyzeTextDataUsingLLMTool.m)                      | Use tool calling to create a table of customer information from a text data set containing that information in natural language |
+| [FitPolynomialToDataUsingAIAgent.m](doc/examples/FitPolynomialToDataUsingAIAgent/FitPolynomialToDataUsingAIAgent.m)         | Build an AI agent to fit polynomials up to ninth degree to data and choose the best fit                                  |
+| [OrchestrateMultipleSubagents.m](doc/examples/OrchestrateMultipleSubagents/OrchestrateMultipleSubagents.m)                  | Create an agent with multiple subagents                                                                                  |
+| [CallMCPClientUsingAIAgent.m](doc/examples/CallMCPClientUsingAIAgent/CallMCPClientUsingAIAgent.m)                           | Create and run an AI agent that uses tools provided by an MCP server                                                     |
+| [LabelImagesUsingLLM.m](doc/examples/LabelImagesUsingLLM/LabelImagesUsingLLM.m)                                             | Categorize and label images by using a large language model                                                              |
 
 ## License
 
