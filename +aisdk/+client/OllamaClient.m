@@ -1,11 +1,11 @@
 classdef OllamaClient < aisdk.client.ClientBase
 %OllamaClient Client for Ollama chat completions.
 %
-%   CLIENT = aisdk.client.OllamaClient(MODELNAME) creates an OllamaClient
+%   CLIENT = aisdk.LLMClient("ollama", MODELNAME) creates an OllamaClient
 %   for the specified model.
 %
-%   CLIENT = aisdk.client.OllamaClient(MODELNAME, Name=Value) specifies options using
-%   one or more name-value arguments:
+%   CLIENT = aisdk.LLMClient("ollama", MODELNAME, Name=Value) specifies
+%   options using one or more name-value arguments:
 %
 %   Temperature             - Temperature value for controlling the randomness
 %                             of the output. Default value is 1.
@@ -61,10 +61,11 @@ classdef OllamaClient < aisdk.client.ClientBase
 %                             OLLAMA_API_ENDPOINT environment variable, or defaults
 %                             to "http://127.0.0.1:11434".
 %
+%   See also aisdk.LLMClient
 
 % Copyright 2026 The MathWorks, Inc.
 
-    properties (Constant)
+    properties (Constant, Hidden)
         API = "ollama"
     end
 
@@ -91,7 +92,7 @@ classdef OllamaClient < aisdk.client.ClientBase
         StopSequences       {aisdk.internal.mustBeValidStop} = []
 
         %MaxNumTokens   Maximum number of tokens in the generated response.
-        MaxNumTokens  (1,1) {mustBeNumeric,mustBePositive} = inf
+        MaxNumTokens  (1,1) {aisdk.internal.mustBePositiveIntegerOrInf} = inf
 
         %TimeOut   Connection timeout in seconds.
         TimeOut       (1,1) {mustBeNumeric,mustBeReal,mustBePositive} = 120
@@ -110,7 +111,7 @@ classdef OllamaClient < aisdk.client.ClientBase
                 nvp.TopK                    {aisdk.internal.mustBeValidTopK} = "auto"
                 nvp.TailFreeSamplingZ       {aisdk.internal.mustBeValidTailFreeSamplingZ} = "auto"
                 nvp.StopSequences           {aisdk.internal.mustBeValidStop} = []
-                nvp.MaxNumTokens      (1,1) {mustBeNumeric,mustBePositive} = inf
+                nvp.MaxNumTokens      (1,1) {aisdk.internal.mustBePositiveIntegerOrInf} = inf
                 nvp.ResponseFormat          {aisdk.internal.mustBeResponseFormat} = "text"
                 nvp.TimeOut           (1,1) {mustBeNumeric,mustBeReal,mustBePositive} = 120
                 nvp.StreamFcn         (1,1) {mustBeA(nvp.StreamFcn,'function_handle')}
@@ -173,7 +174,7 @@ classdef OllamaClient < aisdk.client.ClientBase
                 nvp.TopK                          {aisdk.internal.mustBeValidTopK} = this.TopK
                 nvp.TailFreeSamplingZ             {aisdk.internal.mustBeValidTailFreeSamplingZ} = this.TailFreeSamplingZ
                 nvp.StopSequences                 {aisdk.internal.mustBeValidStop} = this.StopSequences
-                nvp.MaxNumTokens            (1,1) {mustBeNumeric,mustBePositive} = this.MaxNumTokens
+                nvp.MaxNumTokens            (1,1) {aisdk.internal.mustBePositiveIntegerOrInf} = this.MaxNumTokens
                 nvp.Seed                          {mustBeNumeric} = []
                 nvp.ResponseFormat                {aisdk.internal.mustBeResponseFormat} = this.ResponseFormat
                 nvp.TimeOut                 (1,1) {mustBeNumeric,mustBeReal,mustBePositive} = this.TimeOut
@@ -207,6 +208,7 @@ classdef OllamaClient < aisdk.client.ClientBase
 
             this.handleErrorResponse(response);
 
+            assistantText = text;
             if ~isempty(text)
                 text = aisdk.client.internal.reformatOutput(text, nvp.ResponseFormat);
             end
@@ -237,6 +239,9 @@ classdef OllamaClient < aisdk.client.ClientBase
                         aisdk.internal.throwError("aisdk:invalidToolCallArguments", class(args));
                     end
                     messages(end+1) = aisdk.LLMToolCallMessage(tc.name, args, ToolCallID=id); %#ok<AGROW>
+                end
+                if strlength(assistantText) > 0
+                    messages = [aisdk.LLMTextMessage(assistantText, Role="assistant"), messages];
                 end
             else
                 messages = aisdk.LLMTextMessage(message.content, Role="assistant");

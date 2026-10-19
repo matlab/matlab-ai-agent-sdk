@@ -5,11 +5,13 @@ classdef tOllamaClient < hconstructorCommon
 
     properties (TestParameter)
         OllamaDefault = struct( ...
+            "StopSequences",     struct("prop", "StopSequences",     "expected", []), ...
             "MinP",              struct("prop", "MinP",              "expected", "auto"), ...
             "TopK",              struct("prop", "TopK",              "expected", "auto"), ...
             "TailFreeSamplingZ", struct("prop", "TailFreeSamplingZ", "expected", "auto"));
 
         OllamaCustom = struct( ...
+            "StopSequences",     struct("prop", "StopSequences",     "value", ["stop1","stop2"]), ...
             "MinP",              struct("prop", "MinP",              "value", 0.1), ...
             "TopK",              struct("prop", "TopK",              "value", 50), ...
             "TailFreeSamplingZ", struct("prop", "TailFreeSamplingZ", "value", 0.95));
@@ -112,32 +114,6 @@ classdef tOllamaClient < hconstructorCommon
             client = makeOllamaClientWithFakeHTTP(testCase, ...
                 makeOllamaErrorResponse(matlab.net.http.StatusCode.NotFound, "model 'qwen3' not found"));
             testCase.verifyError(@() generate(client, "Hi"), "aisdk:apiReturnedError");
-        end
-
-        function generate_errorResponse_includesErrorText(testCase)
-            client = makeOllamaClientWithFakeHTTP(testCase, ...
-                makeOllamaErrorResponse(matlab.net.http.StatusCode.NotFound, "model 'qwen3' not found"));
-            try
-                generate(client, "Hi");
-            catch ME
-                testCase.verifySubstring(ME.message, "model 'qwen3' not found");
-                return
-            end
-            testCase.verifyFail("Expected an error to be thrown.");
-        end
-
-        function generate_errorResponse_fallbackToStatusCode(testCase)
-            errorResp = struct("StatusCode", matlab.net.http.StatusCode.InternalServerError, ...
-                "Body", struct("Data", struct("unexpected", "format")));
-            client = makeOllamaClientWithFakeHTTP(testCase, errorResp);
-            try
-                generate(client, "Hi");
-            catch ME
-                testCase.verifySubstring(ME.message, "HTTP 500:");
-                testCase.verifySubstring(ME.message, "unexpected");
-                return
-            end
-            testCase.verifyFail("Expected an error to be thrown.");
         end
 
         %% generate — tool call response
@@ -255,7 +231,37 @@ classdef tOllamaClient < hconstructorCommon
             client = makeOllamaClientWithFakeHTTP(testCase, response);
             [text, messages] = generate(client, "Call a tool");
             testCase.verifyEqual(text, "Let me calculate that");
-            testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
+            toolCalls = messages(arrayfun(@(m) isa(m, "aisdk.LLMToolCallMessage"), messages));
+            testCase.assertNumElements(toolCalls, 1);
+            testCase.verifyEqual(toolCalls.Name, "getWeather");
+        end
+
+        function generate_toolCallsWithText_returnsTextMessageBeforeToolCalls(testCase)
+            response = makeOllamaToolCallResponse("Let me calculate that");
+            client = makeOllamaClientWithFakeHTTP(testCase, response);
+            [~, messages] = generate(client, "Call a tool");
+            testCase.assertNumElements(messages, 2, ...
+                "Expected one assistant text message and one tool call message.");
+            testCase.verifyClass(messages(1), "aisdk.LLMTextMessage");
+            testCase.verifyEqual(messages(1).Role, "assistant");
+            testCase.verifyEqual(messages(1).Text, "Let me calculate that");
+            testCase.verifyClass(messages(2), "aisdk.LLMToolCallMessage");
+        end
+
+        function generate_toolCallsWithTextReplayed_sendsAssistantText(testCase)
+            response = makeOllamaToolCallResponse("Let me calculate that");
+            client = makeOllamaClientWithFakeHTTP(testCase, response);
+            [~, messages] = generate(client, "Call a tool");
+            params = captureOllamaParams(testCase, [
+                aisdk.LLMTextMessage("Call a tool"), ...
+                messages, ...
+                aisdk.LLMToolResultMessage("sunny", ToolCallID="0", Name="getWeather")]);
+            testCase.assertNumElements(params.messages, 3, ...
+                "Expected the user message, one assistant message and the tool result.");
+            assistantMsg = params.messages{2};
+            testCase.verifyEqual(assistantMsg.role, "assistant");
+            testCase.verifyEqual(assistantMsg.content, "Let me calculate that");
+            testCase.verifyNumElements(assistantMsg.tool_calls, 1);
         end
 
         function generate_toolCallsWithStructuredText_returnsDecodedStruct(testCase)
@@ -265,7 +271,10 @@ classdef tOllamaClient < hconstructorCommon
             [text, messages] = generate(client, "Call a tool", ResponseFormat=proto);
             testCase.verifyEqual(text.name, "Alice");
             testCase.verifyEqual(text.score, 9.5);
-            testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
+            testCase.assertNumElements(messages, 2, ...
+                "Expected one assistant text message and one tool call message.");
+            testCase.verifyEqual(messages(1).Text, "{""name"":""Alice"",""score"":9.5}");
+            testCase.verifyClass(messages(2), "aisdk.LLMToolCallMessage");
         end
 
         %% generate — structured output with nothing to report
@@ -283,13 +292,13 @@ classdef tOllamaClient < hconstructorCommon
         end
     end
 
-    methods (Test, TestTags = {'Unit'}, ParameterCombination="sequential")
-        function hasCorrectOllamaDefault(testCase, OllamaDefault)
+    methods (Test, TestTags = {'Unit'})
+        function ollamaProperty_notSet_hasDefaultValue(testCase, OllamaDefault)
             client = testCase.createClient("qwen3:0.6b");
             testCase.verifyEqual(client.(OllamaDefault.prop), OllamaDefault.expected);
         end
 
-        function respectsOllamaCustomValue(testCase, OllamaCustom)
+        function ollamaProperty_setAtConstruction_keepsValue(testCase, OllamaCustom)
             client = testCase.createClient("qwen3:0.6b", OllamaCustom.prop, OllamaCustom.value);
             testCase.verifyEqual(client.(OllamaCustom.prop), OllamaCustom.value);
         end

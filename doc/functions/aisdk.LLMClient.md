@@ -59,9 +59,17 @@ client = aisdk.LLMClient("openai",model,BaseURL=baseurl);
 ### `api` — LLM API
 <a id="api"></a>
 
-`"openai"` | `"ollama"`
+`"openai"` | `"openai-responses"` | `"ollama"`
 
-LLM API, specified as `"openai"` or `"ollama"`.
+LLM API, specified as `"openai"`, `"openai-responses"`, or `"ollama"`.
+
+The function returns different objects depending on the value of `api`.
+
+- `"openai"` — [`OpenAIClient`](OpenAIClient.md)
+object
+- `"openai-responses"` — [`OpenAIResponsesClient`](OpenAIResponsesClient.md) object
+- `"ollama"` — [`OllamaClient`](OllamaClient.md) object
+
 
 Data Types: `char` | `string`
 ### `model` — Model name
@@ -106,7 +114,8 @@ For OpenAI, by default, `BaseURL` is set to
 `"https://api.openai.com/v1"`. Change the Base URL to use an
 OpenAI-compatible API instead.
 
-To connect to APIs that are compatible with the OpenAI Chat Completions API:
+To connect to APIs that are compatible with the OpenAI Chat Completions API or with the OpenAI Responses
+API:
 
 - Specify the `BaseURL` name-value argument.
 
@@ -116,7 +125,9 @@ use.
 - If your API requires an API key, then specify the
 `OPENAI_API_KEY` environment variable.
 
-This option is supported only for the Ollama and OpenAI API.
+For both OpenAI APIs, the software appends the endpoint of the selected API to the base
+URL, for example `"https://api.openai.com/v1/chat/completions"` or
+`"https://api.openai.com/v1/responses"`.
 
 Example: `"https://api.openai.com/v1"`
 
@@ -168,7 +179,7 @@ If `ReasoningEffort` is set to `"auto"`, then
 the software chooses the default value of the model used to generate text. The
 supported values and the default value depend on the model.
 
-This option is supported only for the OpenAI APIs.
+This option is supported only for the OpenAI Chat Completions API and the OpenAI Responses API.
 
 Data Types: `char` | `string`
 ### `StopSequences` — Stop sequences
@@ -186,6 +197,8 @@ stops token generation.
 
 Example:
 `["The end.","And that is all she wrote."]`
+
+This option is supported only for the OpenAI Chat Completions API and the Ollama API.
 
 Data Types: `string` | `char` | `cell`
 ### `StreamFcn` — Custom streaming function
@@ -206,9 +219,9 @@ Data Types: `function_handle`
 ### `TimeOut` — Connection timeout in seconds
 <a id="timeout"></a>
 
-`120` (default) | nonnegative numeric scalar
+`120` (default) | positive numeric scalar
 
-Connection timeout in seconds, specified as a nonnegative numeric scalar.
+Connection timeout in seconds, specified as a positive numeric scalar.
 
 If the model does not respond in the timeout, then the software errors.
 
@@ -257,7 +270,7 @@ array.
 If [`ReasoningEffort`](#reasoningeffort) is set to `"auto"`, then
 the software chooses the default value of the model.
 
-This option is supported only for the OpenAI APIs.
+This option is supported only for the OpenAI Chat Completions API and the OpenAI Responses API.
 
 Data Types: `char` | `string`
 ### `PresencePenalty` — Presence penalty
@@ -281,7 +294,7 @@ If the model supports `PresencePenalty` and
 `PresencePenalty` is `"auto"`, then the software
 uses the default presence penalty of the model.
 
-This option is supported only for the OpenAI APIs.
+This option is supported only for the OpenAI Chat Completions API.
 
 Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8` | `uint16` | `uint32` | `uint64` | `char` | `string`
 ### `FrequencyPenalty` — Frequency penalty
@@ -305,7 +318,7 @@ If the model supports `FrequencyPenalty` and
 `FrequencyPenalty` is `"auto"`, then the
 software uses the default frequency penalty of the model.
 
-This option is supported only for the OpenAI APIs.
+This option is supported only for the OpenAI Chat Completions API.
 
 Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8` | `uint16` | `uint32` | `uint64` | `char` | `string`
 ### `Temperature` — Temperature
@@ -395,9 +408,9 @@ Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8`
 ### `client` — LLM Client
 <a id="client"></a>
 
-`OpenAIClient` | `OllamaClient`
+`OpenAIClient` | `OpenAIResponsesClient` | `OllamaClient`
 
-LLM Client, returned as a [`OpenAIClient`](OpenAIClient.md) or [`OllamaClient`](OllamaClient.md) object.
+LLM Client, returned as a [`OpenAIClient`](OpenAIClient.md), [`OpenAIResponsesClient`](OpenAIResponsesClient.md), or [`OllamaClient`](OllamaClient.md) object.
 
 To generate text, use the LLM client as an input to the [`generate`](generate.md) function. To create an AI agent, use the LLM client as an input
 to the [`aisdk.AIAgent`](aisdk.AIAgent.md) function.
@@ -409,28 +422,28 @@ to the [`aisdk.AIAgent`](aisdk.AIAgent.md) function.
 This table shows valid argument combinations for the different APIs that you can use
 with the [`aisdk.LLMClient`](aisdk.LLMClient.md) function.
 
-| Name-Value Argument | `"openai"` | `"ollama"` |
-| --- | --- | --- |
-| [`BaseURL`](#baseurl) | Supported | Supported |
-| [`MaxNumTokens`](#maxnumtokens) | Supported | Supported |
-| [`ReasoningEffort`](#reasoningeffort) | Supported |   |
-| [`ContextSize`](#contextsize) | Supported | Supported |
-| [`StopSequences`](#stopsequences) | Supported | Supported |
-| [`StreamFcn`](#streamfcn) | Supported | Supported |
-| [`TimeOut`](#timeout) | Supported | Supported |
-| [`ResponseFormat`](#responseformat) | Supported | Supported |
-| [`Verbosity`](#verbosity) | Supported |   |
-| [`PresencePenalty`](#presencepenalty) | Supported |   |
-| [`FrequencyPenalty`](#frequencypenalty) | Supported |   |
-| [`Temperature`](#temperature) | Supported | Supported |
-| [`TopP`](#topp) | Supported | Supported |
-| [`MinP`](#minp) |   | Supported |
-| [`TopK`](#topk) |   | Supported |
-| [`TailFreeSamplingZ`](#tailfreesamplingz) |   | Supported |
+| Name-Value Argument | `"openai"` | `"openai-responses"` | `"ollama"` |
+| --- | --- | --- | --- |
+| [`BaseURL`](#baseurl) | Supported | Supported | Supported |
+| [`MaxNumTokens`](#maxnumtokens) | Supported | Supported | Supported |
+| [`ReasoningEffort`](#reasoningeffort) | Supported | Supported |   |
+| [`ContextSize`](#contextsize) | Supported | Supported | Supported |
+| [`StopSequences`](#stopsequences) | Supported |   | Supported |
+| [`StreamFcn`](#streamfcn) | Supported | Supported | Supported |
+| [`TimeOut`](#timeout) | Supported | Supported | Supported |
+| [`ResponseFormat`](#responseformat) | Supported | Supported | Supported |
+| [`Verbosity`](#verbosity) | Supported | Supported |   |
+| [`PresencePenalty`](#presencepenalty) | Supported |   |   |
+| [`FrequencyPenalty`](#frequencypenalty) | Supported |   |   |
+| [`Temperature`](#temperature) | Supported | Supported | Supported |
+| [`TopP`](#topp) | Supported | Supported | Supported |
+| [`MinP`](#minp) |   |   | Supported |
+| [`TopK`](#topk) |   |   | Supported |
+| [`TailFreeSamplingZ`](#tailfreesamplingz) |   |   | Supported |
 ## See Also
 <a id="see-also"></a>
 
-[`OpenAIClient`](OpenAIClient.md) | [`OllamaClient`](OllamaClient.md) | [`generate`](generate.md)
+[`OpenAIClient`](OpenAIClient.md) | [`OpenAIResponsesClient`](OpenAIResponsesClient.md) | [`OllamaClient`](OllamaClient.md) | [`generate`](generate.md)
 
 *Copyright 2026 The MathWorks, Inc.*
 

@@ -5,49 +5,49 @@ classdef tCallOllamaChatAPI < matlab.unittest.TestCase
 
     methods (Test, TestTags = {'Unit'})
         function buildParams_modelAndMessages_set(testCase)
-            params = captureParams();
+            params = callAPIAndCaptureRequest();
             testCase.verifyEqual(params.model, "qwen3:0.6b");
             testCase.verifyEqual(params.messages{1}.role, "user");
         end
 
         function buildParams_optionsContainsTemperature(testCase)
-            params = captureParams(Temperature=0.7);
+            params = callAPIAndCaptureRequest(Temperature=0.7);
             testCase.verifyEqual(params.options.temperature, 0.7);
         end
 
         function buildParams_scalarStop_encodesAsArray(testCase)
             % Verify cell-wrapping produces a JSON array — no live test covers this path
-            params = captureParams(StopSequences="end");
+            params = callAPIAndCaptureRequest(StopSequences="end");
             encoded = jsonencode(params.options.stop);
             testCase.verifyEqual(encoded, '["end"]');
         end
 
         function buildParams_responseFormatJson_setsFormat(testCase)
-            params = captureParams(ResponseFormat="json");
+            params = callAPIAndCaptureRequest(ResponseFormat="json");
             testCase.verifyEqual(params.format, "json");
         end
 
         function buildParams_responseFormatStruct_setsSchema(testCase)
             proto = struct("name", "", "score", 0.0);
-            params = captureParams(ResponseFormat=proto);
+            params = callAPIAndCaptureRequest(ResponseFormat=proto);
             testCase.verifyTrue(isstruct(params.format));
         end
 
         function buildParams_toolsAdded_whenNonEmpty(testCase)
             tools = {struct("type","function","function",struct("name","myTool","parameters",struct()))};
-            params = captureParams(Tools=tools);
+            params = callAPIAndCaptureRequest(Tools=tools);
             testCase.verifyTrue(isfield(params, "tools"));
         end
 
         function buildParams_infValues_omitted(testCase)
-            params = captureParams(TopK=Inf);
+            params = callAPIAndCaptureRequest(TopK=Inf);
             testCase.verifyFalse(isfield(params.options, "top_k"));
         end
     end
 
 end
 
-function params = captureParams(nvp)
+function params = callAPIAndCaptureRequest(nvp)
     arguments
         nvp.Temperature       = "auto"
         nvp.StopSequences     = strings(1,0)

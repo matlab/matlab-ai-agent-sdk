@@ -125,11 +125,12 @@ classdef tSendRequest < matlab.unittest.TestCase
         end
 
         function sendRequest_streamingWithOpenAIUsage_mergesUsageIntoStructBody(testCase)
+            import matlab.unittest.constraints.HasField
             [response, ~] = aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
                 "https://fake/v1", 10, @(~) [], @fakeSend);
 
-            testCase.verifyTrue(isfield(response.Body.Data, "usage"));
+            testCase.verifyThat(response.Body.Data, HasField("usage"));
             testCase.verifyEqual(response.Body.Data.usage.prompt_tokens, 7);
             testCase.verifyEqual(response.Body.Data.usage.completion_tokens, 11);
             testCase.verifyEqual(response.Body.Data.usage.total_tokens, 18);
@@ -165,13 +166,62 @@ classdef tSendRequest < matlab.unittest.TestCase
             end
         end
 
+        function sendRequest_streamingWithOutputItems_mergesOutputIntoBody(testCase)
+            import matlab.unittest.constraints.HasField
+            [response, ~] = aisdk.client.internal.sendRequest( ...
+                struct("model", "test"), "tok", ...
+                "https://fake/v1", 10, @(~) [], @fakeSendWithOutputItems);
+
+            testCase.verifyThat(response.Body.Data, HasField("output"));
+            testCase.verifyEqual(response.Body.Data.output{1}.call_id, "call_1");
+            testCase.verifyEqual(response.Body.Data.usage.input_tokens, 2);
+
+            function response = fakeSendWithOutputItems(~, ~, ~, consumer)
+                consumer.Usage = struct("usage", struct( ...
+                    "input_tokens", 2, "output_tokens", 3, "total_tokens", 5));
+                consumer.StreamedOutputItems = {struct("type", "function_call", ...
+                    "call_id", "call_1", "name", "toolA", "arguments", '{"x":1}')};
+                response = struct("StatusCode", "OK", ...
+                    "Body", struct("Data", '{"id":"x"}'));
+            end
+        end
+
+        function sendRequest_streamingWithStreamError_throwsApiReturnedError(testCase)
+            testCase.verifyError(@() aisdk.client.internal.sendRequest( ...
+                struct("model", "test"), "tok", ...
+                "https://fake/v1", 10, @(~) [], @fakeSendWithStreamError), ...
+                "aisdk:apiReturnedError");
+
+            function response = fakeSendWithStreamError(~, ~, ~, consumer)
+                consumer.StreamError = "The server had an error.";
+                response = struct("StatusCode", "OK", ...
+                    "Body", struct("Data", '{"id":"x"}'));
+            end
+        end
+
+        function sendRequest_streamingWithoutOutputItems_leavesBodyWithoutOutput(testCase)
+            import matlab.unittest.constraints.HasField
+            [response, ~] = aisdk.client.internal.sendRequest( ...
+                struct("model", "test"), "tok", ...
+                "https://fake/v1", 10, @(~) [], @fakeSendWithoutOutputItems);
+
+            testCase.verifyThat(response.Body.Data, ~HasField("output"));
+
+            function response = fakeSendWithoutOutputItems(~, ~, ~, consumer)
+                consumer.Usage = struct("usage", struct("input_tokens", 1));
+                response = struct("StatusCode", "OK", ...
+                    "Body", struct("Data", '{"id":"x"}'));
+            end
+        end
+
         function sendRequest_streamingWithoutUsage_leavesBodyUnchanged(testCase)
+            import matlab.unittest.constraints.HasField
             [response, ~] = aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
                 "https://fake/v1", 10, @(~) [], @fakeSend);
 
             testCase.verifyEqual(string(response.Body.Data.id), "x");
-            testCase.verifyFalse(isfield(response.Body.Data, "usage"));
+            testCase.verifyThat(response.Body.Data, ~HasField("usage"));
 
             function response = fakeSend(~, ~, ~, ~)
                 response = struct("StatusCode", "OK", ...

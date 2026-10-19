@@ -1,7 +1,7 @@
-function [text, message, response] = callOpenAIChatAPI(messages, functions, nvp)
+function [text, message, response] = callChatCompletionsAPI(messages, functions, nvp)
 % This function is undocumented and will change in a future release
 
-%callOpenAIChatAPI Calls the openAI chat completions API.
+%callChatCompletionsAPI Calls the openAI chat completions API.
 %
 %   MESSAGES and FUNCTIONS should be structs matching the json format
 %   required by the OpenAI Chat Completions API.
@@ -35,7 +35,7 @@ function [text, message, response] = callOpenAIChatAPI(messages, functions, nvp)
 %   apiKey = "your-api-key-here"
 %
 %   % Send a request
-%   [text, message] = aisdk.client.internal.callOpenAIChatAPI(messages, functions, APIKey=apiKey)
+%   [text, message] = aisdk.client.internal.callChatCompletionsAPI(messages, functions, APIKey=apiKey)
 
 %   Copyright 2026 The MathWorks, Inc.
 

@@ -13,11 +13,15 @@ To generate text, use the `OpenAIClient` object as an input to the
 function. To create an AI agent, use the `OpenAIClient` object as an input to
 the [`aisdk.AIAgent`](aisdk.AIAgent.md)
 function.
+
+To use the OpenAI Responses API instead, use an
+[`OpenAIResponsesClient`](OpenAIResponsesClient.md) object.
 ## Creation
 <a id="creation"></a>
 
 Create an `OpenAIClient` object using [`aisdk.LLMClient`](aisdk.LLMClient.md)
-and specifying `"openai"` as the first input argument.
+and specifying `"openai"` as the first input
+argument.
 ## Properties
 <a id="properties"></a>
 ### `ModelName` — Model name
@@ -62,13 +66,7 @@ Amount of internal reasoning, specified as a string scalar.
 
 If `ReasoningEffort` is set to `"auto"`, then
 the software chooses the default value of the model used to generate text. The supported
-values and the default value depend on the model, for example:
-
-| Model | Default | Supported Values |
-| --- | --- | --- |
-| GPT-5 | `"medium"` | `"minimal"`, `"low"`, `"medium"`, `"high"` |
-| GPT-5.1 | `"none"` | `"none"`, `"low"`, `"medium"`, `"high"` |
-| GPT 5.2 | `"none"` | `"none"`, `"low"`, `"medium"`, `"high"`, `"xhigh"` |
+values and the default value depend on the model.
 
 Data Types: `string`
 ### `StopSequences` — Stop sequences
@@ -104,9 +102,9 @@ Data Types: `function_handle`
 ### `TimeOut` — Connection timeout in seconds
 <a id="timeout"></a>
 
-`120` (default) | nonnegative numeric scalar
+`120` (default) | positive numeric scalar
 
-Connection timeout in seconds, specified as a nonnegative numeric scalar.
+Connection timeout in seconds, specified as a positive numeric scalar.
 
 If the model does not respond in the timeout, then the function returns an
 error.
@@ -277,6 +275,11 @@ If the API requires an API key, then set the `OPENAI_API_KEY` environment variab
 OPENAI_API_KEY=<your key>
 ```
 
+Then, load the environment file.
+```
+loadenv(".env")
+```
+
 Set the `BaseURL` name-value argument to the base URL `baseurl` of the API. For example, for OpenAI, the base URL is `"https://api.openai.com/v1"`.
 
 ```
@@ -285,7 +288,7 @@ client = aisdk.LLMClient("openai",model,BaseURL=baseurl);
 ## See Also
 <a id="see-also"></a>
 
-[`aisdk.LLMClient`](aisdk.LLMClient.md) | [`generate`](generate.md) | [`OllamaClient`](OllamaClient.md)
+[`aisdk.LLMClient`](aisdk.LLMClient.md) | [`generate`](generate.md) | [`OpenAIResponsesClient`](OpenAIResponsesClient.md) | [`OllamaClient`](OllamaClient.md)
 
 *Copyright 2026 The MathWorks, Inc.*
 

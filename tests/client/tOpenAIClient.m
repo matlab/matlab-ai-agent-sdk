@@ -1,41 +1,24 @@
-classdef tOpenAIClient < hconstructorCommon
-% Tests for aisdk.client.OpenAIClient constructor.
+classdef tOpenAIClient < hOpenAIClientCommon
+% Tests for aisdk.client.OpenAIClient, the Chat Completions client.
 
 %   Copyright 2026 The MathWorks, Inc.
 
+    properties (Constant)
+        ClientClass = "aisdk.client.OpenAIClient"
+        EndpointPath = "chat/completions"
+        MaxNumTokensField = "max_completion_tokens"
+    end
+
     properties (TestParameter)
-        OpenAIDefault = struct( ...
+        ChatCompletionsDefault = struct( ...
+            "StopSequences",    struct("prop", "StopSequences",    "expected", []), ...
             "PresencePenalty",  struct("prop", "PresencePenalty",  "expected", "auto"), ...
-            "FrequencyPenalty", struct("prop", "FrequencyPenalty", "expected", "auto"), ...
-            "ReasoningEffort",  struct("prop", "ReasoningEffort",  "expected", "auto"), ...
-            "Verbosity",        struct("prop", "Verbosity",        "expected", "auto"));
+            "FrequencyPenalty", struct("prop", "FrequencyPenalty", "expected", "auto"));
 
-        OpenAICustom = struct( ...
+        ChatCompletionsCustom = struct( ...
+            "StopSequences",    struct("prop", "StopSequences",    "value", ["stop1","stop2"]), ...
             "PresencePenalty",  struct("prop", "PresencePenalty",  "value", 0.5), ...
-            "FrequencyPenalty", struct("prop", "FrequencyPenalty", "value", 0.4), ...
-            "ReasoningEffort",  struct("prop", "ReasoningEffort",  "value", "high"), ...
-            "Verbosity",        struct("prop", "Verbosity",        "value", "low"));
-
-        InvalidReasoningEffort = struct( ...
-            "bad_string", "invalid", ...
-            "empty",      "");
-
-        InvalidVerbosity = struct( ...
-            "bad_string", "invalid", ...
-            "empty",      "");
-
-        ValidReasoningEffort = struct( ...
-            "none",    "none", ...
-            "minimal", "minimal", ...
-            "low",     "low", ...
-            "medium",  "medium", ...
-            "high",    "high", ...
-            "xhigh",   "xhigh");
-
-        ValidVerbosity = struct( ...
-            "low",    "low", ...
-            "medium", "medium", ...
-            "high",   "high");
+            "FrequencyPenalty", struct("prop", "FrequencyPenalty", "value", 0.4));
     end
 
     methods
@@ -45,218 +28,55 @@ classdef tOpenAIClient < hconstructorCommon
     end
 
     methods (Test, TestTags = {'Unit'})
-        function customBaseURL(testCase)
-            client = testCase.createClient("gpt-4o", BaseURL="https://custom.endpoint");
-            testCase.verifyEqual(client.BaseURL, "https://custom.endpoint/chat/completions");
-        end
-
-        function defaultBaseURL(testCase)
+        function chatCompletionsProperty_notSet_hasDefaultValue(testCase, ChatCompletionsDefault)
             client = testCase.createClient("gpt-4o");
-            testCase.verifyEqual(client.BaseURL, "https://api.openai.com/v1/chat/completions");
-        end
-    end
-
-    methods (Test, TestTags = {'Unit'}, ParameterCombination="sequential")
-        function hasCorrectOpenAIDefault(testCase, OpenAIDefault)
-            client = testCase.createClient("gpt-4o");
-            testCase.verifyEqual(client.(OpenAIDefault.prop), OpenAIDefault.expected);
+            testCase.verifyEqual(client.(ChatCompletionsDefault.prop), ChatCompletionsDefault.expected);
         end
 
-        function respectsOpenAICustomValue(testCase, OpenAICustom)
-            client = testCase.createClient("gpt-4o", OpenAICustom.prop, OpenAICustom.value);
-            testCase.verifyEqual(client.(OpenAICustom.prop), OpenAICustom.value);
-        end
-
-        function rejectsInvalidReasoningEffort(testCase, InvalidReasoningEffort)
-            testCase.verifyError( ...
-                @() testCase.createClient("gpt-4o", ReasoningEffort=InvalidReasoningEffort), ...
-                "MATLAB:validators:mustBeMember");
-        end
-
-        function rejectsInvalidVerbosity(testCase, InvalidVerbosity)
-            testCase.verifyError( ...
-                @() testCase.createClient("gpt-4o", Verbosity=InvalidVerbosity), ...
-                "MATLAB:validators:mustBeMember");
-        end
-
-        function reasoningEffortAcceptsAllValid(testCase, ValidReasoningEffort)
-            client = testCase.createClient("gpt-4o", ReasoningEffort=ValidReasoningEffort);
-            testCase.verifyEqual(client.ReasoningEffort, ValidReasoningEffort);
-        end
-
-        function verbosityAcceptsAllValid(testCase, ValidVerbosity)
-            client = testCase.createClient("gpt-4o", Verbosity=ValidVerbosity);
-            testCase.verifyEqual(client.Verbosity, ValidVerbosity);
+        function chatCompletionsProperty_setAtConstruction_keepsValue(testCase, ChatCompletionsCustom)
+            client = testCase.createClient("gpt-4o", ChatCompletionsCustom.prop, ChatCompletionsCustom.value);
+            testCase.verifyEqual(client.(ChatCompletionsCustom.prop), ChatCompletionsCustom.value);
         end
     end
 
     methods (Test, TestTags = {'Unit'})
-        %% generate — text response
-        function generate_textResponse_returnsTextAndMessage(testCase)
-            client = makeClientWithFakeHTTP(testCase, makeTextResponse("Hello world"));
-            [text, messages] = generate(client, "Hi");
-            testCase.verifyEqual(text, "Hello world");
-            testCase.verifyClass(messages, "aisdk.LLMTextMessage");
-            testCase.verifyNumElements(messages, 1);
-            testCase.verifyEqual(messages.Text, "Hello world");
-            testCase.verifyEqual(messages.Role, "assistant");
+        function generate_toolCallsNullContent_returnsEmptyText(testCase)
+            client = testCase.clientWithFakeHTTP(testCase.toolCallResponse( ...
+                {struct("id", "call_123", "name", "getWeather", "arguments", '{"city":"London"}')}, ...
+                jsondecode('null')));
+            [text, ~] = generate(client, "Call a tool");
+            testCase.verifyEqual(text, "");
         end
+    end
 
-        function generate_textResponse_parsesUsageTokens(testCase)
+    methods (Access=protected)
+        function response = textResponse(~, text)
             responseData = struct( ...
-                "choices", struct("message", struct("role", "assistant", "content", "ok")), ...
+                "choices", struct("message", struct("role", "assistant", "content", text)), ...
                 "usage", struct("prompt_tokens", 10, "completion_tokens", 5, ...
                     "total_tokens", 15, ...
                     "prompt_tokens_details", struct("cached_tokens", 3)));
             response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
-            client = makeClientWithFakeHTTP(testCase, response);
-            [~, ~, info] = generate(client, "Hi");
-            testCase.verifyEqual(info.Tokens.NumInputTokens, 10);
-            testCase.verifyEqual(info.Tokens.NumOutputTokens, 5);
-            testCase.verifyEqual(info.Tokens.NumTotalTokens, 15);
-            testCase.verifyEqual(info.Tokens.NumCachedInputTokens, 3);
         end
 
-        function generate_errorResponse_throwsApiReturnedError(testCase)
-            client = makeClientWithFakeHTTP(testCase, ...
-                makeOpenAIErrorResponse(matlab.net.http.StatusCode.BadRequest, "bad input"));
-            testCase.verifyError(@() generate(client, "Hi"), "aisdk:apiReturnedError");
+        function response = toolCallResponse(~, toolCalls, text)
+            wireCalls = cellfun(@toWireToolCall, toolCalls, UniformOutput=false);
+            response = toolCallReply(wireCalls, text);
         end
 
-        function generate_errorResponse_includesErrorText(testCase)
-            client = makeClientWithFakeHTTP(testCase, ...
-                makeOpenAIErrorResponse(matlab.net.http.StatusCode.BadRequest, "invalid model name"));
-            try
-                generate(client, "Hi");
-            catch ME
-                testCase.verifySubstring(ME.message, "invalid model name");
-                return
-            end
-            testCase.verifyFail("Expected an error to be thrown.");
+        function response = toolCallWithoutIDResponse(~, name, arguments)
+            response = toolCallReply({wireToolCallWithoutID(name, arguments)}, "");
         end
 
-        function generate_errorResponse_fallbackToStatusCode(testCase)
-            errorResp = struct("StatusCode", matlab.net.http.StatusCode.InternalServerError, ...
-                "Body", struct("Data", struct("unexpected", "format")));
-            client = makeClientWithFakeHTTP(testCase, errorResp);
-            try
-                generate(client, "Hi");
-            catch ME
-                testCase.verifySubstring(ME.message, "HTTP 500:");
-                testCase.verifySubstring(ME.message, "unexpected");
-                return
-            end
-            testCase.verifyFail("Expected an error to be thrown.");
+        function messages = sentMessages(~, params)
+            messages = params.messages;
         end
 
-        function constructionWithoutAPIKey_succeeds(testCase)
-            % Construction without API key defers error to generate time
-            envVar = "OPENAI_API_KEY";
-            orig = getenv(envVar);
-            setenv(envVar, "");
-            addTeardown(testCase, @() setenv(envVar, orig));
-            client = aisdk.client.OpenAIClient("gpt-4o");
-            testCase.verifyClass(client, "aisdk.client.OpenAIClient");
-        end
-
-        function generate_unauthorizedResponseWithoutAPIKey_throwsMissingAPIKey(testCase)
-            envVar = "OPENAI_API_KEY";
-            orig = getenv(envVar);
-            setenv(envVar, "");
-            addTeardown(testCase, @() setenv(envVar, orig));
-            client = aisdk.client.OpenAIClient("gpt-4o");
-            client.sendRequestFcn = @fakeUnauthorized;
-            testCase.verifyError( ...
-                @() client.generate("hello"), ...
-                "aisdk:client:missingAPIKey");
-
-            function [response, streamedText] = fakeUnauthorized(~, ~, ~, ~, ~)
-                response = makeOpenAIErrorResponse(matlab.net.http.StatusCode.Unauthorized, "Invalid API key");
-                streamedText = "";
-            end
-        end
-
-        function generate_unauthorizedResponseWithAPIKey_throwsApiReturnedError(testCase)
-            client = aisdk.client.OpenAIClient("gpt-4o", APIKey="wrong-key");
-            client.sendRequestFcn = @fakeUnauthorized;
-            testCase.verifyError( ...
-                @() client.generate("hello"), ...
-                "aisdk:apiReturnedError");
-
-            function [response, streamedText] = fakeUnauthorized(~, ~, ~, ~, ~)
-                response = makeOpenAIErrorResponse(matlab.net.http.StatusCode.Unauthorized, "Invalid API key");
-                streamedText = "";
-            end
-        end
-
-        %% generate — tool call response
-        function generate_toolCallResponse_returnsToolCallMessages(testCase)
-            toolCall = struct("id", "call_123", "type", "function", ...
-                "function", struct("name", "getWeather", "arguments", '{"city":"London"}'));
-            response = makeToolCallResponse({toolCall});
-            client = makeClientWithFakeHTTP(testCase, response);
-            [~, messages] = generate(client, "What's the weather?");
-            testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
-            testCase.verifyEqual(messages.Name, "getWeather");
-            testCase.verifyEqual(messages.Arguments, struct("city", 'London'));
-            testCase.verifyEqual(messages.ToolCallID, "call_123");
-        end
-
-        function generate_toolCallResponse_multipleToolCalls(testCase)
-            toolCall1 = struct("id", "call_1", "type", "function", ...
-                "function", struct("name", "toolA", "arguments", '{"x":1}'));
-            toolCall2 = struct("id", "call_2", "type", "function", ...
-                "function", struct("name", "toolB", "arguments", '{"y":2}'));
-            response = makeToolCallResponse({toolCall1, toolCall2});
-            client = makeClientWithFakeHTTP(testCase, response);
-            [~, messages] = generate(client, "Call both");
-            testCase.verifyNumElements(messages, 2);
-            testCase.verifyEqual(messages(1).Name, "toolA");
-            testCase.verifyEqual(messages(2).Name, "toolB");
-        end
-
-        function generate_toolCallMissingID_returnsEmptyString(testCase)
-            toolCall = struct("type", "function", ...
-                "function", struct("name", "myTool", "arguments", '{"a":1}'));
-            response = makeToolCallResponse({toolCall});
-            client = makeClientWithFakeHTTP(testCase, response);
-            [~, messages] = generate(client, "Call tool");
-            testCase.verifyEqual(messages.ToolCallID, "");
-        end
-
-        function generate_toolCallArgsNotStruct_errors(testCase)
-            toolCall = struct("id", "call_x", "type", "function", ...
-                "function", struct("name", "myTool", "arguments", '"just a string"'));
-            response = makeToolCallResponse({toolCall});
-            client = makeClientWithFakeHTTP(testCase, response);
-            testCase.verifyError(@() generate(client, "Call tool"), ...
-                "aisdk:invalidToolCallArguments");
-        end
-
-        %% generate — convertMessages (captured via sendRequestFcn)
-        function generate_textMessage_producesRoleContent(testCase)
-            params = captureGenerateParams(testCase, ...
-                aisdk.LLMTextMessage("hello"));
-            testCase.verifyEqual(params.messages{1}.role, "user");
-            testCase.verifyEqual(params.messages{1}.content, "hello");
-        end
-
-        function generate_systemMessage_mapsToDeveloperRole(testCase)
-            messages = [
-                aisdk.LLMTextMessage("Be concise.", Role="system"), ...
-                aisdk.LLMTextMessage("hello")];
-            params = captureGenerateParams(testCase, messages);
-            testCase.verifyEqual(params.messages{1}.role, "developer");
-            testCase.verifyEqual(params.messages{1}.content, "Be concise.");
-            testCase.verifyEqual(params.messages{2}.role, "user");
-        end
-
-        function generate_toolResultMessage_producesToolRole(testCase)
-            messages = [
-                aisdk.LLMTextMessage("hi"), ...
-                aisdk.LLMToolCallMessage("myTool", struct("a",1), ToolCallID="call_1"), ...
-                aisdk.LLMToolResultMessage("result text", ToolCallID="call_1", Name="myTool")];
-            params = captureGenerateParams(testCase, messages);
+        function verifyToolCallAndResultSent(testCase, params)
+            assistantMsg = params.messages{2};
+            testCase.verifyEqual(assistantMsg.role, "assistant");
+            testCase.verifyEqual(assistantMsg.tool_calls{1}.id, "call_1");
+            testCase.verifyEqual(assistantMsg.tool_calls{1}.function.name, "myTool");
             toolMsg = params.messages{3};
             testCase.verifyEqual(toolMsg.role, "tool");
             testCase.verifyEqual(toolMsg.tool_call_id, "call_1");
@@ -264,168 +84,85 @@ classdef tOpenAIClient < hconstructorCommon
             testCase.verifyEqual(toolMsg.content, "result text");
         end
 
-        function generate_toolCallMessages_mergeIntoAssistant(testCase)
-            messages = [
-                aisdk.LLMTextMessage("hi"), ...
-                aisdk.LLMToolCallMessage("toolA", struct("x",1), ToolCallID="call_1"), ...
-                aisdk.LLMToolCallMessage("toolB", struct("y",2), ToolCallID="call_2")];
-            params = captureGenerateParams(testCase, messages);
+        function verifyTwoToolCallsSent(testCase, params)
+            % Consecutive tool calls merge into one assistant message.
+            testCase.verifyNumElements(params.messages, 2);
             assistantMsg = params.messages{2};
             testCase.verifyEqual(assistantMsg.role, "assistant");
             testCase.verifyNumElements(assistantMsg.tool_calls, 2);
         end
 
-        function generate_emptyToolCallID_serializesAsEmptyString(testCase)
-            messages = [
-                aisdk.LLMTextMessage("hi"), ...
-                aisdk.LLMToolCallMessage("myTool", struct("a",1))];
-            params = captureGenerateParams(testCase, messages);
+        function verifyToolCallWithoutIDSentWithEmptyID(testCase, params)
+            import matlab.unittest.constraints.HasField
+            testCase.assertNumElements(params.messages, 2, ...
+                "Expected the user message and one assistant message.");
             assistantMsg = params.messages{2};
+            testCase.assertThat(assistantMsg, HasField("tool_calls"));
+            testCase.assertNumElements(assistantMsg.tool_calls, 1);
+            testCase.verifyEqual(assistantMsg.tool_calls{1}.function.name, "myTool");
             testCase.verifyEqual(assistantMsg.tool_calls{1}.id, "");
         end
 
-        function generate_imageMessage_producesImageUrl(testCase)
-            imgData = uint8(zeros(2, 2, 3));
-            messages = [
-                aisdk.LLMTextMessage("hi"), ...
-                aisdk.LLMImageMessage(imgData, Detail="low")];
-            params = captureGenerateParams(testCase, messages);
-            imgMsg = params.messages{2};
+        function verifyImageSent(testCase, params)
+            testCase.assertNumElements(params.messages, 1, ...
+                "Expected one image message.");
+            imgMsg = params.messages{1};
             testCase.verifyEqual(imgMsg.role, "user");
+            testCase.assertNumElements(imgMsg.content, 1, ...
+                "Expected one content part carrying the image.");
             content = imgMsg.content{1};
             testCase.verifyEqual(content.type, "image_url");
             testCase.verifyTrue(startsWith(content.image_url.url, "data:image/png;base64,"));
             testCase.verifyEqual(content.image_url.detail, "low");
         end
 
-        %% generate — tool calls with text
-        % The API may return both content (text) and tool calls. We should return text independently of
-        % tool calls, including for structured output.
-        function generate_toolCallsNoText_returnsEmptyText(testCase)
-            response = makeToolCallResponse({toolCallFixture()});
-            client = makeClientWithFakeHTTP(testCase, response);
-            [text, ~] = generate(client, "Call a tool");
-            testCase.verifyEqual(text, "");
+        function verifyToolDefinitionSent(testCase, params)
+            toolDef = params.tools{1};
+            testCase.verifyEqual(toolDef.type, "function");
+            testCase.verifyEqual(toolDef.function.name, "myTool");
         end
 
-        function generate_toolCallsNullContent_returnsEmptyText(testCase)
-            response = makeToolCallResponseWithContent(jsondecode('null'), {toolCallFixture()});
-            client = makeClientWithFakeHTTP(testCase, response);
-            [text, ~] = generate(client, "Call a tool");
-            testCase.verifyEqual(text, "");
+        function verifyNamedToolChoiceSent(testCase, params)
+            testCase.verifyEqual(params.tool_choice, ...
+                struct("type", "function", "function", struct("name", "myTool")));
         end
 
-        function generate_toolCallsWithText_returnsTextAndToolCalls(testCase)
-            response = makeToolCallResponseWithContent("Let me calculate that", {toolCallFixture()});
-            client = makeClientWithFakeHTTP(testCase, response);
-            [text, messages] = generate(client, "Call a tool");
-            testCase.verifyEqual(text, "Let me calculate that");
-            testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
+        function verifyReasoningEffortAndVerbositySent(testCase, params)
+            testCase.verifyEqual(params.reasoning_effort, "high");
+            testCase.verifyEqual(params.verbosity, "low");
         end
 
-        function generate_toolCallsWithStructuredText_returnsDecodedStruct(testCase)
-            response = makeToolCallResponseWithContent('{"name":"Alice","score":9.5}', {toolCallFixture()});
-            client = makeClientWithFakeHTTP(testCase, response);
-            proto = struct("name", "", "score", 0.0);
-            [text, messages] = generate(client, "Call a tool", ResponseFormat=proto);
-            testCase.verifyEqual(text.name, "Alice");
-            testCase.verifyEqual(text.score, 9.5);
-            testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
+        function verifyStructuredOutputSent(testCase, params)
+            testCase.verifyEqual(params.response_format.type, 'json_schema');
         end
 
-        %% generate — structured output with nothing to report
-        % A model that has nothing to list answers with an empty list. The result
-        % must still be a struct of the requested form, not an empty double.
-        function generate_structuredOutputEmptyList_returnsEmptyStruct(testCase)
-            import matlab.unittest.constraints.IsSameSetAs
-            response = makeTextResponse('{"result":[]}');
-            client = makeClientWithFakeHTTP(testCase, response);
-            proto = struct("plantName", {"appletree","pear"}, "fruit", {"apple","pear"});
-            text = generate(client, "What is harvested in August?", ResponseFormat=proto);
-            testCase.verifyClass(text, "struct");
-            testCase.verifyEmpty(text);
-            testCase.verifyThat(fieldnames(text), IsSameSetAs(fieldnames(proto)));
+        function verifyAssistantTextAndToolCallSent(testCase, params, text, toolCallID)
+            % The text and the tool call merge into one assistant message.
+            testCase.assertNumElements(params.messages, 3, ...
+                "Expected the user message, one assistant message and the tool result.");
+            assistantMsg = params.messages{2};
+            testCase.verifyEqual(assistantMsg.role, "assistant");
+            testCase.verifyEqual(assistantMsg.content, text);
+            testCase.assertNumElements(assistantMsg.tool_calls, 1);
+            testCase.verifyEqual(assistantMsg.tool_calls{1}.id, toolCallID);
         end
-
-        function generate_httpsProxyIsHonored(testCase)
-            import matlab.unittest.fixtures.EnvironmentVariableFixture
-            testCase.applyFixture(EnvironmentVariableFixture("HTTPS_PROXY", "http://nosuchhost.example.com:1234"));
-            client = aisdk.client.OpenAIClient("gpt-4o", APIKey="fake-key");
-            testCase.verifyError(@() generate(client, "Hello"), ...
-                "MATLAB:webservices:UnknownHost");
-        end
-
-        function generate_connectionError_isReportedFromGenerate(testCase)
-            % A connection problem is reported from generate, so the user
-            % sees the call they made rather than either the caller of
-            % generate or the web services internals.
-            import matlab.unittest.fixtures.EnvironmentVariableFixture
-            testCase.applyFixture(EnvironmentVariableFixture("HTTPS_PROXY", "http://nosuchhost.example.com:1234"));
-            client = aisdk.client.OpenAIClient("gpt-4o", APIKey="fake-key");
-            err = MException.empty;
-            try
-                generate(client, "Hello");
-            catch err
-            end
-            testCase.assertNotEmpty(err, "Expected a connection error.");
-            testCase.verifyEqual(err.stack(1).name, 'OpenAIClient.generate');
-            testCase.verifyEmpty(err.cause, ...
-                "The web services cause chain should not be forwarded.");
-        end
-
     end
 
 end
 
-function response = makeOpenAIErrorResponse(statusCode, errorText)
-    response = struct("StatusCode", statusCode, ...
-        "Body", struct("Data", struct("error", struct("message", errorText))));
-end
-
-function client = makeClientWithFakeHTTP(~, mockResponse)
-    client = aisdk.client.OpenAIClient("gpt-4o", APIKey="fake-key");
-    client.sendRequestFcn = @(~,~,~,~,~) deal(mockResponse, "");
-end
-
-function response = makeTextResponse(text)
-    responseData = struct( ...
-        "choices", struct("message", struct("role", "assistant", "content", text)), ...
-        "usage", struct("prompt_tokens", 10, "completion_tokens", 5, "total_tokens", 15));
-    response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
-end
-
-function response = makeToolCallResponse(toolCalls)
-    response = makeToolCallResponseWithContent("", toolCalls);
-end
-
-function response = makeToolCallResponseWithContent(content, toolCalls)
-    message = struct("role", "assistant", "content", content, "tool_calls", {toolCalls});
+function response = toolCallReply(wireCalls, text)
+    message = struct("role", "assistant", "content", text, "tool_calls", {wireCalls});
     responseData = struct("choices", struct("message", message), ...
         "usage", struct("prompt_tokens", 5, "completion_tokens", 5, "total_tokens", 10));
     response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
 end
 
-function tc = toolCallFixture()
-    tc = struct("id", "call_123", "type", "function", ...
-        "function", struct("name", "getWeather", "arguments", '{"city":"London"}'));
+function wireCall = toWireToolCall(toolCall)
+    wireCall = wireToolCallWithoutID(toolCall.name, toolCall.arguments);
+    wireCall.id = toolCall.id;
 end
 
-function params = captureGenerateParams(~, messages)
-    captured = {};
-    client = aisdk.client.OpenAIClient("gpt-4o", APIKey="fake-key");
-    client.sendRequestFcn = @fakeSendRequest;
-    generate(client, messages);
-    params = captured{1};
-
-    function [response, streamedText] = fakeSendRequest(parameters, ~, ~, ~, ~)
-        captured{1} = parameters;
-        responseData = struct( ...
-            "choices", struct( ...
-                "message", struct("role", "assistant", "content", "fake")), ...
-            "usage", struct( ...
-                "prompt_tokens", 0, "completion_tokens", 0, "total_tokens", 0));
-        response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
-        streamedText = "";
-    end
+function wireCall = wireToolCallWithoutID(name, arguments)
+    wireCall = struct("type", "function", ...
+        "function", struct("name", name, "arguments", arguments));
 end
-

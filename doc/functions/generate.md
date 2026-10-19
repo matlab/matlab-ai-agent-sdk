@@ -79,13 +79,13 @@ messageHistory = [messageHistory; message4];
 ### `client` — LLM client
 <a id="client"></a>
 
-`OpenAIClient` | `OllamaClient`
+`OpenAIClient` | `OpenAIResponsesClient` | `OllamaClient`
 
-LLM client, specified as an [`OpenAIClient`](OpenAIClient.md) or [`OllamaClient`](OllamaClient.md) object.
+LLM client, specified as an [`OpenAIClient`](OpenAIClient.md), [`OpenAIResponsesClient`](OpenAIResponsesClient.md), or [`OllamaClient`](OllamaClient.md) object.
 
 Create a client by using the [`aisdk.LLMClient`](aisdk.LLMClient.md) function.
 
-Data Types: `OpenAIClient` | `OllamaClient`
+Data Types: `OpenAIClient` | `OpenAIResponsesClient` | `OllamaClient`
 ### `prompt` — LLM prompt
 <a id="prompt"></a>
 
@@ -154,7 +154,7 @@ If `ReasoningEffort` is set to `"auto"`, then
 the software chooses the default value of the model used to generate text. The
 supported values and the default value depend on the model.
 
-This option is supported only for the OpenAI APIs.
+This option is supported only for the OpenAI Chat Completions API and the OpenAI Responses API.
 
 Data Types: `char` | `string`
 ### `StopSequences` — Stop sequences
@@ -172,6 +172,8 @@ stops token generation.
 
 Example:
 `["The end.","And that is all she wrote."]`
+
+This option is supported only for the OpenAI Chat Completions API and the Ollama API.
 
 Data Types: `string` | `char` | `cell`
 ### `StreamFcn` — Custom streaming function
@@ -192,9 +194,9 @@ Data Types: `function_handle`
 ### `TimeOut` — Connection timeout in seconds
 <a id="timeout"></a>
 
-`120` (default) | nonnegative numeric scalar
+`120` (default) | positive numeric scalar
 
-Connection timeout in seconds, specified as a nonnegative numeric scalar.
+Connection timeout in seconds, specified as a positive numeric scalar.
 
 If the model does not respond in the timeout, then the function returns an
 error.
@@ -236,12 +238,12 @@ Data Types: `char` | `string`
 ### `NumCompletions` — Number of generated outputs
 <a id="numcompletions"></a>
 
-`"auto"` (default) | positive integer
+`1` (default) | positive integer
 
-Number of generated outputs, specified as `"auto"` or as a
+Number of generated outputs, specified as a
 positive integer.
 
-This option is supported only for the OpenAI APIs.
+This option is supported only for the OpenAI Chat Completions API.
 
 Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8` | `uint16` | `uint32` | `uint64` | `char` | `string`
 ### `Seed` — Random seed
@@ -256,6 +258,8 @@ Specify a random seed to enable deterministic model outputs.
 For some models, this option has no effect. To learn whether a given model
 supports deterministic outputs, see the model documentation.
 
+This option is supported only for the OpenAI Chat Completions API and the Ollama API.
+
 Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8` | `uint16` | `uint32` | `uint64` | `char` | `string`
 ### `Verbosity` — Verbosity of generated output
 <a id="verbosity"></a>
@@ -268,7 +272,7 @@ array.
 If [`ReasoningEffort`](#reasoningeffort) is set to `"auto"`, then
 the software chooses the default value of the model.
 
-This option is supported only for the OpenAI APIs.
+This option is supported only for the OpenAI Chat Completions API and the OpenAI Responses API.
 
 Data Types: `char` | `string`
 ### `PresencePenalty` — Presence penalty
@@ -292,7 +296,7 @@ If the model supports `PresencePenalty` and
 `PresencePenalty` is `"auto"`, then the software
 uses the default presence penalty of the model.
 
-This option is supported only for the OpenAI APIs.
+This option is supported only for the OpenAI Chat Completions API.
 
 Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8` | `uint16` | `uint32` | `uint64` | `char` | `string`
 ### `FrequencyPenalty` — Frequency penalty
@@ -316,7 +320,7 @@ If the model supports `FrequencyPenalty` and
 `FrequencyPenalty` is `"auto"`, then the
 software uses the default frequency penalty of the model.
 
-This option is supported only for the OpenAI APIs.
+This option is supported only for the OpenAI Chat Completions API.
 
 Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8` | `uint16` | `uint32` | `uint64` | `char` | `string`
 ### `Temperature` — Temperature
@@ -455,28 +459,28 @@ returned as a nonnegative integer.
 This table shows valid argument combinations for the different APIs that you can use
 with the [`aisdk.LLMClient`](aisdk.LLMClient.md) function.
 
-| Name-Value Argument | `"openai"` | `"ollama"` |
-| --- | --- | --- |
-| [`MaxNumTokens`](#maxnumtokens) | Supported | Supported |
-| [`ReasoningEffort`](#reasoningeffort) | Supported |   |
-| [`StopSequences`](#stopsequences) | Supported | Supported |
-| [`StreamFcn`](#streamfcn) | Supported | Supported |
-| [`TimeOut`](#timeout) | Supported | Supported |
-| [`ResponseFormat`](#responseformat) | Supported | Supported |
-| [`NumCompletions`](#numcompletions) | Supported | Supported |
-| [`Seed`](#seed) | Supported | Supported |
-| [`Verbosity`](#verbosity) | Supported |   |
-| [`PresencePenalty`](#presencepenalty) | Supported |   |
-| [`FrequencyPenalty`](#frequencypenalty) | Supported |   |
-| [`Temperature`](#temperature) | Supported | Supported |
-| [`TopP`](#topp) | Supported | Supported |
-| [`MinP`](#minp) |   | Supported |
-| [`TopK`](#topk) |   | Supported |
-| [`TailFreeSamplingZ`](#tailfreesamplingz) |   | Supported |
+| Name-Value Argument | `"openai"` | `"openai-responses"` | `"ollama"` |
+| --- | --- | --- | --- |
+| [`MaxNumTokens`](#maxnumtokens) | Supported | Supported | Supported |
+| [`ReasoningEffort`](#reasoningeffort) | Supported | Supported |   |
+| [`StopSequences`](#stopsequences) | Supported |   | Supported |
+| [`StreamFcn`](#streamfcn) | Supported | Supported | Supported |
+| [`TimeOut`](#timeout) | Supported | Supported | Supported |
+| [`ResponseFormat`](#responseformat) | Supported | Supported | Supported |
+| [`NumCompletions`](#numcompletions) | Supported |   |   |
+| [`Seed`](#seed) | Supported |   | Supported |
+| [`Verbosity`](#verbosity) | Supported | Supported |   |
+| [`PresencePenalty`](#presencepenalty) | Supported |   |   |
+| [`FrequencyPenalty`](#frequencypenalty) | Supported |   |   |
+| [`Temperature`](#temperature) | Supported | Supported | Supported |
+| [`TopP`](#topp) | Supported | Supported | Supported |
+| [`MinP`](#minp) |   |   | Supported |
+| [`TopK`](#topk) |   |   | Supported |
+| [`TailFreeSamplingZ`](#tailfreesamplingz) |   |   | Supported |
 ## See Also
 <a id="see-also"></a>
 
-[`aisdk.LLMClient`](aisdk.LLMClient.md) | [`OpenAIClient`](OpenAIClient.md) | [`OllamaClient`](OllamaClient.md)
+[`aisdk.LLMClient`](aisdk.LLMClient.md) | [`OpenAIClient`](OpenAIClient.md) | [`OpenAIResponsesClient`](OpenAIResponsesClient.md) | [`OllamaClient`](OllamaClient.md)
 
 *Copyright 2026 The MathWorks, Inc.*
 

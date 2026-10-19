@@ -2,7 +2,8 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
 %ClientBase Abstract base class for LLM clients.
 %
 %   This is an abstract base class that provides common properties and
-%   the call interface for aisdk.client.OpenAIClient and aisdk.client.OllamaClient.
+%   the call interface for aisdk.client.OpenAIClient,
+%   aisdk.client.OpenAIResponsesClient and aisdk.client.OllamaClient.
 %
 %   ClientBase Properties:
 %       ModelName   - Name of the model to use.
@@ -15,7 +16,7 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
 
 % Copyright 2026 The MathWorks, Inc.
 
-    properties (Abstract, Constant)
+    properties (Abstract, Constant, Hidden)
         %API   Provider name used for environment variable prefixes.
         API (1,1) string
     end
@@ -83,12 +84,14 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
     methods (Access=protected)
         function groups = getPropertyGroups(obj)
             props = properties(obj);
-            leading = ["API"; "ModelName"; "BaseURL"; "MaxNumTokens"; "ReasoningEffort"];
+            leading = ["ModelName"; "BaseURL"; "MaxNumTokens"; "ReasoningEffort"];
             server = ["StopSequences"; "StreamFcn"; "TimeOut"];
             leading = leading(ismember(leading, props));
+            generation = ["ResponseFormat"; "Verbosity"; "Temperature"; "TopP"; "PresencePenalty"; "FrequencyPenalty"];
             server = server(ismember(server, props));
-            others = props(~ismember(props, [leading; server]));
-            groups = matlab.mixin.util.PropertyGroup([leading; server; others]);
+            generation = generation(ismember(generation, props));
+            others = props(~ismember(props, [leading; server; generation]));
+            groups = matlab.mixin.util.PropertyGroup([leading; server; generation; others]);
         end
     end
 
@@ -104,8 +107,12 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
                 end
             end
         end
+    end
 
-        function toolChoice = convertToolChoice(toolChoice, functionNames)
+    methods (Access=protected)
+        function toolChoice = convertToolChoice(~, toolChoice, functionNames)
+            %convertToolChoice Convert the tool choice to the Chat Completions format.
+            %   Override in subclasses for APIs that require a different format.
             if isempty(toolChoice)
                 if ~isempty(functionNames)
                     toolChoice = "auto";
@@ -116,9 +123,7 @@ classdef (Abstract) ClientBase < matlab.mixin.CustomDisplay
                 toolChoice = struct("type","function","function",struct("name",toolChoice));
             end
         end
-    end
 
-    methods (Access=protected)
         function toolStruct = encodeTool(~, tool)
             %encodeTool Encode an LLMTool into OpenAI Chat Completions format.
             %   Produces the {type: "function", function: {name, description, parameters}}

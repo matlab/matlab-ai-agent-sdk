@@ -4,7 +4,7 @@
 
 MATLAB® AI Agent SDK lets you build and run AI agents in MATLAB.
 
-- Create agents based on OpenAI® Chat Completions, Ollama™, or OpenAI-compatible APIs.
+- Create agents based on OpenAI® Chat Completions API, OpenAI Responses API, Ollama™, or OpenAI-compatible APIs.
 - Integrate LLMs and agentic workflows into your workflows in a targeted manner, retaining deterministic workflows when those are more suitable.
 - Create agentic tools that use:
   - large amounts of data
@@ -35,7 +35,7 @@ To run code from the add\-on outside of the installation directory, add the path
 
 ### OpenAI
 
-Using the OpenAI Chat Completions API requires an OpenAI API key. For information on how to obtain one, as well as pricing, terms and conditions of use, and available models, see the [OpenAI documentation](https://platform.openai.com/docs/overview).
+Using the OpenAI API requires an OpenAI API key. For information on how to obtain one, as well as pricing, terms and conditions of use, and available models, see the [OpenAI documentation](https://platform.openai.com/docs/overview).
 
 Set your key as an environment variable in a `.env` file:
 
@@ -51,7 +51,7 @@ loadenv(".env")
 
 ### OpenAI-Compatible APIs
 
-To connect to APIs that are compatible with the OpenAI Chat Completions API, set your key as an environment variable in a `.env` file:
+To connect to APIs that are compatible with the OpenAI Responses API or Chat Completions API, set your key as an environment variable in a `.env` file:
 
 ```
 OPENAI_API_KEY=<your key>
@@ -59,7 +59,8 @@ OPENAI_API_KEY=<your key>
 
 If your API does not need an API key, set the environment variable `OPENAI_API_KEY` to `"EMPTY"`.
 
-Then, when creating an LLM client, set the `api` argument of the `aisdk.LLMClient` function to `"openai"` and set the `BaseURL` name-value argument to the base URL of the API. For example, for OpenAI, `BaseURL` is `"https://api.openai.com/v1"`.
+Then, when creating an LLM client, set the `api` argument of the `aisdk.LLMClient` function to `"openai"` or `"openai-responses"`, depending on 
+which OpenAI API your API is compatible with. Set the `BaseURL` name-value argument to the base URL of the API. For example, for both OpenAI APIs, `BaseURL` is `"https://api.openai.com/v1"`.
 
 ### Ollama
 
@@ -215,7 +216,8 @@ agentWithWorkspace.Workspace.matrix = A;
 | [loadSkill](doc/functions/loadSkill.md) | Load skill into agent | 
 | [resetApproval](doc/functions/resetApproval.md) | Reset approval status of agentic tools | 
 | [aisdk.LLMClient](doc/functions/aisdk.LLMClient.md) | Connect to third-party LLM API | 
-| [OpenAIClient](doc/functions/OpenAIClient.md) | Client for OpenAI API | 
+| [OpenAIClient](doc/functions/OpenAIClient.md) | Client for OpenAI Chat Completions API | 
+| [OpenAIResponsesClient](doc/functions/OpenAIResponsesClient.md) | Client for OpenAI Responses API | 
 | [OllamaClient](doc/functions/OllamaClient.md) | Client for Ollama API | 
 | [generate](doc/functions/generate.md) | Generate output from LLMs | 
 | [aisdk.LLMTool](doc/functions/aisdk.LLMTool.md) | Tool for AI agent | 

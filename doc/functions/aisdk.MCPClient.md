@@ -143,9 +143,9 @@ Example:
 ### `TimeOut` — Timeout in seconds
 <a id="timeout"></a>
 
-`120` (default) | nonnegative numeric scalar
+`120` (default) | positive numeric scalar
 
-Timeout in seconds, specified as a nonnegative numeric scalar.
+Timeout in seconds, specified as a positive numeric scalar.
 
 If the server does not return the tool call result in the timeout, then the function returns an
 error.

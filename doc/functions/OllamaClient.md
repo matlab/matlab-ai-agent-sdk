@@ -87,9 +87,9 @@ Data Types: `function_handle`
 ### `TimeOut` — Connection timeout in seconds
 <a id="timeout"></a>
 
-`120` (default) | nonnegative numeric scalar
+`120` (default) | positive numeric scalar
 
-Connection timeout in seconds, specified as a nonnegative numeric scalar.
+Connection timeout in seconds, specified as a positive numeric scalar.
 
 If the model does not respond in the timeout, then the function returns an
 error.

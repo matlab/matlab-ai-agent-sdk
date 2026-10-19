@@ -36,6 +36,7 @@ httpOpts.ProxyURI = getenv("HTTPS_PROXY");
 
 % Send the request and store the response
 streamedUsage = struct.empty;
+streamedOutput = {};
 if isempty(streamFcn)
     response = sendFcn(request, endpoint, httpOpts, []);
     streamedText = "";
@@ -45,32 +46,51 @@ else
     response = sendFcn(request, endpoint, httpOpts, consumer);
     streamedText = consumer.ResponseText;
     streamedUsage = consumer.Usage;
+    streamedOutput = consumer.StreamedOutputItems;
+    if ~isempty(consumer.StreamError)
+        aisdk.internal.throwError("aisdk:apiReturnedError", consumer.StreamError);
+    end
 end
 
 response.Body.Data = aisdk.client.internal.decodeResponseBody(response.Body.Data);
 
-if ~isempty(streamedUsage)
-    response.Body.Data = mergeStreamedUsage(response.Body.Data, streamedUsage);
+% A streamed body is consumed by the consumer, so the token counts and the
+% output items it reassembled are folded back into the response body for the
+% caller to parse like a non-streamed one.
+if ~isempty(streamedUsage) || ~isempty(streamedOutput)
+    response.Body.Data = mergeStreamedFields(response.Body.Data, streamedUsage, streamedOutput);
 end
 end
 
-function data = mergeStreamedUsage(data, usage)
-    fields = fieldnames(usage);
-    if isstruct(data)
-        for k = 1:numel(fields)
-            data.(fields{k}) = usage.(fields{k});
-        end
-    elseif iscell(data)
+function data = mergeStreamedFields(data, usage, output)
+    if iscell(data)
+        % Ollama streams NDJSON chunks; the counts belong on the final one.
         last = data{end};
         if ~isstruct(last)
             last = struct();
         end
-        for k = 1:numel(fields)
-            last.(fields{k}) = usage.(fields{k});
-        end
-        data{end} = last;
-    else
-        data = usage;
+        data{end} = mergeStreamedFields(last, usage, output);
+        return
+    end
+    if ~isstruct(data)
+        % Chat Completions and Responses stream SSE, which does not decode
+        % to JSON.
+        data = struct();
+    end
+    % Chat Completions and Responses.
+    if isfield(usage, "usage")
+        data.usage = usage.usage;
+    end
+    % Ollama.
+    if isfield(usage, "prompt_eval_count")
+        data.prompt_eval_count = usage.prompt_eval_count;
+    end
+    if isfield(usage, "eval_count")
+        data.eval_count = usage.eval_count;
+    end
+    % Responses.
+    if ~isempty(output)
+        data.output = output;
     end
 end
 

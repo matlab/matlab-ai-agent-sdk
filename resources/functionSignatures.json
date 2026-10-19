@@ -144,6 +144,238 @@
             }
         ]
     },
+    "aisdk.LLMClient": {
+        "inputs": [
+            {
+                "name": "api",
+                "kind": "required",
+                "type": "choices={'openai'}"
+            },
+            {
+                "name": "modelName",
+                "kind": "required",
+                "type": [["string", "scalar"], ["char"]]
+            },
+            {
+                "name": "Temperature",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0", "<=2"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "TopP",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0", "<=1"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "StopSequences",
+                "kind": "namevalue",
+                "type": [["string"], ["cell"]]
+            },
+            {
+                "name": "MaxNumTokens",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", ">0"]
+            },
+            {
+                "name": "PresencePenalty",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=-2", "<=2"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "FrequencyPenalty",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=-2", "<=2"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "ResponseFormat",
+                "kind": "namevalue",
+                "type": [["choices={'text','json'}"], ["struct"], ["string", "scalar"]]
+            },
+            {
+                "name": "ReasoningEffort",
+                "kind": "namevalue",
+                "type": "choices=aisdk.client.internal.reasoningEffortValues"
+            },
+            {
+                "name": "Verbosity",
+                "kind": "namevalue",
+                "type": "choices=aisdk.client.internal.verbosityValues"
+            },
+            {
+                "name": "TimeOut",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", ">0"]
+            },
+            {
+                "name": "StreamFcn",
+                "kind": "namevalue",
+                "type": "function_handle"
+            },
+            {
+                "name": "APIKey",
+                "kind": "namevalue",
+                "type": [["string", "scalar"], ["char"]]
+            },
+            {
+                "name": "BaseURL",
+                "kind": "namevalue",
+                "type": [["string", "scalar"], ["char"]]
+            },
+            {
+                "name": "ContextSize",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar"]
+            }
+        ]
+    },
+    "aisdk.LLMClient": {
+        "inputs": [
+            {
+                "name": "api",
+                "kind": "required",
+                "type": "choices={'openai-responses'}"
+            },
+            {
+                "name": "modelName",
+                "kind": "required",
+                "type": [["string", "scalar"], ["char"]]
+            },
+            {
+                "name": "Temperature",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0", "<=2"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "TopP",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0", "<=1"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "MaxNumTokens",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", ">0"]
+            },
+            {
+                "name": "ResponseFormat",
+                "kind": "namevalue",
+                "type": [["choices={'text','json'}"], ["struct"], ["string", "scalar"]]
+            },
+            {
+                "name": "ReasoningEffort",
+                "kind": "namevalue",
+                "type": "choices=aisdk.client.internal.reasoningEffortValues"
+            },
+            {
+                "name": "Verbosity",
+                "kind": "namevalue",
+                "type": "choices=aisdk.client.internal.verbosityValues"
+            },
+            {
+                "name": "TimeOut",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", ">0"]
+            },
+            {
+                "name": "StreamFcn",
+                "kind": "namevalue",
+                "type": "function_handle"
+            },
+            {
+                "name": "APIKey",
+                "kind": "namevalue",
+                "type": [["string", "scalar"], ["char"]]
+            },
+            {
+                "name": "BaseURL",
+                "kind": "namevalue",
+                "type": [["string", "scalar"], ["char"]]
+            },
+            {
+                "name": "ContextSize",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar"]
+            }
+        ]
+    },
+    "aisdk.LLMClient": {
+        "inputs": [
+            {
+                "name": "api",
+                "kind": "required",
+                "type": "choices={'ollama'}"
+            },
+            {
+                "name": "modelName",
+                "kind": "required",
+                "type": [["string", "scalar"], ["char"]]
+            },
+            {
+                "name": "Temperature",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0", "<=2"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "TopP",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0", "<=1"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "MinP",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0", "<=1"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "TopK",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">0"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "TailFreeSamplingZ",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "StopSequences",
+                "kind": "namevalue",
+                "type": [["string"], ["char"], ["cell"]]
+            },
+            {
+                "name": "MaxNumTokens",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", ">0"]
+            },
+            {
+                "name": "ResponseFormat",
+                "kind": "namevalue",
+                "type": [["choices={'text','json'}"], ["struct"], ["string", "scalar"]]
+            },
+            {
+                "name": "TimeOut",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", ">0"]
+            },
+            {
+                "name": "StreamFcn",
+                "kind": "namevalue",
+                "type": "function_handle"
+            },
+            {
+                "name": "APIKey",
+                "kind": "namevalue",
+                "type": [["string", "scalar"], ["char"]]
+            },
+            {
+                "name": "BaseURL",
+                "kind": "namevalue",
+                "type": [["string", "scalar"], ["char"]]
+            },
+            {
+                "name": "ContextSize",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar"]
+            }
+        ]
+    },
     "aisdk.LLMTool": {
         "inputs": [
             {

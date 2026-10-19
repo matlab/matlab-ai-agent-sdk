@@ -2,7 +2,6 @@ classdef AIAgent < handle
 %AIAgent Agent for AI chat completions with agentic tool-calling loop.
 %
 %   AGENT = AIAgent(CLIENT) creates an AIAgent with the specified client
-%   (aisdk.client.OpenAIClient or aisdk.client.OllamaClient).
 %
 %   AGENT = AIAgent(CLIENT, SystemPrompt=SP) specifies a system prompt.
 %

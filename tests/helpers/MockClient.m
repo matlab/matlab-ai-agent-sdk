@@ -6,7 +6,7 @@ classdef MockClient < aisdk.client.ClientBase
 
 %   Copyright 2026 The MathWorks, Inc.
 
-    properties (Constant)
+    properties (Constant, Hidden)
         API = "mock"
     end
 

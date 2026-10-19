@@ -1,11 +1,11 @@
-classdef OpenAIClient < aisdk.client.ClientBase
+classdef OpenAIClient < aisdk.client.internal.OpenAIBase
 %OpenAIClient Client for OpenAI chat completions.
 %
-%   CLIENT = aisdk.client.OpenAIClient(MODELNAME) creates an OpenAIClient
+%   CLIENT = aisdk.LLMClient("openai", MODELNAME) creates an OpenAIClient
 %   for the specified model.
 %
-%   CLIENT = aisdk.client.OpenAIClient(MODELNAME, Name=Value) specifies options using
-%   one or more name-value arguments:
+%   CLIENT = aisdk.LLMClient("openai", MODELNAME, Name=Value) specifies
+%   options using one or more name-value arguments:
 %
 %   Temperature             - Temperature value for controlling the randomness
 %                             of the output. Default value is 1.
@@ -59,46 +59,23 @@ classdef OpenAIClient < aisdk.client.ClientBase
 %                             OPENAI_API_ENDPOINT environment variable, or defaults
 %                             to "https://api.openai.com/v1/".
 %
+%   See also aisdk.LLMClient, aisdk.client.OpenAIResponsesClient
 
 % Copyright 2026 The MathWorks, Inc.
 
-    properties (Constant)
+    properties (Constant, Hidden)
         API = "openai"
     end
 
     properties
-        %ResponseFormat   Response format, "text" or "json" or struct or JSON schema string.
-        ResponseFormat      {aisdk.internal.mustBeResponseFormat} = "text"
-
-        %ReasoningEffort   Reasoning effort level for reasoning models.
-        ReasoningEffort (1,1) string {aisdk.internal.mustBeReasoningEffort} = "auto"
-
-        %Verbosity   Verbosity level for the model output.
-        Verbosity       (1,1) string {aisdk.internal.mustBeVerbosity} = "auto"
-
-        %Temperature   Temperature of generation.
-        Temperature         {aisdk.internal.mustBeValidTemperature} = "auto"
-
-        %TopP   Top probability mass to consider for generation.
-        TopP                {aisdk.internal.mustBeValidProbability} = "auto"
-
         %StopSequences   Sequences to stop the generation of tokens.
         StopSequences       {aisdk.internal.mustBeValidStop} = []
-
-        %MaxNumTokens   Maximum number of tokens in the generated response.
-        MaxNumTokens  (1,1) {mustBeNumeric,mustBePositive} = inf
 
         %PresencePenalty   Penalty for using a token that has already been used.
         PresencePenalty     {aisdk.internal.mustBeValidPenalty} = "auto"
 
         %FrequencyPenalty   Penalty for using a token that is frequent in the training data.
         FrequencyPenalty    {aisdk.internal.mustBeValidPenalty} = "auto"
-
-        %TimeOut   Connection timeout in seconds.
-        TimeOut       (1,1) {mustBeNumeric,mustBeReal,mustBePositive} = 120
-
-        %StreamFcn   Function to callback when streaming.
-        StreamFcn
     end
 
     methods
@@ -108,7 +85,7 @@ classdef OpenAIClient < aisdk.client.ClientBase
                 nvp.Temperature             {aisdk.internal.mustBeValidTemperature} = "auto"
                 nvp.TopP                    {aisdk.internal.mustBeValidProbability} = "auto"
                 nvp.StopSequences           {aisdk.internal.mustBeValidStop} = []
-                nvp.MaxNumTokens      (1,1) {mustBeNumeric,mustBePositive} = inf
+                nvp.MaxNumTokens      (1,1) {aisdk.internal.mustBePositiveIntegerOrInf} = inf
                 nvp.PresencePenalty         {aisdk.internal.mustBeValidPenalty} = "auto"
                 nvp.FrequencyPenalty        {aisdk.internal.mustBeValidPenalty} = "auto"
                 nvp.ResponseFormat          {aisdk.internal.mustBeResponseFormat} = "text"
@@ -121,27 +98,10 @@ classdef OpenAIClient < aisdk.client.ClientBase
                 nvp.ContextSize       (1,1) {aisdk.internal.mustBePositiveIntegerOrNaN} = NaN
             end
 
-            this.ModelName = modelName;
-            this.APIKey = this.parseAPIKey(nvp);
-            this.BaseURL = this.parseEndpoint(nvp);
-            this.ContextSize = nvp.ContextSize;
-
-            this.Temperature = nvp.Temperature;
-            this.TopP = nvp.TopP;
+            this@aisdk.client.internal.OpenAIBase(modelName, nvp);
             this.StopSequences = nvp.StopSequences;
-            this.MaxNumTokens = nvp.MaxNumTokens;
             this.PresencePenalty = nvp.PresencePenalty;
             this.FrequencyPenalty = nvp.FrequencyPenalty;
-            this.ResponseFormat = nvp.ResponseFormat;
-            this.ReasoningEffort = nvp.ReasoningEffort;
-            this.Verbosity = nvp.Verbosity;
-            this.TimeOut = nvp.TimeOut;
-
-            if isfield(nvp, "StreamFcn")
-                this.StreamFcn = nvp.StreamFcn;
-            else
-                this.StreamFcn = [];
-            end
         end
 
         function this = set.StopSequences(this, value)
@@ -173,7 +133,7 @@ classdef OpenAIClient < aisdk.client.ClientBase
                 nvp.Temperature                   {aisdk.internal.mustBeValidTemperature} = this.Temperature
                 nvp.TopP                          {aisdk.internal.mustBeValidProbability} = this.TopP
                 nvp.StopSequences                 {aisdk.internal.mustBeValidStop} = this.StopSequences
-                nvp.MaxNumTokens            (1,1) {mustBeNumeric,mustBePositive} = this.MaxNumTokens
+                nvp.MaxNumTokens            (1,1) {aisdk.internal.mustBePositiveIntegerOrInf} = this.MaxNumTokens
                 nvp.PresencePenalty                {aisdk.internal.mustBeValidPenalty} = this.PresencePenalty
                 nvp.FrequencyPenalty               {aisdk.internal.mustBeValidPenalty} = this.FrequencyPenalty
                 nvp.NumCompletions          (1,1) {mustBeNumeric,mustBePositive,mustBeInteger} = 1
@@ -185,16 +145,10 @@ classdef OpenAIClient < aisdk.client.ClientBase
                 nvp.StreamFcn                     = this.StreamFcn
             end
 
-            messagesIn = aisdk.client.ClientBase.normalizeMessages(messagesIn);
-            [functionsStruct, functionNames] = this.convertToolsWithNames(nvp.Tools);
-
-            aisdk.client.ClientBase.validateToolChoice(nvp.ToolChoice, functionNames);
-            toolChoice = aisdk.client.ClientBase.convertToolChoice(nvp.ToolChoice, functionNames);
-
-            apiMessages = this.convertMessages(messagesIn);
+            [apiMessages, functionsStruct, toolChoice] = this.prepareRequest(messagesIn, nvp);
 
             try
-                [text, messageBody, response] = aisdk.client.internal.callOpenAIChatAPI(apiMessages, functionsStruct, ...
+                [text, messageBody, response] = aisdk.client.internal.callChatCompletionsAPI(apiMessages, functionsStruct, ...
                     ModelName=this.ModelName, ToolChoice=toolChoice, ...
                     Temperature=nvp.Temperature, ...
                     TopP=nvp.TopP, ...
@@ -215,42 +169,39 @@ classdef OpenAIClient < aisdk.client.ClientBase
                 throw(ME);
             end
 
-            this.handleErrorResponse(response);
-
-            if ~isempty(text)
-                text = aisdk.client.internal.reformatOutput(text, nvp.ResponseFormat);
-            end
-
-            info = struct("Tokens", parseUsage(response));
-
-            if isfield(messageBody, "tool_calls")
-                toolCalls = messageBody.tool_calls;
-                if iscell(toolCalls)
-                    toolCalls = [toolCalls{:}];
-                end
-                messages = aisdk.LLMToolCallMessage.empty(1,0);
-                for i = 1:numel(toolCalls)
-                    tc = toolCalls(i);
-                    if isfield(tc, "id")
-                        id = string(tc.id);
-                    else
-                        id = "";
-                    end
-                    args = jsondecode(tc.function.arguments);
-                    if ~isstruct(args)
-                        aisdk.internal.throwError("aisdk:invalidToolCallArguments", class(args));
-                    end
-                    messages(end+1) = aisdk.LLMToolCallMessage(tc.function.name, args, ToolCallID=id); %#ok<AGROW>
-                end
-            else
-                messages = aisdk.LLMTextMessage(messageBody.content, Role="assistant");
-            end
+            [text, messages, info] = this.processAPIResponse(text, messageBody, response, nvp.ResponseFormat);
         end
 
     end
 
     methods (Access=protected)
-        function messagesOut = convertMessages(~, messages)
+        function messages = buildOutputMessages(this, text, message)
+            %buildOutputMessages Build LLMMessage objects from a Chat Completions
+            %   assistant MESSAGE. TEXT that accompanies tool calls comes first.
+            if ~isfield(message, "tool_calls")
+                messages = aisdk.LLMTextMessage(message.content, Role="assistant");
+                return
+            end
+            toolCalls = message.tool_calls;
+            if iscell(toolCalls)
+                toolCalls = [toolCalls{:}];
+            end
+            messages = aisdk.LLMToolCallMessage.empty(1,0);
+            for i = 1:numel(toolCalls)
+                tc = toolCalls(i);
+                if isfield(tc, "id")
+                    id = string(tc.id);
+                else
+                    id = "";
+                end
+                messages(end+1) = this.toolCallMessage(tc.function.name, tc.function.arguments, id); %#ok<AGROW>
+            end
+            if strlength(text) > 0
+                messages = [aisdk.LLMTextMessage(text, Role="assistant"), messages];
+            end
+        end
+
+        function messagesOut = convertMessages(this, messages)
             messagesOut = cell(1, numel(messages));
             idx = 0;
             for i = 1:numel(messages)
@@ -273,9 +224,7 @@ classdef OpenAIClient < aisdk.client.ClientBase
                             "content", msg.Result);
 
                     case 'aisdk.LLMImageMessage'
-                        imgData = msg.Image;
-                        base64Str = matlab.net.base64encode(aisdk.internal.encodeImageToPNG(imgData));
-                        dataURI = "data:image/png;base64," + base64Str;
+                        dataURI = this.imageDataURI(msg);
                         imgPart = struct("type", "image_url", ...
                             "image_url", struct("url", dataURI, "detail", msg.Detail));
                         idx = idx + 1;
@@ -308,50 +257,28 @@ classdef OpenAIClient < aisdk.client.ClientBase
             messagesOut = messagesOut(1:idx);
         end
 
-        function endpoint = parseEndpoint(this, nvp)
-            envVarName = upper(this.API) + "_API_ENDPOINT";
-            if isfield(nvp, "BaseURL") && strlength(nvp.BaseURL) > 0
-                endpoint = nvp.BaseURL;
-            elseif isenv(envVarName)
-                endpoint = getenv(envVarName);
-            else
-                endpoint = "https://api.openai.com/v1/";
-            end
-            if ~endsWith(endpoint, "/")
-                endpoint = endpoint + "/";
-            end
-            endpoint = endpoint + "chat/completions";
+        function path = endpointPath(~)
+            path = "chat/completions";
         end
 
-        function err = extractErrorMessage(~, data)
-            if isfield(data, "error") && isstruct(data.error) && isfield(data.error, "message")
-                err = string(data.error.message);
-            else
-                err = string.empty;
-            end
-        end
-    end
-
-end
-
-function usage = parseUsage(response)
-    data = response.Body.Data;
-    if isfield(data, "usage")
-        u = data.usage;
-        inputTokens = u.prompt_tokens;
-        outputTokens = u.completion_tokens;
-        totalTokens = u.total_tokens;
-        if isfield(u, "prompt_tokens_details") && isfield(u.prompt_tokens_details, "cached_tokens")
-            cachedInputTokens = u.prompt_tokens_details.cached_tokens;
-        else
+        function usage = parseUsage(~, response)
+            data = response.Body.Data;
+            inputTokens = 0;
+            outputTokens = 0;
+            totalTokens = 0;
             cachedInputTokens = 0;
+            if isfield(data, "usage") && isfield(data.usage, "prompt_tokens")
+                u = data.usage;
+                inputTokens = u.prompt_tokens;
+                outputTokens = u.completion_tokens;
+                totalTokens = u.total_tokens;
+                if isfield(u, "prompt_tokens_details") && isfield(u.prompt_tokens_details, "cached_tokens")
+                    cachedInputTokens = u.prompt_tokens_details.cached_tokens;
+                end
+            end
+            usage = struct("NumInputTokens", inputTokens, "NumOutputTokens", outputTokens, ...
+                "NumTotalTokens", totalTokens, "NumCachedInputTokens", cachedInputTokens);
         end
-    else
-        inputTokens = 0;
-        outputTokens = 0;
-        totalTokens = 0;
-        cachedInputTokens = 0;
     end
-    usage = struct("NumInputTokens", inputTokens, "NumOutputTokens", outputTokens, ...
-        "NumTotalTokens", totalTokens, "NumCachedInputTokens", cachedInputTokens);
+
 end
