@@ -4,6 +4,15 @@ classdef tCallOpenAIChatAPI < matlab.unittest.TestCase
 %   Copyright 2026 The MathWorks, Inc.
 
     methods (Test, TestTags = {'Unit'})
+        function toolCallWithoutContent_returnsEmptyTextAndToolCalls(testCase)
+            toolCall = struct("id", "call_1", "type", "function", ...
+                "function", struct("name", "lookup", "arguments", "{}"));
+            apiMessage = struct("role", "assistant", "tool_calls", {{toolCall}});
+            [~, text, message] = captureParams(APIMessage=apiMessage);
+            testCase.verifyEqual(text, "");
+            testCase.verifyFalse(isfield(message, "content"));
+            testCase.verifyEqual(message.tool_calls{1}.id, "call_1");
+        end
         %% Basic parameter structure
         function buildParams_includesModelAndMessages(testCase)
             params = captureParams();
@@ -99,7 +108,7 @@ classdef tCallOpenAIChatAPI < matlab.unittest.TestCase
 
 end
 
-function params = captureParams(nvp)
+function [params, text, message] = captureParams(nvp)
     arguments
         nvp.ReasoningEffort (1,1) string = "auto"
         nvp.Verbosity       (1,1) string = "auto"
@@ -109,10 +118,11 @@ function params = captureParams(nvp)
         nvp.ToolChoice                   = []
         nvp.Seed                         = []
         nvp.MaxNumTokens    (1,1)        = inf
+        nvp.APIMessage                   = struct("role", "assistant", "content", "fake")
     end
     captured = {};
     messages = {struct("role", "user", "content", "Hello")};
-    aisdk.client.internal.callOpenAIChatAPI(messages, nvp.Tools, ...
+    [text, message] = aisdk.client.internal.callOpenAIChatAPI(messages, nvp.Tools, ...
         ModelName="gpt-4o", ToolChoice=nvp.ToolChoice, ...
         Temperature="auto", TopP="auto", ...
         StopSequences=strings(1,0), MaxNumTokens=nvp.MaxNumTokens, ...
@@ -128,7 +138,7 @@ function params = captureParams(nvp)
         captured{1} = parameters;
         responseData = struct( ...
             "choices", struct( ...
-                "message", struct("role", "assistant", "content", "fake")), ...
+                "message", nvp.APIMessage), ...
             "usage", struct( ...
                 "prompt_tokens", 0, "completion_tokens", 0, "total_tokens", 0));
         response = struct("StatusCode", "OK", "Body", struct("Data", responseData));

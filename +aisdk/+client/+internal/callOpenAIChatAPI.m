@@ -90,9 +90,13 @@ if response.StatusCode=="OK"
                 "content", streamedText);
         end
     end
-    text = string(message.content);
-    % API may return content: null, normalize to scalar ""
-    if isempty(text), text = ""; end
+    % Tool-call messages may omit content; leave the API message unchanged.
+    text = "";
+    if isfield(message, "content")
+        text = string(message.content);
+        % API may return content: null, normalize to scalar ""
+        if isempty(text), text = ""; end
+    end
 else
     text = "";
     message = struct();
