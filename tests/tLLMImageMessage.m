@@ -8,7 +8,6 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
             img = ones(10, 10, 3, "uint8");
             msg = aisdk.LLMImageMessage(img);
             testCase.verifyEqual(msg.Role, "user");
-            testCase.verifyEqual(msg.Type, "image");
             testCase.verifyEqual(msg.Image, img);
         end
 
@@ -19,7 +18,6 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
             testCase.addTeardown(@() delete(tempFile));
 
             msg = aisdk.LLMImageMessage(tempFile);
-            testCase.verifyEqual(msg.Type, "image");
             testCase.verifyEqual(size(msg.Image), size(img));
             testCase.verifyClass(msg.Image, "uint8");
         end
@@ -53,8 +51,8 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
             imgMsg = aisdk.LLMImageMessage(uint8(randi(255, 4, 4, 3)));
             msgs = [textMsg, imgMsg];
             testCase.verifyEqual(numel(msgs), 2);
-            testCase.verifyEqual(msgs(1).Type, "text");
-            testCase.verifyEqual(msgs(2).Type, "image");
+            testCase.verifyClass(msgs(1), "aisdk.LLMTextMessage");
+            testCase.verifyClass(msgs(2), "aisdk.LLMImageMessage");
         end
 
         function contentPreviewInDisplay(testCase)

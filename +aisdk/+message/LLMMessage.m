@@ -4,18 +4,12 @@ classdef(Abstract) LLMMessage < matlab.mixin.Heterogeneous & matlab.mixin.Custom
 %   LLMMessage Properties:
 %       Role                 - The role of the message sender
 %                              (e.g. "user", "assistant", "tool").
-%
-%       Type                 - The type of message content
-%                              (e.g. "text", "tool-call").
 
 %   Copyright 2026 The MathWorks, Inc.
 
     properties (SetAccess = immutable)
         %ROLE   The role of the message sender.
         Role(1,1) string
-
-        %TYPE   The type of message content.
-        Type(1,1) string
     end
 
     methods (Abstract, Access = protected)
@@ -23,9 +17,13 @@ classdef(Abstract) LLMMessage < matlab.mixin.Heterogeneous & matlab.mixin.Custom
     end
 
     methods (Access = protected)
-        function this = LLMMessage(role, type)
+        function this = LLMMessage(role)
             this.Role = role;
-            this.Type = type;
+        end
+
+        function label = displayTypeLabel(this)
+            classParts = split(string(class(this)), ".");
+            label = classParts(end);
         end
 
         function txt = truncateForDisplay(~, txt)
@@ -61,7 +59,7 @@ classdef(Abstract) LLMMessage < matlab.mixin.Heterogeneous & matlab.mixin.Custom
             texts  = strings(n,1);
             for i = 1:n
                 roles(i) = roleLabel(obj(i).Role);
-                types(i) = typeLabel(obj(i).Type);
+                types(i) = displayTypeLabel(obj(i));
                 texts(i) = obj(i).contentPreview();
             end
 
@@ -93,18 +91,5 @@ function label = roleLabel(role)
             label = "Tool";
         otherwise
             label = role;
-    end
-end
-
-function label = typeLabel(type)
-    switch type
-        case "text"
-            label = "Text";
-        case "tool-call"
-            label = "Tool Call";
-        case "image"
-            label = "Image";
-        otherwise
-            label = type;
     end
 end

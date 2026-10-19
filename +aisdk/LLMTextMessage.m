@@ -9,8 +9,6 @@ classdef LLMTextMessage < aisdk.message.LLMMessage
 %   LLMTextMessage Properties:
 %       Role                 - "system", "user", or "assistant".
 %
-%       Type                 - Always "text".
-%
 %       Text                 - The text of the message.
 
 %   Copyright 2026 The MathWorks, Inc.
@@ -27,7 +25,7 @@ classdef LLMTextMessage < aisdk.message.LLMMessage
                 nvp.Role(1,1) string {mustBeMember(nvp.Role, ["system","user","assistant"])} = "user"
             end
 
-            this@aisdk.message.LLMMessage(nvp.Role, "text");
+            this@aisdk.message.LLMMessage(nvp.Role);
             this.Text = string(text);
         end
 
@@ -38,6 +36,10 @@ classdef LLMTextMessage < aisdk.message.LLMMessage
     end
 
     methods (Access = protected)
+        function label = displayTypeLabel(~)
+            label = "Text";
+        end
+
         function txt = contentPreview(this)
             txt = this.truncateForDisplay(this.Text);
         end

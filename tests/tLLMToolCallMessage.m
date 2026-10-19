@@ -7,7 +7,6 @@ classdef tLLMToolCallMessage < matlab.unittest.TestCase
         function constructorSetsRole(testCase)
             msg = aisdk.LLMToolCallMessage("myTool", struct(), ToolCallID="tc1");
             testCase.verifyEqual(msg.Role, "assistant");
-            testCase.verifyEqual(msg.Type, "tool-call");
         end
 
         function constructorSetsName(testCase)

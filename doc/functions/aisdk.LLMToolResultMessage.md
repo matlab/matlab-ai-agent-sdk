@@ -75,16 +75,7 @@ This property is read-only.
 Message sender, specified as `"tool"`.
 
 Data Types: `string`
-### `Type` — Message type
-<a id="type"></a>
 
-Read-only: `"text"`
-
-This property is read-only.
-
-Message type, specified as `"text"`.
-
-Data Types: `string`
 ### `Result` — Tool result
 <a id="result-1"></a>
 
@@ -177,12 +168,11 @@ ans =
 This example shows how to determine whether an AI agent called a
 tool.
 
-Check whether the `Type` property of any of the messages in the
-message history of the `aisdk.AIAgent` object `agent` is equal
-to `"tool-call"`.
+Check whether any message in the history of the `aisdk.AIAgent` object
+`agent` is an `aisdk.LLMToolCallMessage`.
 
 ```
-isToolCall = [agent.Messages.Type] == "tool-call";
+isToolCall = arrayfun(@(message) isa(message,"aisdk.LLMToolCallMessage"),agent.Messages);
 ```
 
 Display the tool call messages.
@@ -197,11 +187,21 @@ ans =
   aisdk.LLMToolCallMessage with properties:
 
           Role: "assistant"
-          Type: "tool-call"
           Name: "myTool"
      Arguments: '{"x":42}'
     ToolCallID: "abc"
 ```
+
+## Version History
+
+> ### v0.4.0 Behavior Change
+> #### `Type` property has been removed
+> Since v0.4.0, `LLMToolResultMessage` objects no longer have a `Type` property.
+>
+> To check if the message history of an agent contains a tool result message, use the `isa` function. For example:
+> `isLLMToolResultMessage = arrayfun(@(message) isa(message,"aisdk.LLMToolResultMessage"), agent.Messages);`
+
+
 ## See Also
 <a id="see-also"></a>
 

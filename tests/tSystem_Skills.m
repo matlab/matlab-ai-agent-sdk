@@ -123,9 +123,13 @@ classdef tSystem_Skills < matlab.unittest.TestCase
             % is typed as the base class, so reading .Text/.Result would error
             % and require extra test logic to guard.
             msgs = agent.Messages;
+            isTextOrToolResult = arrayfun(@(msg) ...
+                isa(msg, 'aisdk.LLMTextMessage') || ...
+                isa(msg, 'aisdk.LLMToolResultMessage'), msgs);
+            serializedMessages = string(jsonencode(msgs(isTextOrToolResult)));
             str = join([string(agent.SystemPrompt), ...
                 agent.SkillRegistry.CatalogText, ...
-                string(jsonencode(msgs(string([msgs.Type]) == "text")))], newline);
+                serializedMessages], newline);
         end
 
         function results = getToolResults(~, agent)

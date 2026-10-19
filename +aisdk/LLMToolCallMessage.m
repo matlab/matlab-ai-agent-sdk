@@ -12,8 +12,6 @@ classdef LLMToolCallMessage < aisdk.message.LLMMessage
 %   LLMToolCallMessage Properties:
 %       Role                 - Always "assistant".
 %
-%       Type                 - Always "tool-call".
-%
 %       Name                 - Name of the tool the model wants to call.
 %
 %       ToolCallID           - Unique identifier for this tool call.
@@ -34,6 +32,10 @@ classdef LLMToolCallMessage < aisdk.message.LLMMessage
     end
 
     methods (Access = protected)
+        function label = displayTypeLabel(~)
+            label = "Tool Call";
+        end
+
         function txt = contentPreview(this)
             txt = this.Name;
             if ~isempty(fieldnames(this.Arguments))
@@ -45,7 +47,6 @@ classdef LLMToolCallMessage < aisdk.message.LLMMessage
         function groups = getPropertyGroups(obj)
             props = struct( ...
                 "Role", obj.Role, ...
-                "Type", obj.Type, ...
                 "Name", obj.Name, ...
                 "Arguments", iFormatArgs(obj.Arguments), ...
                 "ToolCallID", obj.ToolCallID);
@@ -61,7 +62,7 @@ classdef LLMToolCallMessage < aisdk.message.LLMMessage
                 nvp.ToolCallID {aisdk.internal.mustBeValidToolCallID} = ""
             end
 
-            this@aisdk.message.LLMMessage("assistant", "tool-call");
+            this@aisdk.message.LLMMessage("assistant");
             this.Name = name;
             this.ToolCallID = nvp.ToolCallID;
             this.Arguments = arguments;

@@ -14,8 +14,6 @@ classdef LLMImageMessage < aisdk.message.LLMMessage
 %   LLMImageMessage Properties:
 %       Role                 - Always "user".
 %
-%       Type                 - Always "image".
-%
 %       Image                - MATLAB image array (numeric), usable
 %                              with imshow/imwrite.
 %
@@ -45,7 +43,7 @@ classdef LLMImageMessage < aisdk.message.LLMMessage
                 nvp.DownloadFcn function_handle = @websave
             end
 
-            this@aisdk.message.LLMMessage("user", "image");
+            this@aisdk.message.LLMMessage("user");
             this.Detail = nvp.Detail;
             this.DownloadFcn = nvp.DownloadFcn;
             this.Image = resolveToImageArray(content, this.DownloadFcn);
@@ -58,6 +56,10 @@ classdef LLMImageMessage < aisdk.message.LLMMessage
     end
 
     methods (Access = protected)
+        function label = displayTypeLabel(~)
+            label = "Image";
+        end
+
         function txt = contentPreview(this)
             sz = size(this.Image);
             txt = "<image " + strjoin(string(sz), "×") + " " + class(this.Image) + ">";
@@ -66,7 +68,6 @@ classdef LLMImageMessage < aisdk.message.LLMMessage
         function groups = getPropertyGroups(obj)
             props = struct( ...
                 "Role", obj.Role, ...
-                "Type", obj.Type, ...
                 "Image", contentPreview(obj));
             if obj.Detail ~= "auto"
                 props.Detail = obj.Detail;

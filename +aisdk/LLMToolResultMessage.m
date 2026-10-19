@@ -12,8 +12,6 @@ classdef LLMToolResultMessage < aisdk.message.LLMMessage
 %   LLMToolResultMessage Properties:
 %       Role                 - Always "tool".
 %
-%       Type                 - Always "text".
-%
 %       Result               - The result returned by the tool.
 %
 %       Name                 - Name of the tool that produced the result.
@@ -41,7 +39,7 @@ classdef LLMToolResultMessage < aisdk.message.LLMMessage
                 nvp.Name(1,1) string = ""
             end
 
-            this@aisdk.message.LLMMessage("tool", "text");
+            this@aisdk.message.LLMMessage("tool");
             this.Result = result;
             this.Name = nvp.Name;
             this.ToolCallID = nvp.ToolCallID;
@@ -54,6 +52,10 @@ classdef LLMToolResultMessage < aisdk.message.LLMMessage
     end
 
     methods (Access = protected)
+        function label = displayTypeLabel(~)
+            label = "Text";
+        end
+
         function txt = contentPreview(this)
             txt = this.truncateForDisplay(this.Result);
         end

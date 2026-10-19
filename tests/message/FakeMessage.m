@@ -1,11 +1,11 @@
 classdef FakeMessage < aisdk.message.LLMMessage
-% Test helper: message with a non-standard role and type.
+% Test helper: message with a non-standard role.
 
 %   Copyright 2026 The MathWorks, Inc.
 
     methods
-        function this = FakeMessage(role, type)
-            this@aisdk.message.LLMMessage(role, type);
+        function this = FakeMessage(role)
+            this@aisdk.message.LLMMessage(role);
         end
     end
 

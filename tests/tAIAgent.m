@@ -385,7 +385,8 @@ classdef tAIAgent < matlab.unittest.TestCase
             % Every tool call must have a matching tool result, or the
             % history cannot be replayed to the model.
             msgs = agent.Messages;
-            toolCallIDs = [msgs([msgs.Type] == "tool-call").ToolCallID];
+            isToolCall = arrayfun(@(msg) isa(msg, 'aisdk.LLMToolCallMessage'), msgs);
+            toolCallIDs = [msgs(isToolCall).ToolCallID];
             toolResultIDs = [msgs([msgs.Role] == "tool").ToolCallID];
             testCase.verifyEqual(sort(toolResultIDs), sort(toolCallIDs));
         end

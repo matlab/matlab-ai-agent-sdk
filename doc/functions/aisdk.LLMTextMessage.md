@@ -102,16 +102,7 @@ system prompts as text messages with `Role` specified as
 - `"assistant"` — LLM or AI agent.
 
 Data Types: `string`
-### `Type` — Message type
-<a id="type"></a>
 
-Read-only: `"text"`
-
-This property is read-only.
-
-Message type, specified as `"text"`.
-
-Data Types: `string`
 ## Examples
 <a id="examples"></a>
 ### Inspect Agent Message History
@@ -217,8 +208,17 @@ newMessage =
 
        Text: "False botanically; they are a fruit, but commonly used as a vegetable."
        Role: "assistant"
-       Type: "text"
 ```
+
+## Version History
+
+> ### v0.4.0 Behavior Change
+> #### `Type` property has been removed
+> Since v0.4.0, `LLMTextMessage` objects no longer have a `Type` property.
+>
+> To check if the message history of an agent contains a text message, use the `isa` function. For example:
+> `isLLMTextMessage = arrayfun(@(message) isa(message,"aisdk.LLMTextMessage"), agent.Messages);`
+
 ## See Also
 <a id="see-also"></a>
 

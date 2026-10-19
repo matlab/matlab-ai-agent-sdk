@@ -366,7 +366,8 @@ classdef tSystem < matlab.unittest.TestCase
 
             run(supervisor, "What is 10 + 20?", ToolChoice="required");
 
-            toolCalls = supervisor.Messages([supervisor.Messages.Type] == "tool-call");
+            toolCalls = supervisor.Messages(arrayfun( ...
+                @(msg) isa(msg, 'aisdk.LLMToolCallMessage'), supervisor.Messages));
             testCase.assertNotEmpty(toolCalls, "Expected a tool call");
             toolResults = supervisor.Messages([supervisor.Messages.Role] == "tool");
             testCase.assertNotEmpty(toolResults, "Expected a tool result");
@@ -405,7 +406,8 @@ classdef tSystem < matlab.unittest.TestCase
 
             run(agent, "Hello, how are you?", ToolChoice="required");
 
-            toolCalls = agent.Messages([agent.Messages.Type] == "tool-call");
+            toolCalls = agent.Messages(arrayfun( ...
+                @(msg) isa(msg, 'aisdk.LLMToolCallMessage'), agent.Messages));
             testCase.assertNotEmpty(toolCalls, "Expected a tool call");
             testCase.verifyEqual(toolCalls(1).Name, "addTwoNumbers");
         end
@@ -417,7 +419,8 @@ classdef tSystem < matlab.unittest.TestCase
             run(agent, "What is 2 + 3?", ToolChoice="none");
 
             testCase.verifyEmpty( ...
-                agent.Messages([agent.Messages.Type] == "tool-call"), ...
+                agent.Messages(arrayfun( ...
+                    @(msg) isa(msg, 'aisdk.LLMToolCallMessage'), agent.Messages)), ...
                 "No tool should be called when ToolChoice is none");
         end
 
@@ -446,7 +449,6 @@ classdef tSystem < matlab.unittest.TestCase
             img = uint8(255 * ones(64, 64, 3));
             imageMessage = aisdk.LLMImageMessage(img);
 
-            testCase.verifyEqual(imageMessage.Type, "image");
             testCase.verifyEqual(imageMessage.Role, "user");
             testCase.verifyEqual(size(imageMessage.Image), size(img));
             testCase.verifyClass(imageMessage.Image, "uint8");
@@ -525,7 +527,8 @@ classdef tSystem < matlab.unittest.TestCase
 
             run(agent, "Add 5 and 9.", ToolChoice="required");
 
-            toolCalls = agent.Messages([agent.Messages.Type] == "tool-call");
+            toolCalls = agent.Messages(arrayfun( ...
+                @(msg) isa(msg, 'aisdk.LLMToolCallMessage'), agent.Messages));
             testCase.assertNotEmpty(toolCalls, "Expected a tool call");
             testCase.verifyEqual(toolCalls(1).Name, "addTwoNumbers");
             testCase.verifyTrue(isfield(toolCalls(1).Arguments, "a"), ...

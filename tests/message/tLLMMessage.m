@@ -33,6 +33,8 @@ classdef tLLMMessage < matlab.unittest.TestCase
             output = formattedDisplayText(msgs);
             testCase.verifySubstring(output, "hello");
             testCase.verifySubstring(output, "world");
+            testCase.verifyNotEmpty(regexp(output, ...
+                '(?m)^\s*1\s+User\s+Text\s+"hello"', 'once'));
         end
 
         function roleIsImmutable(testCase)
@@ -41,17 +43,13 @@ classdef tLLMMessage < matlab.unittest.TestCase
                 @() iSetRole(msg), "MATLAB:class:SetProhibited");
         end
 
-        function typeIsImmutable(testCase)
-            msg = aisdk.LLMTextMessage("hello");
-            testCase.verifyError(...
-                @() iSetType(msg), "MATLAB:class:SetProhibited");
-        end
-
         function displayArray_toolCallShowsName(testCase)
             toolCall = aisdk.LLMToolCallMessage("myTool", struct(), ToolCallID="tc1");
             msgs = [toolCall, toolCall];
             output = formattedDisplayText(msgs);
             testCase.verifySubstring(output, "myTool");
+            testCase.verifyNotEmpty(regexp(output, ...
+                '(?m)^\s*1\s+Assistant\s+Tool Call\s+"myTool"', 'once'));
         end
 
         function displayArray_toolCallWithArgs_showsArguments(testCase)
@@ -105,11 +103,12 @@ classdef tLLMMessage < matlab.unittest.TestCase
             toolResult = aisdk.LLMToolResultMessage("res", ToolCallID="tc1", Name="myTool");
             msgs = [toolResult, toolResult];
             output = formattedDisplayText(msgs);
-            testCase.verifySubstring(output, "Tool");
+            testCase.verifyNotEmpty(regexp(output, ...
+                '(?m)^\s*1\s+Tool\s+Text\s+"res"', 'once'));
         end
 
         function displayArray_unknownRole_showsRawRole(testCase)
-            msg = FakeMessage("custom-role", "text");
+            msg = FakeMessage("custom-role");
             msgs = [msg, msg];
             output = formattedDisplayText(msgs);
             testCase.verifySubstring(output, "custom-role");
@@ -120,14 +119,16 @@ classdef tLLMMessage < matlab.unittest.TestCase
             imgMsg = aisdk.LLMImageMessage(img);
             msgs = [imgMsg, imgMsg];
             output = formattedDisplayText(msgs);
-            testCase.verifySubstring(output, "Image");
+            testCase.verifyNotEmpty(regexp(output, ...
+                '(?m)^\s*1\s+User\s+Image\s+<image', 'once'));
         end
 
-        function displayArray_unknownType_showsRawType(testCase)
-            msg = FakeMessage("user", "custom-type");
+        function displayArray_customSubclass_showsClassName(testCase)
+            msg = FakeMessage("user");
             msgs = [msg, msg];
             output = formattedDisplayText(msgs);
-            testCase.verifySubstring(output, "custom-type");
+            testCase.verifyNotEmpty(regexp(output, ...
+                '(?m)^\s*1\s+User\s+FakeMessage', 'once'));
         end
     end
 
@@ -135,9 +136,5 @@ end
 
 function iSetRole(msg)
     msg = subsasgn(msg, substruct('.','Role'), "assistant"); %#ok<NASGU>
-end
-
-function iSetType(msg)
-    msg = subsasgn(msg, substruct('.','Type'), "tool-call"); %#ok<NASGU>
 end
 

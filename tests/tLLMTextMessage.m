@@ -19,11 +19,6 @@ classdef tLLMTextMessage < matlab.unittest.TestCase
             testCase.verifyEqual(msg.Role, "assistant");
         end
 
-        function constructorSetsType(testCase)
-            msg = aisdk.LLMTextMessage("hello");
-            testCase.verifyEqual(msg.Type, "text");
-        end
-
         function constructorSetsText(testCase)
             msg = aisdk.LLMTextMessage("my question");
             testCase.verifyEqual(msg.Text, "my question");
