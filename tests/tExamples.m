@@ -30,9 +30,21 @@ classdef tExamples < matlab.unittest.TestCase
             testCase.applyFixture(PathFixture( ...
                 fullfile(testCase.TestDir,"helpers")));
 
-            import matlab.unittest.fixtures.CurrentFolderFixture
-            testCase.applyFixture(CurrentFolderFixture( ...
-                fullfile(testCase.TestDir,"..","doc","examples")));
+            % Every example loads its API key from a ".env" file that users
+            % create themselves. That file is not in the repository, so
+            % shadow loadenv; see private/example-doubles/loadenv.m.
+            testCase.applyFixture(PathFixture( ...
+                fullfile(testCase.TestDir,"private","example-doubles")));
+
+            % Tools default to ApprovalRequest="once", and the two examples
+            % that demonstrate approval leave it there, so they reach the
+            % approval dialog: AnalyzeTextDataUsingLLMTool on
+            % extractCustomerData, CallMCPClientUsingAIAgent on
+            % addTwoNumbers. Apply the double for the whole class, not just
+            % for those two, so that it cannot depend on the order the
+            % tests run in.
+            testCase.applyFixture(PathFixture( ...
+                fullfile(testCase.TestDir,"private","ui-doubles")));
 
             import matlab.unittest.fixtures.SuppressedWarningsFixture
             testCase.applyFixture( ...
@@ -41,9 +53,19 @@ classdef tExamples < matlab.unittest.TestCase
     end
 
     methods
-        function startCapture(testCase,testName)
+        function prepareExample(testCase,exampleName)
+            % Make one example runnable: change to its own folder, so that
+            % it is on the path and resolves its relative paths the way it
+            % does for a user, and arm its recording.
+            %
+            % Each example lives in a folder of its own, named after the
+            % example, and so is its recording.
+            import matlab.unittest.fixtures.CurrentFolderFixture
+            testCase.applyFixture(CurrentFolderFixture( ...
+                fullfile(testCase.TestDir,"..","doc","examples",exampleName)));
+
             aisdk.client.internal.sendRequestWrapper("open", ...
-                fullfile(testCase.TestDir,"recordings",testName));
+                fullfile(testCase.TestDir,"recordings",exampleName));
         end
     end
 
@@ -63,63 +85,14 @@ classdef tExamples < matlab.unittest.TestCase
     % Integration: multiple components interact, but not System because
     % server responses are recorded/mocked.
     methods(Test, TestTags = {'Integration'})
-        function testSimpleMathAgent(testCase)
-            testCase.startCapture("SimpleMathAgent");
-            evalc("SimpleMathAgent");
+        function testSolveSimpleMathProblemUsingAIAgent(testCase)
+            testCase.prepareExample("SolveSimpleMathProblemUsingAIAgent");
+            evalc("SolveSimpleMathProblemUsingAIAgent");
         end
 
-        function testAnalyzeTextUsingParallelToolCalls(testCase)
-            testCase.startCapture("AnalyzeTextUsingParallelToolCalls");
-            evalc("AnalyzeTextUsingParallelToolCalls");
-        end
+        function testCreateSimpleChatBot(testCase)
+            testCase.prepareExample("CreateSimpleChatbot");
 
-        function testNestedToolsAndSubagentsExample(testCase)
-            testCase.startCapture("NestedToolsAndSubagentsExample");
-            evalc("NestedToolsAndSubagentsExample");
-        end
-
-        function testSupervisorSubagentExample(testCase)
-            import matlab.unittest.fixtures.PathFixture
-            testCase.applyFixture(PathFixture( ...
-                fullfile(testCase.TestDir,"private","ui-doubles")));
-            testCase.startCapture("SupervisorSubagentExample");
-            evalc("SupervisorSubagentExample");
-        end
-
-        function testSendImageMessagesToVisionModels(testCase)
-            testCase.assumeFail("BPed test (see issue 283): MATLAB:print:UnableToExport")
-
-            testCase.assumeFalse( ...
-                isMATLABReleaseOlderThan("R2026b"), ...
-                "MATLABWindow exited Unexpected in TeamCity.");
-
-            testCase.startCapture("SendImageMessagesToVisionModels");
-            evalc("SendImageMessagesToVisionModels");
-        end
-
-        function testMCPClientAndAgentTools(testCase)
-            testCase.startCapture("MCPClientAndAgentTools");
-            mcpHTTPClient = @(endpoint) createMathMCPMock(); %#ok<NASGU>
-            evalc("MCPClientAndAgentTools");
-        end
-
-        function testFitPolynomialToDataUsingAIAgent(testCase)
-            
-            testCase.assumeFalse( ...
-                isMATLABReleaseOlderThan("R2026b"), ...
-                "MATLABWindow exited Unexpected in TeamCity.");
-
-            % Requires Curve Fitting Toolbox
-            testCase.assumeTrue( ...
-                ~isempty(ver("curvefit")), ...
-                "Curve Fitting Toolbox is not installed");
-            
-            testCase.startCapture("FitPolynomialToDataUsingAIAgent");
-            evalc("FitPolynomialToDataUsingAIAgent");
-        end
-
-        function testCreateSimpleChatBotUsingAIAgent(testCase)
-            testCase.startCapture("CreateSimpleChatBotUsingAIAgent");
             % Set up a fake input command, returning canned user prompts
             count = 0;
             prompts = [
@@ -137,18 +110,73 @@ classdef tExamples < matlab.unittest.TestCase
             % To avoid errors about a static workspace, let MATLAB know we
             % want these variables to exist
             api = []; %#ok<NASGU>
-            modelName = []; %#ok<NASGU>
+            model = []; %#ok<NASGU>
             client = []; %#ok<NASGU>
-            sysPrompt = []; %#ok<NASGU>
             session = []; %#ok<NASGU>
             stopWord = []; %#ok<NASGU>
             prompt = []; %#ok<NASGU>
             text = []; %#ok<NASGU>
 
             % Run the example
-            evalc("CreateSimpleChatBotUsingAIAgent");
+            evalc("CreateSimpleChatBot");
 
             testCase.verifyEqual(count, find(prompts == "end", 1));
+        end
+
+        function testAnalyzeTextDataUsingLLMTool(testCase)
+            testCase.prepareExample("AnalyzeTextDataUsingLLMTool");
+            evalc("AnalyzeTextDataUsingLLMTool");
+        end
+
+        function testFitPolynomialToDataUsingAIAgent(testCase)
+
+            testCase.assumeFalse( ...
+                isMATLABReleaseOlderThan("R2026b"), ...
+                "MATLABWindow exited Unexpected in TeamCity.");
+
+            % Requires Curve Fitting Toolbox
+            testCase.assumeTrue( ...
+                ~isempty(ver("curvefit")), ...
+                "Curve Fitting Toolbox is not installed");
+
+            % The example adds random noise to its data, and the agent's
+            % tools then reject fits based on that data. Replaying canned
+            % responses only makes sense against the data they were
+            % recorded for, so fix the generator.
+            generatorState = rng(0,"twister");
+            testCase.addTeardown(@() rng(generatorState));
+
+            testCase.prepareExample("FitPolynomialToDataUsingAIAgent");
+            evalc("FitPolynomialToDataUsingAIAgent");
+        end
+
+        function testOrchestrateMultipleSubagents(testCase)
+            testCase.prepareExample("OrchestrateMultipleSubagents");
+            evalc("OrchestrateMultipleSubagents");
+        end
+
+        function testCallMCPClientUsingAIAgent(testCase)
+            % The mcpclient_mex double is a .m file shadowing a MEX file.
+            % MEX wins over .m within a single folder, so the double relies
+            % on coming earlier on the path, which in turn needs the current
+            % folder not to be the repository root. prepareExample changes
+            % to the example's own folder, so it is not.
+            import matlab.unittest.fixtures.PathFixture
+            testCase.applyFixture(PathFixture( ...
+                fullfile(testCase.TestDir,"private","mcp-doubles")));
+            testCase.prepareExample("CallMCPClientUsingAIAgent");
+
+            % The example expects the MCP server and the model to be given.
+            mcpServer = "mock-math-server"; %#ok<NASGU>
+            api = "openai"; %#ok<NASGU>
+            model = "gpt-4.1-mini"; %#ok<NASGU>
+
+            evalc("CallMCPClientUsingAIAgent");
+        end
+
+        function testLabelImagesUsingLLM(testCase)
+            testCase.prepareExample("LabelImagesUsingLLM");
+            evalc("LabelImagesUsingLLM");
         end
     end
 end
