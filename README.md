@@ -24,6 +24,15 @@ Using this add\-on requires MATLAB R2023a or newer.
 
 You can use the add\-on in MATLAB Online™ by clicking this link: [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=matlab/matlab-ai-agent-sdk)
 
+### Install by using Add\-On Explorer
+
+The recommended way of using the add-on on an installed version of MATLAB is to use the Add\-On Explorer.
+
+1. In MATLAB, go to the **Home** tab, and in the **Environment** section, click the **Add\-Ons** icon.
+2. In the Add\-On Explorer, search for "MATLAB AI Agent SDK".
+3. Select **Install**.
+
+### Install by cloning GitHub repository
 To use the add\-on on an installed version of MATLAB, you can clone the GitHub repository. In the MATLAB Command Window, run this command:
 ```
 >> !git clone https://github.com/matlab/matlab-ai-agent-sdk.git
