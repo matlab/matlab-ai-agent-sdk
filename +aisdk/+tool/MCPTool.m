@@ -11,6 +11,11 @@ classdef MCPTool < aisdk.tool.internal.CallableTool
         OutputSchema
     end
 
+    properties (Access = protected)
+        %Function   Function handle to invoke when the tool is called.
+        Function
+    end
+
     methods
         function this = MCPTool(mcpClient)
             if nargin == 0

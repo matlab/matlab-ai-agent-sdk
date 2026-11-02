@@ -9,11 +9,6 @@ classdef CallableTool < aisdk.tool.LLMTool
             aisdk.tool.ApprovalRequest.once
     end
 
-    properties (Access = protected)
-        %Function   Function handle to invoke when the tool is called.
-        Function = @aisdk.tool.internal.CallableTool.doNothing
-    end
-
     methods(Abstract, Access = protected)
         [output, workspace] = evaluateImpl(this, args, workspace)
     end
@@ -35,9 +30,6 @@ classdef CallableTool < aisdk.tool.LLMTool
 
 
     methods (Static, Access = protected)
-        function doNothing
-        end
-
         function str = argumentsToSchema(args)
         %argumentsToSchema Convert LLMToolArgument array to JSON Schema struct.
             str = struct();

@@ -11,6 +11,11 @@ classdef LocalLLMTool < aisdk.tool.internal.CallableTool
         OutputArguments
     end
 
+    properties (Access = protected)
+        %Function   Function handle to invoke when the tool is called.
+        Function
+    end
+
     methods
         function this = LocalLLMTool(fcnHandle, NVPairs)
             arguments

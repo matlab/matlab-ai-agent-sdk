@@ -27,8 +27,5 @@ classdef (Abstract) BuiltInTool < aisdk.tool.internal.CallableTool
             label = "BuiltInTool";
         end
 
-        function label = displayWorkspaceLabel(~)
-            label = """none""";
-        end
     end
 end

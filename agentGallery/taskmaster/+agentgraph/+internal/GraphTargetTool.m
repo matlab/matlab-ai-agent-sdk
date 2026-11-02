@@ -73,10 +73,6 @@ classdef GraphTargetTool < aisdk.tool.BuiltInTool
             label = "GraphTargetTool";
         end
 
-        function label = displayWorkspaceLabel(this)
-            label = """" + this.Workspace + """";
-        end
-
         function [output, workspace] = evaluateImpl(this, args, workspace)
             arguments
                 this (1,1) agentgraph.internal.GraphTargetTool
