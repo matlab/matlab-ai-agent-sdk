@@ -2,7 +2,7 @@ classdef LLMImageMessage < aisdk.message.LLMMessage
 %LLMImageMessage An image message in a conversation.
 %
 %   msg = aisdk.LLMImageMessage(IMGARRAY) creates a user image message
-%   from a MATLAB image array (numeric or logical).
+%   from a nonsparse MATLAB grayscale or RGB image array.
 %
 %   msg = aisdk.LLMImageMessage(SOURCE) creates a user image message from
 %   a file path or URL.
@@ -22,7 +22,7 @@ classdef LLMImageMessage < aisdk.message.LLMMessage
 %   Copyright 2026 The MathWorks, Inc.
 
     properties
-        %IMAGE   MATLAB image array (numeric or logical).
+        %IMAGE   Nonsparse MATLAB grayscale or RGB image array.
         Image
     end
 
@@ -119,9 +119,12 @@ function deleteIfExists(filePath)
 end
 
 function mustBeImageArray(val)
-    okType = isnumeric(val) || islogical(val);
-    okShape = ismatrix(val) || (ndims(val) == 3 && ismember(size(val,3), [1 3 4]));
-    if ~(okType && okShape && ~isempty(val))
-        aisdk.internal.throwError("aisdk:message:InvalidImageContent");
+    validateattributes(val, ["double" "single" "logical" "uint8" "uint16"], ...
+        ["nonempty" "nonsparse"]);
+    if ~(ismatrix(val) || (ndims(val) == 3 && size(val, 3) == 3))
+        aisdk.internal.throwError("aisdk:message:InvalidImageDimensions");
+    end
+    if islogical(val) && ~ismatrix(val)
+        aisdk.internal.throwError("aisdk:message:InvalidLogicalImageDimensions");
     end
 end

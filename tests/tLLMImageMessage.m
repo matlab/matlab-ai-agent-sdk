@@ -3,6 +3,17 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
+    properties (TestParameter)
+        InvalidImageContent = struct( ...
+            "emptyArray", struct("Image", uint8([]), "ErrorID", "MATLAB:expectedNonempty"), ...
+            "sparseArray", struct("Image", sparse(10, 10), "ErrorID", "MATLAB:expectedNonsparse"), ...
+            "signedInteger", struct("Image", int16(ones(10, 10, 3)), "ErrorID", "MATLAB:invalidType"), ...
+            "uint64", struct("Image", uint64(ones(10, 10, 3)), "ErrorID", "MATLAB:invalidType"), ...
+            "invalidDimensions", struct("Image", uint8(ones(255, 4, 4, 2)), "ErrorID", "aisdk:message:InvalidImageDimensions"), ...
+            "fourChannelShape", struct("Image", ones(10, 10, 4, "uint8"), "ErrorID", "aisdk:message:InvalidImageDimensions"), ...
+            "logicalRGB", struct("Image", true(10, 10, 3), "ErrorID", "aisdk:message:InvalidLogicalImageDimensions"));
+    end
+
     methods (Test, TestTags = {'Unit'})
         function constructorFromArray(testCase)
             img = ones(10, 10, 3, "uint8");
@@ -62,29 +73,16 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
             testCase.verifySubstring(output, "10×15×3");
         end
 
-        function constructorRejectsEmptyArray_throwsError(testCase)
+        function constructor_withInvalidImageContent_throwsError(testCase, InvalidImageContent)
             testCase.verifyError( ...
-                @() aisdk.LLMImageMessage(uint8([])), ...
-                "aisdk:message:InvalidImageContent");
+                @() aisdk.LLMImageMessage(InvalidImageContent.Image), ...
+                InvalidImageContent.ErrorID);
         end
 
-        function constructorRejectsInvalidDimensions_throwsError(testCase)
-            img = uint8(ones(255, 4, 4, 2));
-            testCase.verifyError( ...
-                @() aisdk.LLMImageMessage(img), ...
-                "aisdk:message:InvalidImageContent");
-        end
-
-        function constructorRejectsNonImageSource_throwsError(testCase)
+        function constructor_withNonImageSource_throwsError(testCase)
             testCase.verifyError( ...
                 @() aisdk.LLMImageMessage({1,2,3}), ...
                 "aisdk:message:InvalidImageSource");
-        end
-
-        function constructorAcceptsFourChannel_storesContent(testCase)
-            img = ones(10, 10, 4, "uint8");
-            msg = aisdk.LLMImageMessage(img);
-            testCase.verifyEqual(msg.Image, img);
         end
 
         function displayShowsDetail_whenNonAuto(testCase)

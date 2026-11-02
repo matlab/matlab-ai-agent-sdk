@@ -52,7 +52,7 @@ Image data, specified as a full (nonsparse) matrix.
 
 This argument sets the `Image` property.
 
-Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8` | `uint16` | `uint32` | `uint64` | `logical`
+Data Types: `single` | `double` | `uint8` | `uint16` | `logical`
 ### `filename` — Name of graphics file
 <a id="filename"></a>
 
@@ -117,7 +117,7 @@ Image data, specified as a full (nonsparse) matrix.
 
 - For truecolor images, `Image` must be m-by-n-by-3.
 
-Data Types: `single` | `double` | `int8` | `int16` | `int32` | `int64` | `uint8` | `uint16` | `uint32` | `uint64` | `logical`
+Data Types: `single` | `double` | `uint8` | `uint16` | `logical`
 ### `Detail` — Image detail
 <a id="detail-1"></a>
 
