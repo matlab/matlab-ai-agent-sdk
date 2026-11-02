@@ -411,13 +411,12 @@ classdef tOpenAIResponsesClient < hOpenAIClientCommon
             testCase.assertNumElements(captured, 2, ...
                 "The agent should have sent exactly two requests.");
 
-            function [httpResponse, streamedText] = fakeSendRequest(parameters, ~, ~, ~, ~)
+            function httpResponse = fakeSendRequest(parameters, ~, ~, ~, ~, ~)
                 turn = turn + 1;
                 captured{turn} = parameters;
                 % Indexing rather than branching: a third request would
                 % fail here, which the assertion above reports.
                 httpResponse = responses{turn};
-                streamedText = "";
             end
         end
     end
