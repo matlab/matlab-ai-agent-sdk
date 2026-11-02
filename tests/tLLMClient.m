@@ -49,6 +49,10 @@ classdef tLLMClient < matlab.unittest.TestCase
         end
 
         function openaiResponses_withChatCompletionsOnlyOption_throwsUnsupportedParameterError(testCase, ChatCompletionsOnlyOption)
+            % Identifier only: messages come from MessageCatalog, which could
+            % be localized, so their wording is no contract. Asserting that
+            % the error names which option was refused needs the matcher
+            % extracted out of createClient, a source change not yet made.
             testCase.verifyError( ...
                 @() aisdk.LLMClient("openai-responses", "gpt-4o", ...
                     ChatCompletionsOnlyOption.prop, ChatCompletionsOnlyOption.value), ...

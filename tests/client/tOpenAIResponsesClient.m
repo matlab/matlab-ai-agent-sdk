@@ -14,6 +14,11 @@ classdef tOpenAIResponsesClient < hOpenAIClientCommon
             "NumCompletions", struct("prop", "NumCompletions", "value", 2), ...
             "Seed",           struct("prop", "Seed",           "value", 42));
 
+        ChatCompletionsOnlyOption = struct( ...
+            "StopSequences",    struct("prop", "StopSequences",    "value", "STOP"), ...
+            "PresencePenalty",  struct("prop", "PresencePenalty",  "value", 0.1), ...
+            "FrequencyPenalty", struct("prop", "FrequencyPenalty", "value", 0.1));
+
         UnreadableBody = struct( ...
             "noOutputField",   struct("id", "resp_1"), ...
             "html",            '<html><body>Hello</body></html>', ...
@@ -35,6 +40,19 @@ classdef tOpenAIResponsesClient < hOpenAIClientCommon
                 @() generate(client, "Hi", ...
                     ChatCompletionsOnlyGenerateOption.prop, ChatCompletionsOnlyGenerateOption.value), ...
                 "MATLAB:TooManyInputs");
+        end
+
+        function properties_chatCompletionsOnly_absentFromResponsesClient(testCase, ChatCompletionsOnlyOption)
+            % The documentation tells users to branch on isprop, so the
+            % property must be absent here and still present on the other client.
+            responsesClient = testCase.createClient("gpt-4o", APIKey="fake-key");
+            chatCompletionsClient = aisdk.client.OpenAIClient("gpt-4o", APIKey="fake-key");
+            testCase.verifyFalse(isprop(responsesClient, ChatCompletionsOnlyOption.prop), ...
+                ChatCompletionsOnlyOption.prop + " should not be a property of the Responses client.");
+            testCase.verifyTrue(isprop(chatCompletionsClient, ChatCompletionsOnlyOption.prop), ...
+                ChatCompletionsOnlyOption.prop + " should remain a property of the Chat Completions client.");
+            testCase.verifyError(@() setfield(responsesClient, ChatCompletionsOnlyOption.prop, ChatCompletionsOnlyOption.value), ...
+                "MATLAB:noPublicFieldForClass");
         end
     end
 
@@ -240,6 +258,104 @@ classdef tOpenAIResponsesClient < hOpenAIClientCommon
         end
     end
 
+    methods (Test, TestTags = {'Integration'})
+        %% Agent loop over the Responses client
+        % A real aisdk.AIAgent, a real aisdk.LLMTool and the client run two
+        % turns behind a fake sendRequestFcn, so the request the agent builds
+        % out of items it produced itself is asserted without a network call.
+        function run_withToolCall_sendsCallAndOutputItemsOnSecondTurn(testCase)
+            toolCall = struct("id", "call_1", "name", "squareNumber", "arguments", '{"x":5}');
+            firstTurnText = "Let me compute that.";
+            [answer, agent, captured] = testCase.runAgentOverTwoTurns( ...
+                squareNumberTool(), "What is 5 squared?", ...
+                testCase.toolCallResponse({toolCall}, firstTurnText), ...
+                testCase.textResponse("Five squared is 25."));
+
+            % Both turns carried text, so the answer holds each of them in turn order.
+            testCase.verifyEqual(answer, firstTurnText + newline + "Five squared is 25.");
+
+            % The loop selected the tool, ran it, and kept its computed value.
+            toolResults = agent.Messages([agent.Messages.Role] == "tool");
+            testCase.assertNumElements(toolResults, 1);
+            testCase.verifyEqual(toolResults.Result, "{""result"":25}");
+
+            input = captured{2}.input;
+            testCase.assertNumElements(input, 4);
+            testCase.verifyEqual(input{1}.role, "user");
+            testCase.verifyEqual(input{1}.content, "What is 5 squared?");
+            testCase.verifyEqual(input{2}.role, "assistant");
+            testCase.verifyEqual(input{2}.content, firstTurnText);
+            testCase.verifyEqual(input{3}.type, "function_call");
+            testCase.verifyEqual(input{3}.call_id, "call_1");
+            testCase.verifyEqual(input{3}.name, "squareNumber");
+            testCase.verifyEqual(input{4}.type, "function_call_output");
+            testCase.verifyEqual(input{4}.call_id, "call_1");
+            testCase.verifyEqual(input{4}.output, "{""result"":25}");
+        end
+
+        function run_withParallelToolCalls_pairsEachOutputWithItsCallID(testCase)
+            toolCalls = { ...
+                struct("id", "call_sq", "name", "squareNumber", "arguments", '{"x":3}'), ...
+                struct("id", "call_db", "name", "doubleNumber",  "arguments", '{"x":10}')};
+            firstTurnText = "Squaring and doubling now.";
+            [~, agent, captured] = testCase.runAgentOverTwoTurns( ...
+                [squareNumberTool(), doubleNumberTool()], "Square 3 and double 10.", ...
+                testCase.toolCallResponse(toolCalls, firstTurnText), ...
+                testCase.textResponse("That is 9 and 20."));
+
+            % Both tools ran, each on the arguments of its own call.
+            toolResults = agent.Messages([agent.Messages.Role] == "tool");
+            testCase.assertNumElements(toolResults, 2);
+            testCase.verifyEqual(toolResults(1).Result, "{""result"":9}");
+            testCase.verifyEqual(toolResults(2).Result, "{""result"":20}");
+
+            % Every output names the call it answers, so the two results cannot
+            % be swapped: the square belongs to call_sq and the double to call_db.
+            % The text that arrived with the two calls is replayed ahead of them.
+            input = captured{2}.input;
+            testCase.assertNumElements(input, 6);
+            testCase.verifyEqual(input{2}.role, "assistant");
+            testCase.verifyEqual(input{2}.content, firstTurnText);
+            testCase.verifyEqual(input{3}.type, "function_call");
+            testCase.verifyEqual(input{3}.call_id, "call_sq");
+            testCase.verifyEqual(input{4}.type, "function_call");
+            testCase.verifyEqual(input{4}.call_id, "call_db");
+            testCase.verifyEqual(input{5}.type, "function_call_output");
+            testCase.verifyEqual(input{5}.call_id, "call_sq");
+            testCase.verifyEqual(input{5}.output, "{""result"":9}");
+            testCase.verifyEqual(input{6}.type, "function_call_output");
+            testCase.verifyEqual(input{6}.call_id, "call_db");
+            testCase.verifyEqual(input{6}.output, "{""result"":20}");
+        end
+    end
+
+    methods (Access=private)
+        function [answer, agent, captured] = runAgentOverTwoTurns(testCase, tools, prompt, firstResponse, secondResponse)
+            % Run an agent whose client answers with FIRSTRESPONSE then
+            % SECONDRESPONSE, capturing the parameter struct of each request.
+            % The client is built before the agent because it is a value
+            % class, so the agent holds a copy of the fake already installed.
+            turn = 0;
+            captured = {};
+            responses = {firstResponse, secondResponse};
+            client = testCase.createClient("gpt-4o", APIKey="fake-key");
+            client.sendRequestFcn = @fakeSendRequest;
+            agent = aisdk.AIAgent(client, Tools=tools, DisplayMode="off");
+            answer = run(agent, prompt);
+            testCase.assertNumElements(captured, 2, ...
+                "The agent should have sent exactly two requests.");
+
+            function [httpResponse, streamedText] = fakeSendRequest(parameters, ~, ~, ~, ~)
+                turn = turn + 1;
+                captured{turn} = parameters;
+                % Indexing rather than branching: a third request would
+                % fail here, which the assertion above reports.
+                httpResponse = responses{turn};
+                streamedText = "";
+            end
+        end
+    end
+
     methods (Access=protected)
         function response = textResponse(~, text)
             responseData = struct("output", {{messageItem(text)}}, ...
@@ -384,4 +500,21 @@ end
 
 function item = functionCallItemWithoutID(name, arguments)
     item = struct("type", "function_call", "name", name, "arguments", arguments);
+end
+
+function tool = squareNumberTool()
+    % An anonymous-function tool needs no file on the path.
+    tool = aisdk.LLMTool(@(x) x^2, Name="squareNumber", ...
+        Description="Square a number", ...
+        InputArguments=struct(x=2), ...
+        OutputArguments=struct(result=4), ...
+        ApprovalRequest="never");
+end
+
+function tool = doubleNumberTool()
+    tool = aisdk.LLMTool(@(x) 2*x, Name="doubleNumber", ...
+        Description="Double a number", ...
+        InputArguments=struct(x=2), ...
+        OutputArguments=struct(result=4), ...
+        ApprovalRequest="never");
 end

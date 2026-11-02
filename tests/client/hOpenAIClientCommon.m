@@ -81,6 +81,14 @@ classdef (Abstract) hOpenAIClientCommon < hconstructorCommon
             testCase.verifyEqual(client.BaseURL, "https://api.openai.com/v1/" + testCase.EndpointPath);
         end
 
+        function baseURL_environmentEndpointSet_usesEnvironmentEndpoint(testCase)
+            % OPENAI_API_ENDPOINT supplies the base URL when BaseURL is not given
+            import matlab.unittest.fixtures.EnvironmentVariableFixture
+            testCase.applyFixture(EnvironmentVariableFixture("OPENAI_API_ENDPOINT", "https://proxy.example.com/v1"));
+            client = testCase.createClient("gpt-4o");
+            testCase.verifyEqual(client.BaseURL, "https://proxy.example.com/v1/" + testCase.EndpointPath);
+        end
+
         function constructionWithoutAPIKey_succeeds(testCase)
             % Construction without API key defers error to generate time
             import matlab.unittest.fixtures.EnvironmentVariableFixture
