@@ -1,9 +1,15 @@
-function [response, streamedText] = sendRequest(parameters, token, endpoint, timeout, streamFcn, sendFcn)
+function response = sendRequest(parameters, token, endpoint, timeout, streamFcn, streamerFactory, sendFcn)
 % This function is undocumented and will change in a future release
 
 %sendRequest Sends a request to an ENDPOINT using PARAMETERS and
 %   api key TOKEN. TIMEOUT is the number of seconds to wait for initial
-%   server connection. STREAMFCN is an optional callback function.
+%   server connection. streamFcn is empty or a callback function.
+%   streamerFactory constructs the API-specific response consumer.
+%   sendFcn is an optional function handle called as
+%   RESPONSE = sendFcn(REQUEST, ENDPOINT, httpOpts, CONSUMER), where
+%   CONSUMER is [] for non-streaming requests. By default, it wraps
+%   matlab.net.http.RequestMessage.send. Tests can supply sendFcn to
+%   replace the HTTP transport.
 
 %   Copyright 2026 The MathWorks, Inc.
 
@@ -12,7 +18,8 @@ arguments
     token
     endpoint
     timeout
-    streamFcn = []
+    streamFcn
+    streamerFactory (1,1) function_handle
     sendFcn = @defaultSend
 end
 
@@ -35,18 +42,15 @@ httpOpts.ResponseTimeout = timeout;
 httpOpts.ProxyURI = getenv("HTTPS_PROXY");
 
 % Send the request and store the response
-streamedUsage = struct.empty;
-streamedOutput = {};
 if isempty(streamFcn)
     response = sendFcn(request, endpoint, httpOpts, []);
-    streamedText = "";
 else
     % User defined a stream callback function
-    consumer = aisdk.utils.ResponseStreamer(streamFcn);
+    consumer = streamerFactory(streamFcn);
+    if isa(consumer, "aisdk.client.internal.SSEResponseStreamer")
+        request.Header(end+1) = matlab.net.http.HeaderField("Accept", "text/event-stream");
+    end
     response = sendFcn(request, endpoint, httpOpts, consumer);
-    streamedText = consumer.ResponseText;
-    streamedUsage = consumer.Usage;
-    streamedOutput = consumer.StreamedOutputItems;
     if ~isempty(consumer.StreamError)
         aisdk.internal.throwError("aisdk:apiReturnedError", consumer.StreamError);
     end
@@ -54,44 +58,13 @@ end
 
 response.Body.Data = aisdk.client.internal.decodeResponseBody(response.Body.Data);
 
-% A streamed body is consumed by the consumer, so the token counts and the
-% output items it reassembled are folded back into the response body for the
-% caller to parse like a non-streamed one.
-if ~isempty(streamedUsage) || ~isempty(streamedOutput)
-    response.Body.Data = mergeStreamedFields(response.Body.Data, streamedUsage, streamedOutput);
-end
-end
+% A successful streamed body is consumed by the API-specific consumer.
+% Reconstruct the fields that the corresponding non-streamed decoder
+% expects. Preserve error bodies verbatim for provider error reporting.
+if ~isempty(streamFcn) && response.StatusCode == "OK"
 
-function data = mergeStreamedFields(data, usage, output)
-    if iscell(data)
-        % Ollama streams NDJSON chunks; the counts belong on the final one.
-        last = data{end};
-        if ~isstruct(last)
-            last = struct();
-        end
-        data{end} = mergeStreamedFields(last, usage, output);
-        return
-    end
-    if ~isstruct(data)
-        % Chat Completions and Responses stream SSE, which does not decode
-        % to JSON.
-        data = struct();
-    end
-    % Chat Completions and Responses.
-    if isfield(usage, "usage")
-        data.usage = usage.usage;
-    end
-    % Ollama.
-    if isfield(usage, "prompt_eval_count")
-        data.prompt_eval_count = usage.prompt_eval_count;
-    end
-    if isfield(usage, "eval_count")
-        data.eval_count = usage.eval_count;
-    end
-    % Responses.
-    if ~isempty(output)
-        data.output = output;
-    end
+    response.Body.Data = consumer.mergeResponseData(response.Body.Data);
+end
 end
 
 function response = defaultSend(request, endpoint, httpOpts, consumer)

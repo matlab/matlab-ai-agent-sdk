@@ -5,6 +5,13 @@ classdef tSendRequest < matlab.unittest.TestCase
 
     properties (TestParameter)
         EmptyToken = {[], "", ''};
+        StreamerFactory = struct( ...
+            "chatCompletions", @aisdk.client.internal.ChatCompletionsResponseStreamer, ...
+            "responses", @aisdk.client.internal.ResponsesResponseStreamer, ...
+            "ollama", @aisdk.client.internal.OllamaResponseStreamer);
+        SSEStreamerFactory = struct( ...
+            "chatCompletions", @aisdk.client.internal.ChatCompletionsResponseStreamer, ...
+            "responses", @aisdk.client.internal.ResponsesResponseStreamer);
     end
 
     methods (Test, TestTags = {'Unit'})
@@ -12,7 +19,8 @@ classdef tSendRequest < matlab.unittest.TestCase
             captured = {};
             aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "my-token", ...
-                "https://fake/v1", 10, [], @fakeSend);
+                "https://fake/v1", 10, [], ...
+                @aisdk.client.internal.ChatCompletionsResponseStreamer, @fakeSend);
 
             request = captured{1};
             headerNames = string({request.Header.Name});
@@ -36,7 +44,8 @@ classdef tSendRequest < matlab.unittest.TestCase
             captured = {};
             aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), EmptyToken, ...
-                "https://fake/v1", 10, [], @fakeSend);
+                "https://fake/v1", 10, [], ...
+                @aisdk.client.internal.ChatCompletionsResponseStreamer, @fakeSend);
 
             request = captured{1};
             headerNames = string({request.Header.Name});
@@ -54,10 +63,11 @@ classdef tSendRequest < matlab.unittest.TestCase
             captured = {};
             aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
-                "https://fake/v1", 10, @(~) [], @fakeSend);
+                "https://fake/v1", 10, @(~) [], ...
+                @aisdk.client.internal.ChatCompletionsResponseStreamer, @fakeSend);
 
             testCase.verifyClass(captured{1}, ...
-                "aisdk.utils.ResponseStreamer");
+                "aisdk.client.internal.ChatCompletionsResponseStreamer");
 
             function response = fakeSend(~, ~, ~, consumer)
                 captured{1} = consumer;
@@ -70,7 +80,8 @@ classdef tSendRequest < matlab.unittest.TestCase
             captured = {};
             aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
-                "https://fake/v1", 10, [], @fakeSend);
+                "https://fake/v1", 10, [], ...
+                @aisdk.client.internal.ChatCompletionsResponseStreamer, @fakeSend);
 
             testCase.verifyEmpty(captured{1});
 
@@ -81,10 +92,61 @@ classdef tSendRequest < matlab.unittest.TestCase
             end
         end
 
-        function sendRequest_decodesResponseBody(testCase)
-            [response, ~] = aisdk.client.internal.sendRequest( ...
+        function sendRequest_withSSEConsumer_requestsEventStream(testCase, SSEStreamerFactory)
+            captured = {};
+            aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
-                "https://fake/v1", 10, [], @fakeSend);
+                "https://example.invalid/v1", 10, @(~) [], ...
+                SSEStreamerFactory, @fakeSend);
+
+            request = captured{1};
+            accept = request.Header([request.Header.Name] == "Accept");
+            testCase.assertNumElements(accept, 1);
+            testCase.verifyEqual(accept.Value, "text/event-stream");
+
+            function response = fakeSend(request, ~, ~, ~)
+                captured{1} = request;
+                response = struct("StatusCode", "OK", "Body", struct("Data", ""));
+            end
+        end
+
+        function sendRequest_withOllamaConsumer_doesNotRequestEventStream(testCase)
+            captured = {};
+            aisdk.client.internal.sendRequest( ...
+                struct("model", "test"), "tok", ...
+                "https://example.invalid/v1", 10, @(~) [], ...
+                @aisdk.client.internal.OllamaResponseStreamer, @fakeSend);
+
+            request = captured{1};
+            testCase.verifyEmpty(request.Header([request.Header.Name] == "Accept"));
+
+            function response = fakeSend(request, ~, ~, ~)
+                captured{1} = request;
+                response = struct("StatusCode", "OK", "Body", struct("Data", ""));
+            end
+        end
+
+        function sendRequest_noStreamFcn_doesNotRequestEventStream(testCase, StreamerFactory)
+            captured = {};
+            aisdk.client.internal.sendRequest( ...
+                struct("model", "test"), "tok", ...
+                "https://example.invalid/v1", 10, [], ...
+                StreamerFactory, @fakeSend);
+
+            request = captured{1};
+            testCase.verifyEmpty(request.Header([request.Header.Name] == "Accept"));
+
+            function response = fakeSend(request, ~, ~, ~)
+                captured{1} = request;
+                response = struct("StatusCode", "OK", "Body", struct("Data", ""));
+            end
+        end
+
+        function sendRequest_decodesResponseBody(testCase)
+            response = aisdk.client.internal.sendRequest( ...
+                struct("model", "test"), "tok", ...
+                "https://fake/v1", 10, [], ...
+                @aisdk.client.internal.ChatCompletionsResponseStreamer, @fakeSend);
 
             testCase.verifyTrue(isstruct(response.Body.Data));
             testCase.verifyEqual(string(response.Body.Data.result), "hello");
@@ -95,24 +157,12 @@ classdef tSendRequest < matlab.unittest.TestCase
             end
         end
 
-        function sendRequest_noStreamFcn_returnsEmptyStreamedText(testCase)
-            [~, streamedText] = aisdk.client.internal.sendRequest( ...
-                struct("model", "test"), "tok", ...
-                "https://fake/v1", 10, [], @fakeSend);
-
-            testCase.verifyEqual(streamedText, "");
-
-            function response = fakeSend(~, ~, ~, ~)
-                response = struct("StatusCode", "OK", ...
-                    "Body", struct("Data", '{"ok":true}'));
-            end
-        end
-
         function sendRequest_setsTimeouts(testCase)
             captured = {};
             aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
-                "https://fake/v1", 42, [], @fakeSend);
+                "https://fake/v1", 42, [], ...
+                @aisdk.client.internal.ChatCompletionsResponseStreamer, @fakeSend);
 
             testCase.verifyEqual(captured{1}.ConnectTimeout, 42);
             testCase.verifyEqual(captured{1}.ResponseTimeout, 42);
@@ -126,9 +176,10 @@ classdef tSendRequest < matlab.unittest.TestCase
 
         function sendRequest_streamingWithOpenAIUsage_mergesUsageIntoStructBody(testCase)
             import matlab.unittest.constraints.HasField
-            [response, ~] = aisdk.client.internal.sendRequest( ...
+            response = aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
-                "https://fake/v1", 10, @(~) [], @fakeSend);
+                "https://fake/v1", 10, @(~) [], ...
+                @aisdk.client.internal.ChatCompletionsResponseStreamer, @fakeSend);
 
             testCase.verifyThat(response.Body.Data, HasField("usage"));
             testCase.verifyEqual(response.Body.Data.usage.prompt_tokens, 7);
@@ -145,16 +196,17 @@ classdef tSendRequest < matlab.unittest.TestCase
             end
         end
 
-        function sendRequest_streamingWithOllamaUsage_mergesUsageIntoCellBody(testCase)
-            [response, ~] = aisdk.client.internal.sendRequest( ...
+        function sendRequest_streamingWithOllamaUsage_reconstructsScalarBody(testCase)
+            response = aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
-                "https://fake/v1", 10, @(~) [], @fakeSend);
+                "https://fake/v1", 10, @(~) [], ...
+                @aisdk.client.internal.OllamaResponseStreamer, @fakeSend);
 
             data = response.Body.Data;
-            testCase.verifyClass(data, "cell");
-            testCase.verifyEqual(data{end}.prompt_eval_count, 5);
-            testCase.verifyEqual(data{end}.eval_count, 9);
-            testCase.verifyEqual(data{1}.done, false);
+            testCase.verifyClass(data, "struct");
+            testCase.verifyEqual(data.prompt_eval_count, 5);
+            testCase.verifyEqual(data.eval_count, 9);
+            testCase.verifyEqual(data.message.content, '');
 
             function response = fakeSend(~, ~, ~, consumer)
                 consumer.Usage = struct( ...
@@ -168,9 +220,10 @@ classdef tSendRequest < matlab.unittest.TestCase
 
         function sendRequest_streamingWithOutputItems_mergesOutputIntoBody(testCase)
             import matlab.unittest.constraints.HasField
-            [response, ~] = aisdk.client.internal.sendRequest( ...
+            response = aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
-                "https://fake/v1", 10, @(~) [], @fakeSendWithOutputItems);
+                "https://fake/v1", 10, @(~) [], ...
+                @aisdk.client.internal.ResponsesResponseStreamer, @fakeSendWithOutputItems);
 
             testCase.verifyThat(response.Body.Data, HasField("output"));
             testCase.verifyEqual(response.Body.Data.output{1}.call_id, "call_1");
@@ -189,7 +242,8 @@ classdef tSendRequest < matlab.unittest.TestCase
         function sendRequest_streamingWithStreamError_throwsApiReturnedError(testCase)
             testCase.verifyError(@() aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
-                "https://fake/v1", 10, @(~) [], @fakeSendWithStreamError), ...
+                "https://fake/v1", 10, @(~) [], ...
+                @aisdk.client.internal.ResponsesResponseStreamer, @fakeSendWithStreamError), ...
                 "aisdk:apiReturnedError");
 
             function response = fakeSendWithStreamError(~, ~, ~, consumer)
@@ -201,9 +255,10 @@ classdef tSendRequest < matlab.unittest.TestCase
 
         function sendRequest_streamingWithoutOutputItems_leavesBodyWithoutOutput(testCase)
             import matlab.unittest.constraints.HasField
-            [response, ~] = aisdk.client.internal.sendRequest( ...
+            response = aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
-                "https://fake/v1", 10, @(~) [], @fakeSendWithoutOutputItems);
+                "https://fake/v1", 10, @(~) [], ...
+                @aisdk.client.internal.ResponsesResponseStreamer, @fakeSendWithoutOutputItems);
 
             testCase.verifyThat(response.Body.Data, ~HasField("output"));
 
@@ -216,9 +271,10 @@ classdef tSendRequest < matlab.unittest.TestCase
 
         function sendRequest_streamingWithoutUsage_leavesBodyUnchanged(testCase)
             import matlab.unittest.constraints.HasField
-            [response, ~] = aisdk.client.internal.sendRequest( ...
+            response = aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
-                "https://fake/v1", 10, @(~) [], @fakeSend);
+                "https://fake/v1", 10, @(~) [], ...
+                @aisdk.client.internal.ChatCompletionsResponseStreamer, @fakeSend);
 
             testCase.verifyEqual(string(response.Body.Data.id), "x");
             testCase.verifyThat(response.Body.Data, ~HasField("usage"));
@@ -229,24 +285,29 @@ classdef tSendRequest < matlab.unittest.TestCase
             end
         end
 
-        function sendRequest_streamingCallback_returnsConsumerResponseText(testCase)
-            [~, streamedText] = aisdk.client.internal.sendRequest( ...
+        function sendRequest_streamingNonJSONError_preservesBody( ...
+                testCase, StreamerFactory)
+            serverText = "<html>Bad gateway</html>";
+
+            response = aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
-                "https://fake/v1", 10, @(~) [], @fakeSend);
+                "https://example.invalid/v1", 10, @(~) [], ...
+                StreamerFactory, @fakeSend);
 
-            testCase.verifyEqual(streamedText, "hello world");
+            testCase.verifyEqual(string(response.Body.Data), serverText);
 
-            function response = fakeSend(~, ~, ~, consumer)
-                consumer.ResponseText = "hello world";
-                response = struct("StatusCode", "OK", ...
-                    "Body", struct("Data", '{"ok":true}'));
+            function response = fakeSend(~, ~, ~, ~)
+                response = struct( ...
+                    "StatusCode", "BadGateway", ...
+                    "Body", struct("Data", serverText));
             end
         end
 
         function sendRequestWrapper_delegatesToSendRequest(testCase)
             response = aisdk.client.internal.sendRequestWrapper( ...
                 struct("model", "test"), "tok", ...
-                "https://fake/v1", 10, [], @fakeSend);
+                "https://fake/v1", 10, [], ...
+                @aisdk.client.internal.ChatCompletionsResponseStreamer, @fakeSend);
 
             testCase.verifyEqual(string(response.Body.Data.result), "wrapped");
 

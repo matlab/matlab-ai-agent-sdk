@@ -58,21 +58,21 @@ end
 
 parameters = buildParametersCall(model, messages, functions, nvp);
 
-[response, streamedText] = nvp.sendRequestFcn(parameters,[], nvp.Endpoint,nvp.TimeOut,nvp.StreamFcn);
+response = nvp.sendRequestFcn( ...
+    parameters, [], nvp.Endpoint, nvp.TimeOut, nvp.StreamFcn, ...
+    @aisdk.client.internal.OllamaResponseStreamer);
 
 % If call errors, "choices" will not be part of response.Body.Data, instead
 % we get response.Body.Data.error
 if response.StatusCode=="OK"
-    % Outputs the first generation
-    if isempty(nvp.StreamFcn)
-        if iscell(response.Body.Data)
-            message = response.Body.Data{1}.message;
-        else
-            message = response.Body.Data.message;
-        end
+    if iscell(response.Body.Data)
+        message = response.Body.Data{1}.message;
     else
-        message = struct("role", "assistant", ...
-            "content", streamedText);
+        message = response.Body.Data.message;
+    end
+    if isfield(message, "tool_calls")
+        message.tool_calls = ...
+            aisdk.client.internal.normalizeToolCallsShape(message.tool_calls);
     end
     text = string(message.content);
     % API may return content: null, normalize to scalar ""

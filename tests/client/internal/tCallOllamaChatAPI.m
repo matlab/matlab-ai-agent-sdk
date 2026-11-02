@@ -43,21 +43,46 @@ classdef tCallOllamaChatAPI < matlab.unittest.TestCase
             params = callAPIAndCaptureRequest(TopK=Inf);
             testCase.verifyFalse(isfield(params.options, "top_k"));
         end
+
+        function nonStreamingToolCalls_areNormalizedToColumnCell(testCase)
+            toolCalls = struct( ...
+                "function", { ...
+                    struct("name", "first", "arguments", struct()), ...
+                    struct("name", "second", "arguments", struct())});
+            apiMessage = struct( ...
+                "role", "assistant", ...
+                "content", "", ...
+                "tool_calls", toolCalls);
+
+            [~, ~, message] = callAPIAndCaptureRequest(APIMessage=apiMessage);
+
+            testCase.verifyClass(message.tool_calls, "cell");
+            testCase.verifySize(message.tool_calls, [2 1]);
+            testCase.verifyEqual(message.tool_calls{2}.function.name, "second");
+        end
+
+        function request_usesOllamaStreamerFactory(testCase)
+            [~, streamerFactory] = callAPIAndCaptureRequest();
+            testCase.verifyEqual( ...
+                streamerFactory, ...
+                @aisdk.client.internal.OllamaResponseStreamer);
+        end
     end
 
 end
 
-function params = callAPIAndCaptureRequest(nvp)
+function [params, streamerFactory, message] = callAPIAndCaptureRequest(nvp)
     arguments
         nvp.Temperature       = "auto"
         nvp.StopSequences     = strings(1,0)
         nvp.ResponseFormat    = "text"
         nvp.Tools             = []
         nvp.TopK              = "auto"
+        nvp.APIMessage        = struct("role", "assistant", "content", "fake")
     end
     captured = {};
     messages = {struct("role", "user", "content", "Hello")};
-    aisdk.client.internal.callOllamaChatAPI("qwen3:0.6b", messages, nvp.Tools, ...
+    [~, message] = aisdk.client.internal.callOllamaChatAPI("qwen3:0.6b", messages, nvp.Tools, ...
         ToolChoice=[], Temperature=nvp.Temperature, TopP="auto", ...
         MinP="auto", TopK=nvp.TopK, TailFreeSamplingZ="auto", ...
         StopSequences=nvp.StopSequences, MaxNumTokens=inf, ...
@@ -67,10 +92,10 @@ function params = callAPIAndCaptureRequest(nvp)
 
     params = captured{1};
 
-    function [response, streamedText] = fakeSendRequest(parameters, ~, ~, ~, ~)
+    function response = fakeSendRequest(parameters, ~, ~, ~, ~, factory)
         captured{1} = parameters;
-        responseData = struct("message", struct("role", "assistant", "content", "fake"));
+        streamerFactory = factory;
+        responseData = struct("message", nvp.APIMessage);
         response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
-        streamedText = "";
     end
 end

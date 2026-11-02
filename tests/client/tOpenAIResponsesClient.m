@@ -109,15 +109,54 @@ classdef tOpenAIResponsesClient < hOpenAIClientCommon
         end
 
         %% generate — streaming
-        function generate_streamedText_returnsStreamedDeltas(testCase)
-            responseData = struct("output", {{messageItem("Hello world")}}, "usage", ...
-                struct("input_tokens", 4, "output_tokens", 6, "total_tokens", 10));
-            client = streamingClient(responseData, "Hello world");
-            [text, messages, info] = generate(client, "Hi");
-            testCase.verifyEqual(text, "Hello world");
-            testCase.verifyClass(messages, "aisdk.LLMTextMessage");
-            testCase.verifyEqual(messages.Text, "Hello world");
-            testCase.verifyEqual(info.Tokens.NumTotalTokens, 10);
+        function generate_streamedTextOnly_returnsTextMessage(testCase)
+            client = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) []);
+
+            txt1 = "Hello ";
+            txt2 = "world";
+            responseData = responsesSplitTextOnlyStream(txt1, txt2);
+
+            hClientTestUtils.verifyStreamedTextOnly( ...
+                testCase, client, responseData, txt1 + txt2);
+        end
+
+        function generate_streamedJSONLookingText_returnsTextMessage(testCase)
+            client = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) []);
+
+            txt1 = "Arguments: ";
+            txt2 = "{""a"":1}";
+            responseData = responsesSplitTextOnlyStream(txt1, txt2);
+
+            hClientTestUtils.verifyStreamedTextOnly( ...
+                testCase, client, responseData, txt1 + txt2);
+        end
+
+        function generate_streamedUsage_matchesNonStreamedUsage(testCase)
+            streamer = aisdk.client.internal.ResponsesResponseStreamer(@(~) []);
+            event = ['{"type":"response.completed","response":{"usage":{' ...
+                '"input_tokens":10,"output_tokens":5,"total_tokens":15,' ...
+                '"input_tokens_details":{"cached_tokens":3}}}}'];
+            streamedData = hClientTestUtils.streamEventsAndMergeResponse( ...
+                streamer, event, "sse");
+
+            streamedClient = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) []);
+            streamedClient.sendRequestFcn = @streamedResponse;
+            [~, ~, streamedInfo] = generate(streamedClient, "Hi");
+
+            nonStreamedClient = testCase.clientWithFakeHTTP( ...
+                testCase.textResponse("ok"));
+            [~, ~, nonStreamedInfo] = generate(nonStreamedClient, "Hi");
+
+            testCase.verifyEqual(streamedInfo.Tokens, nonStreamedInfo.Tokens);
+
+            function response = streamedResponse(~, ~, ~, ~, ~, ~)
+                response = struct( ...
+                    "StatusCode", "OK", ...
+                    "Body", struct("Data", streamedData));
+            end
         end
 
         function generate_streamedToolCall_returnsToolCallMessage(testCase)
@@ -125,7 +164,7 @@ classdef tOpenAIResponsesClient < hOpenAIClientCommon
                 "name", "getWeather", "arguments", '{"city":"Oslo"}');
             responseData = struct("output", {{fcItem}}, ...
                 "usage", struct("input_tokens", 4, "output_tokens", 6, "total_tokens", 10));
-            client = streamingClient(responseData, "");
+            client = streamingClient(responseData);
             [~, messages] = generate(client, "What's the weather?");
             testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
             testCase.verifyEqual(messages.Name, "getWeather");
@@ -134,19 +173,11 @@ classdef tOpenAIResponsesClient < hOpenAIClientCommon
         end
 
         function generate_streamedParallelToolCalls_returnsAllMessages(testCase)
-            fcItem1 = struct("type", "function_call", "call_id", "call_1", ...
-                "name", "toolA", "arguments", '{"x":1}');
-            fcItem2 = struct("type", "function_call", "call_id", "call_2", ...
-                "name", "toolB", "arguments", '{"y":2}');
-            responseData = struct("output", {{fcItem1, fcItem2}}, ...
-                "usage", struct("input_tokens", 4, "output_tokens", 6, "total_tokens", 10));
-            client = streamingClient(responseData, "");
-            [~, messages] = generate(client, "Call both");
-            testCase.verifyNumElements(messages, 2);
-            testCase.verifyEqual(messages(1).Name, "toolA");
-            testCase.verifyEqual(messages(1).ToolCallID, "call_1");
-            testCase.verifyEqual(messages(2).Name, "toolB");
-            testCase.verifyEqual(messages(2).ToolCallID, "call_2");
+            client = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) []);
+            responseData = responsesParallelToolCallResponse();
+
+            hClientTestUtils.verifyStreamedParallelToolCalls(testCase, client, responseData);
         end
 
         function generate_streamedTextAndToolCall_returnsTextMessageAndToolCall(testCase)
@@ -154,7 +185,7 @@ classdef tOpenAIResponsesClient < hOpenAIClientCommon
                 "name", "getWeather", "arguments", '{"city":"Oslo"}');
             responseData = struct("output", {{messageItem("Checking."), fcItem}}, ...
                 "usage", struct("input_tokens", 4, "output_tokens", 6, "total_tokens", 10));
-            client = streamingClient(responseData, "Checking.");
+            client = streamingClient(responseData);
             [~, messages] = generate(client, "What's the weather?");
             testCase.assertNumElements(messages, 2);
             testCase.verifyEqual(messages(1).Text, "Checking.");
@@ -164,30 +195,65 @@ classdef tOpenAIResponsesClient < hOpenAIClientCommon
         function generate_streamedTextAroundToolCall_keepsItemOrder(testCase)
             responseData = struct("output", {interleavedOutput()}, ...
                 "usage", struct("input_tokens", 4, "output_tokens", 6, "total_tokens", 10));
-            client = streamingClient(responseData, "Let me check.Done.");
+            client = streamingClient(responseData);
             [text, messages] = generate(client, "What's the weather?");
             testCase.verifyEqual(text, "Let me check.Done.");
             verifyInterleavedMessages(testCase, messages);
         end
 
         function generate_streamedTextWithoutMessageItem_throwsUnreadableResponse(testCase)
-            % A stream that is not Responses-shaped, such as Chat Completions
-            % chunks, yields text but no output items.
-            responseData = struct("usage", ...
-                struct("input_tokens", 4, "output_tokens", 6, "total_tokens", 10));
-            client = streamingClient(responseData, "Hello world");
+            client = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) [], ...
+                BaseURL="https://example.invalid/v1");
+
+            % The Responses endpoint sends Chat Completions text instead.
+            streamData = ['data: {"choices":[{"index":0,"delta":{"role":"assistant",' ...
+                '"content":"Hello world"},"finish_reason":"stop"}]}' newline newline];
+            client.sendRequestFcn = @(varargin) ...
+                hSendRequestWithStreamData(streamData, varargin{:});
+
             testCase.verifyError(@() generate(client, "Hi"), "aisdk:unreadableResponse");
         end
 
         function generate_streamedToolCallWithoutItems_throwsUnreadableResponse(testCase)
-            % A Chat Completions stream leaves a tool call in the streamed
-            % text as JSON, without output items.
-            toolCallJSON = "{""id"":""call_1"",""type"":""function""," + ...
-                """function"":{""name"":""getWeather"",""arguments"":""{}""}}";
-            responseData = struct("usage", ...
-                struct("input_tokens", 4, "output_tokens", 6, "total_tokens", 10));
-            client = streamingClient(responseData, toolCallJSON);
-            testCase.verifyError(@() generate(client, "What's the weather?"), "aisdk:unreadableResponse");
+            client = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) [], ...
+                BaseURL="https://example.invalid/v1");
+
+            % The Responses endpoint sends a Chat Completions tool call instead.
+            streamData = ['data: {"choices":[{"index":0,"delta":{"tool_calls":[' ...
+                '{"index":0,"id":"call_1","type":"function",' ...
+                '"function":{"name":"getWeather","arguments":"{}"}}' ...
+                ']},"finish_reason":"tool_calls"}]}' newline newline];
+            client.sendRequestFcn = @(varargin) ...
+                hSendRequestWithStreamData(streamData, varargin{:});
+
+            testCase.verifyError(@() generate(client, "What's the weather?"), ...
+                "aisdk:unreadableResponse");
+        end
+
+        function generate_streamedEmptyCompletion_returnsEmptyText(testCase)
+            client = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) [], ...
+                BaseURL="https://example.invalid/v1");
+
+            streamData = ['data: {"type":"response.completed","response":{' ...
+                '"id":"resp_1","object":"response","status":"completed","output":[],' ...
+                '"usage":{"input_tokens":4,"output_tokens":0,"total_tokens":4}}}' ...
+                newline newline];
+            client.sendRequestFcn = @(varargin) ...
+                hSendRequestWithStreamData(streamData, varargin{:});
+
+            [text, messages, info] = generate(client, "Hi");
+
+            testCase.verifyEqual(text, "");
+            testCase.verifyNumElements(messages, 1);
+            testCase.verifyClass(messages, "aisdk.LLMTextMessage");
+            testCase.verifyEqual(messages.Role, "assistant");
+            testCase.verifyEqual(messages.Text, "");
+            testCase.verifyEqual(info.Tokens.NumInputTokens, 4);
+            testCase.verifyEqual(info.Tokens.NumOutputTokens, 0);
+            testCase.verifyEqual(info.Tokens.NumTotalTokens, 4);
         end
 
         %% generate — output item order
@@ -457,19 +523,53 @@ classdef tOpenAIResponsesClient < hOpenAIClientCommon
 
 end
 
-function client = streamingClient(responseData, streamedText)
-    % Stands in for a streamed call: sendRequest returns the text collected
-    % from the deltas plus a body carrying the reassembled output items.
+function client = streamingClient(responseData)
+    % Stands in for a streamed call with a reconstructed non-streamed body.
     client = aisdk.client.OpenAIResponsesClient("gpt-4o", APIKey="fake-key", ...
         StreamFcn=@(~) []);
     mockResponse = struct("StatusCode", "OK", "Body", struct("Data", responseData));
-    client.sendRequestFcn = @(~,~,~,~,~) deal(mockResponse, streamedText);
+    client.sendRequestFcn = @(~,~,~,~,~,~) mockResponse;
+end
+
+function response = hSendRequestWithStreamData(streamData, varargin)
+    % Exercise sendRequest and its selected streamer with a fake HTTP transport.
+    response = aisdk.client.internal.sendRequest(varargin{:}, @fakeSend);
+
+    function response = fakeSend(~, endpoint, ~, consumer)
+        consumer.URI = matlab.net.URI(endpoint);
+        bytes = unicode2native(char(streamData), "UTF-8")';
+        consumer.doPutData(bytes, false);
+        consumer.doPutData(uint8.empty(0,1), false);
+        response = struct("StatusCode", "OK", "Body", struct("Data", ""));
+    end
 end
 
 function output = interleavedOutput()
     fcItem = struct("type", "function_call", "call_id", "call_1", ...
         "name", "getWeather", "arguments", '{"city":"Paris"}');
     output = {messageItem("Let me check."), fcItem, messageItem("Done.")};
+end
+
+function data = responsesParallelToolCallResponse()
+    streamer = aisdk.client.internal.ResponsesResponseStreamer(@(~) []);
+    events = {
+        '{"type":"response.output_item.done","output_index":0,"item":{"id":"fc_1","type":"function_call","call_id":"call_1","name":"toolA","arguments":"{\"x\":1}"}}'
+        '{"type":"response.output_item.done","output_index":1,"item":{"id":"fc_2","type":"function_call","call_id":"call_2","name":"toolB","arguments":"{\"y\":2}"}}'
+        };
+    data = hClientTestUtils.streamEventsAndMergeResponse( ...
+        streamer, events, "sse");
+end
+
+function data = responsesSplitTextOnlyStream(txt1, txt2)
+    streamer = aisdk.client.internal.ResponsesResponseStreamer(@(~) []);
+    txt1 = hClientTestUtils.escapeJSONText(txt1);
+    txt2 = hClientTestUtils.escapeJSONText(txt2);
+    events = [
+        "{""type"":""response.output_text.delta"",""item_id"":""msg_1"",""delta"":""" + txt1 + """}"
+        "{""type"":""response.output_text.delta"",""item_id"":""msg_1"",""delta"":""" + txt2 + """}"
+        ];
+    data = hClientTestUtils.streamEventsAndMergeResponse( ...
+        streamer, events, "sse");
 end
 
 function verifyInterleavedMessages(testCase, messages)

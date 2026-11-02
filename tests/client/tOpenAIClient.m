@@ -47,6 +47,64 @@ classdef tOpenAIClient < hOpenAIClientCommon
             [text, ~] = generate(client, "Call a tool");
             testCase.verifyEqual(text, "");
         end
+
+        function generate_streamedUsage_matchesNonStreamedUsage(testCase)
+            streamer = aisdk.client.internal.ChatCompletionsResponseStreamer(@(~) []);
+            event = ['{"choices":[],"usage":{"prompt_tokens":10,' ...
+                '"completion_tokens":5,"total_tokens":15,' ...
+                '"prompt_tokens_details":{"cached_tokens":3}}}'];
+            streamedData = hClientTestUtils.streamEventsAndMergeResponse( ...
+                streamer, event, "sse");
+
+            streamedClient = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) []);
+            streamedClient.sendRequestFcn = @streamedResponse;
+            [~, ~, streamedInfo] = generate(streamedClient, "Hi");
+
+            nonStreamedClient = testCase.clientWithFakeHTTP( ...
+                testCase.textResponse("ok"));
+            [~, ~, nonStreamedInfo] = generate(nonStreamedClient, "Hi");
+
+            testCase.verifyEqual(streamedInfo.Tokens, nonStreamedInfo.Tokens);
+
+            function response = streamedResponse(~, ~, ~, ~, ~, ~)
+                response = struct( ...
+                    "StatusCode", "OK", ...
+                    "Body", struct("Data", streamedData));
+            end
+        end
+
+        function generate_streamedParallelToolCalls_returnsAllMessages(testCase)
+            client = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) []);
+            responseData = chatCompletionsParallelToolCallResponse();
+
+            hClientTestUtils.verifyStreamedParallelToolCalls(testCase, client, responseData);
+        end
+
+        function generate_streamedTextOnly_returnsTextMessage(testCase)
+            client = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) []);
+
+            txt1 = "Hello ";
+            txt2 = "world";
+            responseData = chatCompletionsSplitTextOnlyStream(txt1, txt2);
+
+            hClientTestUtils.verifyStreamedTextOnly( ...
+                testCase, client, responseData, txt1 + txt2);
+        end
+
+        function generate_streamedJSONLookingText_returnsTextMessage(testCase)
+            client = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) []);
+
+            txt1 = "Arguments: ";
+            txt2 = "{""a"":1}";
+            responseData = chatCompletionsSplitTextOnlyStream(txt1, txt2);
+
+            hClientTestUtils.verifyStreamedTextOnly( ...
+                testCase, client, responseData, txt1 + txt2);
+        end
     end
 
     methods (Access=protected)
@@ -155,6 +213,28 @@ function response = toolCallReply(wireCalls, text)
     responseData = struct("choices", struct("message", message), ...
         "usage", struct("prompt_tokens", 5, "completion_tokens", 5, "total_tokens", 10));
     response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
+end
+
+function data = chatCompletionsParallelToolCallResponse()
+    streamer = aisdk.client.internal.ChatCompletionsResponseStreamer(@(~) []);
+    events = {
+        '{"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_1","type":"function","function":{"name":"toolA","arguments":"{\"x\":1}"}}]}}]}'
+        '{"choices":[{"delta":{"tool_calls":[{"index":1,"id":"call_2","type":"function","function":{"name":"toolB","arguments":"{\"y\":2}"}}]}}]}'
+        };
+    data = hClientTestUtils.streamEventsAndMergeResponse( ...
+        streamer, events, "sse");
+end
+
+function data = chatCompletionsSplitTextOnlyStream(txt1, txt2)
+    streamer = aisdk.client.internal.ChatCompletionsResponseStreamer(@(~) []);
+    txt1 = hClientTestUtils.escapeJSONText(txt1);
+    txt2 = hClientTestUtils.escapeJSONText(txt2);
+    events = [
+        "{""choices"":[{""delta"":{""role"":""assistant"",""content"":""" + txt1 + """}}]}"
+        "{""choices"":[{""delta"":{""content"":""" + txt2 + """},""finish_reason"":""stop""}]}"
+        ];
+    data = hClientTestUtils.streamEventsAndMergeResponse( ...
+        streamer, events, "sse");
 end
 
 function wireCall = toWireToolCall(toolCall)

@@ -217,14 +217,12 @@ classdef OllamaClient < aisdk.client.ClientBase
 
             if isfield(message, "tool_calls")
                 toolCalls = message.tool_calls;
-                if iscell(toolCalls)
-                    toolCalls = [toolCalls{:}];
-                end
                 messages = aisdk.LLMToolCallMessage.empty(1,0);
                 for i = 1:numel(toolCalls)
-                    tc = toolCalls(i).function;
-                    if isfield(toolCalls(i), "id")
-                        id = string(toolCalls(i).id);
+                    toolCall = toolCalls{i};
+                    tc = toolCall.function;
+                    if isfield(toolCall, "id")
+                        id = string(toolCall.id);
                     elseif isfield(tc, "index")
                         id = string(tc.index);
                     else

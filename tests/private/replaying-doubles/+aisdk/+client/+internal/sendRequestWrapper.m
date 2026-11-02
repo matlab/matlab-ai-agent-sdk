@@ -1,4 +1,4 @@
-function [response, streamedText] = sendRequestWrapper(parameters, token, varargin)
+function response = sendRequestWrapper(parameters, token, varargin)
 % This function is undocumented and will change in a future release
 
 %   Copyright 2026 The MathWorks, Inc.
@@ -22,7 +22,6 @@ end
 result = seenCalls{1,2};
 response = result{1};
 streamFunCalls = result{2};
-streamedText = result{3};
 
 if nargin >= 5 && isa(varargin{3},'function_handle')
     streamFun = varargin{3};

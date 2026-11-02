@@ -34,7 +34,9 @@ end
 
 parameters = buildParametersCall(inMessages, tools, nvp);
 
-[response, streamedText] = nvp.sendRequestFcn(parameters, nvp.APIKey, nvp.Endpoint, nvp.TimeOut, nvp.StreamFcn);
+response = nvp.sendRequestFcn( ...
+    parameters, nvp.APIKey, nvp.Endpoint, nvp.TimeOut, nvp.StreamFcn, ...
+    @aisdk.client.internal.ResponsesResponseStreamer);
 
 % If the call errors, "output" will not be part of response.Body.Data;
 % instead we get response.Body.Data.error.
@@ -42,16 +44,7 @@ if response.StatusCode == "OK"
     % A streamed body carries the output items the streamer reassembled,
     % in the same shape a non-streamed body uses.
     outputItems = responseOutputItems(response.Body.Data);
-    if isempty(nvp.StreamFcn)
-        text = outputText(outputItems);
-    else
-        % Streaming takes the assistant text from the emitted output_text
-        % deltas.
-        text = string(streamedText);
-        if isempty(text)
-            text = "";
-        end
-    end
+    text = outputText(outputItems);
 else
     text = "";
     outputItems = cell(1,0);

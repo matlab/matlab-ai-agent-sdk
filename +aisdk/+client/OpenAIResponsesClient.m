@@ -129,8 +129,6 @@ classdef OpenAIResponsesClient < aisdk.client.internal.OpenAIBase
 
             if isempty(nvp.StreamFcn)
                 this.validateResponsesReply(response);
-            else
-                this.validateStreamedReply(text, outputItems);
             end
 
             [text, messages, info] = this.processAPIResponse(text, outputItems, response, nvp.ResponseFormat);
@@ -249,14 +247,6 @@ classdef OpenAIResponsesClient < aisdk.client.internal.OpenAIBase
             aisdk.internal.throwError("aisdk:unreadableResponse", this.BaseURL);
         end
 
-        function validateStreamedReply(this, text, output)
-            %validateStreamedReply Error if streamed TEXT arrived without a
-            %   message item among the reassembled OUTPUT items.
-            if strlength(text) > 0 && ~any(cellfun(@isMessageItem, output))
-                aisdk.internal.throwError("aisdk:unreadableResponse", this.BaseURL);
-            end
-        end
-
         function path = endpointPath(~)
             path = "responses";
         end
@@ -301,10 +291,6 @@ function tf = hasReadableOutput(data)
     else
         tf = false;
     end
-end
-
-function tf = isMessageItem(item)
-    tf = isstruct(item) && isfield(item, "type") && string(item.type) == "message";
 end
 
 function parts = appendTextMessage(parts, text)

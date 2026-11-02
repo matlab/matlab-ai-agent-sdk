@@ -171,14 +171,14 @@ classdef (Abstract) hOpenAIClientCommon < hconstructorCommon
             testCase.applyFixture(EnvironmentVariableFixture("OPENAI_API_KEY", ""));
             client = testCase.createClient("gpt-4o");
             unauthorized = errorResponse(matlab.net.http.StatusCode.Unauthorized, "Invalid API key");
-            client.sendRequestFcn = @(~,~,~,~,~) deal(unauthorized, "");
+            client.sendRequestFcn = @(~,~,~,~,~,~) unauthorized;
             testCase.verifyError(@() client.generate("hello"), "aisdk:client:missingAPIKey");
         end
 
         function generate_unauthorizedResponseWithAPIKey_throwsApiReturnedError(testCase)
             client = testCase.createClient("gpt-4o", APIKey="wrong-key");
             unauthorized = errorResponse(matlab.net.http.StatusCode.Unauthorized, "Invalid API key");
-            client.sendRequestFcn = @(~,~,~,~,~) deal(unauthorized, "");
+            client.sendRequestFcn = @(~,~,~,~,~,~) unauthorized;
             testCase.verifyError(@() client.generate("hello"), "aisdk:apiReturnedError");
         end
 
@@ -223,8 +223,7 @@ classdef (Abstract) hOpenAIClientCommon < hconstructorCommon
         function generate_toolCallsNoText_returnsEmptyText(testCase)
             client = testCase.clientWithFakeHTTP(testCase.toolCallResponse( ...
                 {toolCallFixture()}, ""));
-            [text, ~] = generate(client, "Call a tool");
-            testCase.verifyEqual(text, "");
+            hClientTestUtils.verifyToolCallsNoText(testCase, client);
         end
 
         function generate_toolCallsWithText_returnsTextAndToolCalls(testCase)
@@ -397,7 +396,7 @@ classdef (Abstract) hOpenAIClientCommon < hconstructorCommon
     methods (Access=protected)
         function client = clientWithFakeHTTP(testCase, mockResponse)
             client = testCase.createClient("gpt-4o", APIKey="fake-key");
-            client.sendRequestFcn = @(~,~,~,~,~) deal(mockResponse, "");
+            client.sendRequestFcn = @(~,~,~,~,~,~) mockResponse;
         end
 
         function params = generateAndCaptureRequest(testCase, messages, varargin)
@@ -411,10 +410,9 @@ classdef (Abstract) hOpenAIClientCommon < hconstructorCommon
             generate(client, messages, varargin{:});
             params = captured{1};
 
-            function [response, streamedText] = fakeSendRequest(parameters, ~, ~, ~, ~)
+            function response = fakeSendRequest(parameters, ~, ~, ~, ~, ~)
                 captured{1} = parameters;
                 response = testCase.textResponse(replyText);
-                streamedText = "";
             end
         end
     end

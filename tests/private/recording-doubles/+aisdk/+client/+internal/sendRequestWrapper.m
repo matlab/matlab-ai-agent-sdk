@@ -1,4 +1,4 @@
-function [response, streamedText] = sendRequestWrapper(parameters, token, varargin)
+function response = sendRequestWrapper(parameters, token, varargin)
 % This function is undocumented and will change in a future release
 
 %   Copyright 2026 The MathWorks, Inc.
@@ -36,7 +36,7 @@ if hasCallback
 end
 
 
-[response, streamedText] = aisdk.client.internal.sendRequest(parameters, token, varargin{:});
+response = aisdk.client.internal.sendRequest(parameters, token, varargin{:});
 
-seenCalls(end+1,:) = {{parameters},{response,streamFunCalls,streamedText}};
+seenCalls(end+1,:) = {{parameters},{response,streamFunCalls}};
 end

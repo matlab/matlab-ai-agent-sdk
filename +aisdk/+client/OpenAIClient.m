@@ -183,12 +183,9 @@ classdef OpenAIClient < aisdk.client.internal.OpenAIBase
                 return
             end
             toolCalls = message.tool_calls;
-            if iscell(toolCalls)
-                toolCalls = [toolCalls{:}];
-            end
             messages = aisdk.LLMToolCallMessage.empty(1,0);
             for i = 1:numel(toolCalls)
-                tc = toolCalls(i);
+                tc = toolCalls{i};
                 if isfield(tc, "id")
                     id = string(tc.id);
                 else

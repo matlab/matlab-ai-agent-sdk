@@ -28,6 +28,13 @@ classdef tCallResponsesAPI < matlab.unittest.TestCase
             testCase.verifyFalse(params.stream);
         end
 
+        function request_usesResponsesStreamerFactory(testCase)
+            [~, streamerFactory] = callAPIAndCaptureRequest();
+            testCase.verifyEqual( ...
+                streamerFactory, ...
+                @aisdk.client.internal.ResponsesResponseStreamer);
+        end
+
         function buildParams_toolsAdded_asFlatFunctions(testCase)
             import matlab.unittest.constraints.HasField
             tools = {struct("type","function","name","myTool","parameters",struct())};
@@ -146,16 +153,16 @@ classdef tCallResponsesAPI < matlab.unittest.TestCase
         end
 
         %% Streaming
-        function streaming_textOnly_returnsStreamedText(testCase)
+        function streaming_reconstructedBody_returnsText(testCase)
             msgItem = struct("type", "message", "role", "assistant", ...
                 "content", {{struct("type", "output_text", "text", "Hello world")}});
-            [text, items] = callStreamed(testCase, "Hello world", {msgItem});
+            [text, items] = callStreamed(testCase, {msgItem});
             testCase.verifyEqual(text, "Hello world");
             testCase.verifyEqual(items, {msgItem});
         end
 
-        function streaming_noStreamedText_returnsEmptyString(testCase)
-            [text, items] = callStreamedWithoutItems(testCase, []);
+        function streaming_withoutOutputItems_returnsEmptyString(testCase)
+            [text, items] = callStreamedWithoutItems(testCase);
             testCase.verifyEqual(text, "");
             testCase.verifyEqual(items, cell(1,0));
         end
@@ -167,7 +174,7 @@ classdef tCallResponsesAPI < matlab.unittest.TestCase
                 "content", {{struct("type", "output_text", "text", "Let me check")}});
             fcItem = struct("type", "function_call", "call_id", "call_7", ...
                 "name", "getWeather", "arguments", '{"city":"Oslo"}');
-            [text, items] = callStreamed(testCase, "Let me check", {msgItem, fcItem});
+            [text, items] = callStreamed(testCase, {msgItem, fcItem});
             testCase.verifyEqual(text, "Let me check");
             testCase.verifyEqual(items, {msgItem, fcItem});
         end
@@ -182,7 +189,7 @@ classdef tCallResponsesAPI < matlab.unittest.TestCase
 
 end
 
-function params = callAPIAndCaptureRequest(nvp)
+function [params, streamerFactory] = callAPIAndCaptureRequest(nvp)
     arguments
         nvp.ReasoningEffort (1,1) string = "auto"
         nvp.Verbosity       (1,1) string = "auto"
@@ -204,38 +211,33 @@ function params = callAPIAndCaptureRequest(nvp)
 
     params = captured{1};
 
-    function [response, streamedText] = fakeSendRequest(parameters, ~, ~, ~, ~)
+    function response = fakeSendRequest(parameters, ~, ~, ~, ~, factory)
         captured{1} = parameters;
+        streamerFactory = factory;
         msgItem = struct("type", "message", "role", "assistant", ...
             "content", {{struct("type", "output_text", "text", "fake")}});
         responseData = struct("output", {{msgItem}}, ...
             "usage", struct("input_tokens", 0, "output_tokens", 0, "total_tokens", 0));
         response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
-        streamedText = "";
     end
 end
 
-function [text, items] = callStreamed(~, streamedText, outputItems)
-% Call with a StreamFcn set, simulating what sendRequest returns after a
-% streamed call: STREAMEDTEXT is the joined output_text deltas, and the
-% body holds only the token usage and the OUTPUTITEMS the streamer
-% reassembled.
+function [text, items] = callStreamed(~, outputItems)
+% Call with a StreamFcn set and a reconstructed non-streamed response body.
 
     responseData = struct("output", {outputItems}, ...
         "usage", struct("input_tokens", 1, "output_tokens", 1, "total_tokens", 2));
-    [text, items] = callStreamedWithBody(streamedText, responseData);
+    [text, items] = callStreamedWithBody(responseData);
 end
 
-function [text, items] = callStreamedWithoutItems(~, streamedText)
-% Call with a StreamFcn set, simulating what sendRequest returns after a
-% streamed call in which the streamer reassembled no items: the body holds
-% only the token usage, without an "output" field.
+function [text, items] = callStreamedWithoutItems(~)
+% Call with a reconstructed body that has usage but no output items.
 
     responseData = struct("usage", struct("input_tokens", 1, "output_tokens", 1, "total_tokens", 2));
-    [text, items] = callStreamedWithBody(streamedText, responseData);
+    [text, items] = callStreamedWithBody(responseData);
 end
 
-function [text, items] = callStreamedWithBody(streamedText, responseData)
+function [text, items] = callStreamedWithBody(responseData)
     messages = {struct("role", "user", "content", "Hi")};
     [text, items] = aisdk.client.internal.callResponsesAPI(messages, [], ...
         ModelName="gpt-4o", ToolChoice=[], ...
@@ -244,9 +246,8 @@ function [text, items] = callStreamedWithBody(streamedText, responseData)
         APIKey="fake-key", TimeOut=10, StreamFcn=@(~) [], ...
         sendRequestFcn=@fakeSendRequest, Endpoint="https://fake");
 
-    function [response, streamed] = fakeSendRequest(~, ~, ~, ~, ~)
+    function response = fakeSendRequest(~, ~, ~, ~, ~, ~)
         response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
-        streamed = streamedText;
     end
 end
 
@@ -264,5 +265,5 @@ function [text, items] = callWithResponse(~, response)
         Temperature="auto", TopP="auto", MaxNumTokens=inf, ...
         ResponseFormat="text", ReasoningEffort="auto", Verbosity="auto", ...
         APIKey="fake-key", TimeOut=10, StreamFcn=[], ...
-        sendRequestFcn=@(~,~,~,~,~) deal(response, ""), Endpoint="https://fake");
+        sendRequestFcn=@(~,~,~,~,~,~) response, Endpoint="https://fake");
 end

@@ -66,29 +66,17 @@ end
 
 parameters = buildParametersCall(messages, functions, nvp);
 
-[response, streamedText] = nvp.sendRequestFcn(parameters,nvp.APIKey, nvp.Endpoint, nvp.TimeOut, nvp.StreamFcn);
+response = nvp.sendRequestFcn( ...
+    parameters, nvp.APIKey, nvp.Endpoint, nvp.TimeOut, nvp.StreamFcn, ...
+    @aisdk.client.internal.ChatCompletionsResponseStreamer);
 
 % If call errors, "choices" will not be part of response.Body.Data, instead
 % we get response.Body.Data.error
 if response.StatusCode=="OK"
-    % Outputs the first generation
-    if isempty(nvp.StreamFcn)
-        message = response.Body.Data.choices(1).message;
-    else
-        pat = '{"' + wildcardPattern + '":';
-        if contains(streamedText,pat)
-            s = jsondecode(streamedText);
-            if contains(s.function.arguments,pat)
-                prompt = jsondecode(s.function.arguments);
-                s.function.arguments = prompt;
-            end
-            message = struct("role", "assistant", ...
-                 "content",[], ...
-                 "tool_calls",jsondecode(streamedText));
-        else
-            message = struct("role", "assistant", ...
-                "content", streamedText);
-        end
+    message = response.Body.Data.choices(1).message;
+    if isfield(message, "tool_calls")
+        message.tool_calls = ...
+            aisdk.client.internal.normalizeToolCallsShape(message.tool_calls);
     end
     % Tool-call messages may omit content; leave the API message unchanged.
     text = "";

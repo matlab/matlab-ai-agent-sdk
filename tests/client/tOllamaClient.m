@@ -200,6 +200,94 @@ classdef tOllamaClient < hconstructorCommon
             testCase.verifyEqual(info.Tokens.NumTotalTokens, 20);
         end
 
+        function generate_streamedUsage_matchesNonStreamedUsage(testCase)
+            streamer = aisdk.client.internal.OllamaResponseStreamer(@(~) []);
+            event = ['{"message":{"role":"assistant","content":""},' ...
+                '"done":true,"prompt_eval_count":8,"eval_count":12}'];
+            streamedData = hClientTestUtils.streamEventsAndMergeResponse( ...
+                streamer, event, "ndjson");
+
+            streamedClient = testCase.createClient( ...
+                "qwen3:0.6b", StreamFcn=@(~) []);
+            streamedClient.sendRequestFcn = @streamedResponse;
+            [~, ~, streamedInfo] = generate(streamedClient, "Hi");
+
+            responseData = struct( ...
+                "message", struct("role", "assistant", "content", "ok"), ...
+                "prompt_eval_count", 8, ...
+                "eval_count", 12);
+            nonStreamedClient = makeOllamaClientWithFakeHTTP(testCase, ...
+                struct("StatusCode", "OK", "Body", struct("Data", responseData)));
+            [~, ~, nonStreamedInfo] = generate(nonStreamedClient, "Hi");
+
+            testCase.verifyEqual(streamedInfo.Tokens, nonStreamedInfo.Tokens);
+
+            function response = streamedResponse(~, ~, ~, ~, ~, ~)
+                body = struct();
+                body.Data = streamedData;
+                response = struct( ...
+                    "StatusCode", "OK", ...
+                    "Body", body);
+            end
+        end
+
+        function generate_streamedToolCall_returnsToolCallMessage(testCase)
+            streamer = aisdk.client.internal.OllamaResponseStreamer(@(~) []);
+            event = ['{"message":{"role":"assistant","content":"",' ...
+                '"tool_calls":[{"function":{"name":"getWeather",' ...
+                '"arguments":{"city":"London"}}}]},"done":true}'];
+            streamedData = hClientTestUtils.streamEventsAndMergeResponse( ...
+                streamer, event, "ndjson");
+
+            client = testCase.createClient( ...
+                "qwen3:0.6b", StreamFcn=@(~) []);
+            client.sendRequestFcn = @streamedResponse;
+
+            [~, messages] = generate(client, "What's the weather?");
+
+            testCase.verifyClass(messages, "aisdk.LLMToolCallMessage");
+            testCase.verifyEqual(messages.Name, "getWeather");
+            testCase.verifyEqual(messages.Arguments, struct("city", 'London'));
+
+            function response = streamedResponse(~, ~, ~, ~, ~, ~)
+                body = struct();
+                body.Data = streamedData;
+                response = struct("StatusCode", "OK", "Body", body);
+            end
+        end
+
+        function generate_streamedParallelToolCalls_returnsAllMessages(testCase)
+            client = testCase.createClient( ...
+                "qwen3:0.6b", StreamFcn=@(~) []);
+            responseData = ollamaParallelToolCallResponse();
+
+            hClientTestUtils.verifyStreamedParallelToolCalls(testCase, client, responseData);
+        end
+
+        function generate_streamedTextOnly_returnsTextMessage(testCase)
+            client = testCase.createClient( ...
+                "qwen3:0.6b", StreamFcn=@(~) []);
+
+            txt1 = "Hello ";
+            txt2 = "world";
+            responseData = ollamaSplitTextOnlyStream(txt1, txt2);
+
+            hClientTestUtils.verifyStreamedTextOnly( ...
+                testCase, client, responseData, txt1 + txt2);
+        end
+
+        function generate_streamedJSONLookingText_returnsTextMessage(testCase)
+            client = testCase.createClient( ...
+                "qwen3:0.6b", StreamFcn=@(~) []);
+
+            txt1 = "Arguments: ";
+            txt2 = "{""a"":1}";
+            responseData = ollamaSplitTextOnlyStream(txt1, txt2);
+
+            hClientTestUtils.verifyStreamedTextOnly( ...
+                testCase, client, responseData, txt1 + txt2);
+        end
+
         function generate_missingUsage_defaultsZero(testCase)
             responseData = struct("message", struct("role", "assistant", "content", "ok"));
             response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
@@ -215,8 +303,7 @@ classdef tOllamaClient < hconstructorCommon
         function generate_toolCallsNoText_returnsEmptyText(testCase)
             response = makeOllamaToolCallResponse("");
             client = makeOllamaClientWithFakeHTTP(testCase, response);
-            [text, ~] = generate(client, "Call a tool");
-            testCase.verifyEqual(text, "");
+            hClientTestUtils.verifyToolCallsNoText(testCase, client);
         end
 
         function generate_toolCallsNullContent_returnsEmptyText(testCase)
@@ -308,7 +395,7 @@ end
 
 function client = makeOllamaClientWithFakeHTTP(~, mockResponse)
     client = aisdk.client.OllamaClient("qwen3:0.6b");
-    client.sendRequestFcn = @(~,~,~,~,~) deal(mockResponse, "");
+    client.sendRequestFcn = @(~,~,~,~,~,~) mockResponse;
 end
 
 function response = makeOllamaErrorResponse(statusCode, errorText)
@@ -331,6 +418,28 @@ function response = makeOllamaToolCallResponse(content)
     response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
 end
 
+function data = ollamaParallelToolCallResponse()
+    streamer = aisdk.client.internal.OllamaResponseStreamer(@(~) []);
+    event = ['{"message":{"role":"assistant","content":"","tool_calls":[' ...
+        '{"id":"call_1","function":{"name":"toolA","arguments":{"x":1}}},' ...
+        '{"id":"call_2","function":{"name":"toolB","arguments":{"y":2}}}' ...
+        ']},"done":true}'];
+    data = hClientTestUtils.streamEventsAndMergeResponse( ...
+        streamer, event, "ndjson");
+end
+
+function data = ollamaSplitTextOnlyStream(txt1, txt2)
+    streamer = aisdk.client.internal.OllamaResponseStreamer(@(~) []);
+    txt1 = hClientTestUtils.escapeJSONText(txt1);
+    txt2 = hClientTestUtils.escapeJSONText(txt2);
+    events = [
+        "{""message"":{""role"":""assistant"",""content"":""" + txt1 + """},""done"":false}"
+        "{""message"":{""role"":""assistant"",""content"":""" + txt2 + """},""done"":true}"
+        ];
+    data = hClientTestUtils.streamEventsAndMergeResponse( ...
+        streamer, events, "ndjson");
+end
+
 function params = captureOllamaParams(~, messages)
     captured = {};
     client = aisdk.client.OllamaClient("qwen3:0.6b");
@@ -338,10 +447,9 @@ function params = captureOllamaParams(~, messages)
     generate(client, messages);
     params = captured{1};
 
-    function [response, streamedText] = fakeSendRequest(parameters, ~, ~, ~, ~)
+    function response = fakeSendRequest(parameters, ~, ~, ~, ~, ~)
         captured{1} = parameters;
         responseData = struct("message", struct("role", "assistant", "content", "fake"));
         response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
-        streamedText = "";
     end
 end

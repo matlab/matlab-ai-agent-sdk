@@ -1,7 +1,7 @@
-function [response, streamedText] = sendRequestWrapper(varargin)
+function response = sendRequestWrapper(varargin)
 % This function is undocumented and will change in a future release
 
 %   Copyright 2026 The MathWorks, Inc.
 
 % A wrapper around sendRequest to have a test seam
-[response, streamedText] = aisdk.client.internal.sendRequest(varargin{:});
+response = aisdk.client.internal.sendRequest(varargin{:});

@@ -14,6 +14,10 @@ classdef tSystem < matlab.unittest.TestCase
         Streaming = struct( ...
             "nonStreaming", struct("streamArgs", {{}}), ...
             "streaming", struct("streamArgs", {{"StreamFcn", @(~) []}}))
+        StreamingProvider = struct( ...
+            "chatCompletions", struct("api", "openai", "model", "gpt-4.1-mini"), ...
+            "responses", struct("api", "openai-responses", "model", "gpt-4.1-mini"), ...
+            "ollama", struct("api", "ollama", "model", "qwen3:0.6b"))
     end
 
     methods (TestClassSetup)
@@ -25,6 +29,30 @@ classdef tSystem < matlab.unittest.TestCase
                 fullfile(fileparts(mfilename("fullpath")), "resources", "functions")));
             testCase.applyFixture(matlab.unittest.fixtures.PathFixture( ...
                 fullfile(fileparts(mfilename("fullpath")), "helpers")));
+        end
+    end
+
+    methods (Test, TestTags = {'System', 'Live'})
+        function generate_streamedText_matchesCallbackText(testCase, StreamingProvider)
+            received = strings(1,0);
+            % A callback enables streaming; StreamFcn=[] is the non-streaming path.
+            client = aisdk.LLMClient(StreamingProvider.api, StreamingProvider.model, ...
+                StreamFcn=@captureText);
+
+            [text, messages] = generate(client, ...
+                "Describe a clear night sky in two short sentences.");
+
+            testCase.verifyGreaterThan(strlength(text), 0);
+            testCase.verifyNotEmpty(received);
+            testCase.verifyEqual(join(received, ""), text);
+            testCase.assertNumElements(messages, 1);
+            testCase.verifyClass(messages, "aisdk.LLMTextMessage");
+            testCase.verifyEqual(messages.Role, "assistant");
+            testCase.verifyEqual(messages.Text, text);
+
+            function captureText(delta)
+                received(end+1) = string(delta);
+            end
         end
     end
 
@@ -521,9 +549,11 @@ classdef tSystem < matlab.unittest.TestCase
 
         %% SDK traces tool calls in message history
 
-        function run_afterToolUse_tracksCallAndArguments(testCase)
+        function run_afterToolUse_tracksCallAndArguments(testCase, Streaming)
+            client = aisdk.LLMClient("openai", "gpt-4.1-mini", "Temperature", 0, ...
+                Streaming.streamArgs{:});
             tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
-            agent = aisdk.AIAgent(testCase.Client, Tools=tool, DisplayMode = "off");
+            agent = aisdk.AIAgent(client, Tools=tool, DisplayMode = "off");
 
             run(agent, "Add 5 and 9.", ToolChoice="required");
 
@@ -557,4 +587,3 @@ classdef tSystem < matlab.unittest.TestCase
 
     end
 end
-

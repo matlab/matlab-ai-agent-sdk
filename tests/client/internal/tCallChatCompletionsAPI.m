@@ -13,6 +13,25 @@ classdef tCallChatCompletionsAPI < matlab.unittest.TestCase
             testCase.verifyFalse(isfield(message, "content"));
             testCase.verifyEqual(message.tool_calls{1}.id, "call_1");
         end
+
+        function nonStreamingToolCalls_areNormalizedToColumnCell(testCase)
+            toolCalls = struct( ...
+                "id", {"call_1", "call_2"}, ...
+                "type", {"function", "function"}, ...
+                "function", { ...
+                    struct("name", "first", "arguments", "{}"), ...
+                    struct("name", "second", "arguments", "{}")});
+            apiMessage = struct( ...
+                "role", "assistant", ...
+                "content", "", ...
+                "tool_calls", toolCalls);
+
+            [~, ~, message] = callAPIAndCaptureRequest(APIMessage=apiMessage);
+
+            testCase.verifyClass(message.tool_calls, "cell");
+            testCase.verifySize(message.tool_calls, [2 1]);
+            testCase.verifyEqual(message.tool_calls{2}.id, "call_2");
+        end
         %% Basic parameter structure
         function buildParams_includesModelAndMessages(testCase)
             params = callAPIAndCaptureRequest();
@@ -28,6 +47,13 @@ classdef tCallChatCompletionsAPI < matlab.unittest.TestCase
         function buildParams_streamFalse_whenNoStreamFcn(testCase)
             params = callAPIAndCaptureRequest();
             testCase.verifyFalse(params.stream);
+        end
+
+        function request_usesChatCompletionsStreamerFactory(testCase)
+            [~, ~, ~, streamerFactory] = callAPIAndCaptureRequest();
+            testCase.verifyEqual( ...
+                streamerFactory, ...
+                @aisdk.client.internal.ChatCompletionsResponseStreamer);
         end
 
         function buildParams_toolsAdded_whenNonEmpty(testCase)
@@ -108,7 +134,7 @@ classdef tCallChatCompletionsAPI < matlab.unittest.TestCase
 
 end
 
-function [params, text, message] = callAPIAndCaptureRequest(nvp)
+function [params, text, message, streamerFactory] = callAPIAndCaptureRequest(nvp)
     arguments
         nvp.ReasoningEffort (1,1) string = "auto"
         nvp.Verbosity       (1,1) string = "auto"
@@ -134,14 +160,14 @@ function [params, text, message] = callAPIAndCaptureRequest(nvp)
 
     params = captured{1};
 
-    function [response, streamedText] = fakeSendRequest(parameters, ~, ~, ~, ~)
+    function response = fakeSendRequest(parameters, ~, ~, ~, ~, factory)
         captured{1} = parameters;
+        streamerFactory = factory;
         responseData = struct( ...
             "choices", struct( ...
                 "message", nvp.APIMessage), ...
             "usage", struct( ...
                 "prompt_tokens", 0, "completion_tokens", 0, "total_tokens", 0));
         response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
-        streamedText = "";
     end
 end

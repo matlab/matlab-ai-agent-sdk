@@ -102,11 +102,10 @@ classdef tClientBase < matlab.unittest.TestCase
                 @() generate(client, "hi", ToolChoice="myFunc"), ...
                 "aisdk:mustSetFunctionsForCall");
 
-            function [response, streamedText] = fakeOk(~, ~, ~, ~, ~)
+            function response = fakeOk(~, ~, ~, ~, ~, ~)
                 response = struct("StatusCode", "OK", "Body", struct("Data", ...
                     struct("choices", struct("message", struct("role","assistant","content","x")), ...
                     "usage", struct("prompt_tokens",0,"completion_tokens",0,"total_tokens",0))));
-                streamedText = "";
             end
         end
 
@@ -123,11 +122,10 @@ classdef tClientBase < matlab.unittest.TestCase
                 @() generate(client, "hi", Tools=tool, ToolChoice="unknown"), ...
                 "MATLAB:validators:mustBeMember");
 
-            function [response, streamedText] = fakeOk(~, ~, ~, ~, ~)
+            function response = fakeOk(~, ~, ~, ~, ~, ~)
                 response = struct("StatusCode", "OK", "Body", struct("Data", ...
                     struct("choices", struct("message", struct("role","assistant","content","x")), ...
                     "usage", struct("prompt_tokens",0,"completion_tokens",0,"total_tokens",0))));
-                streamedText = "";
             end
         end
 
@@ -141,12 +139,11 @@ classdef tClientBase < matlab.unittest.TestCase
             generate(client, "hi", Tools=tool, ToolChoice="toolA");
             testCase.verifyTrue(~isempty(captured));
 
-            function [response, streamedText] = fakeSend(parameters, ~, ~, ~, ~)
+            function response = fakeSend(parameters, ~, ~, ~, ~, ~)
                 captured{1} = parameters;
                 response = struct("StatusCode", "OK", "Body", struct("Data", ...
                     struct("choices", struct("message", struct("role","assistant","content","x")), ...
                     "usage", struct("prompt_tokens",0,"completion_tokens",0,"total_tokens",0))));
-                streamedText = "";
             end
         end
 
@@ -161,12 +158,11 @@ classdef tClientBase < matlab.unittest.TestCase
             generate(client, "hi", Tools=tool, ToolChoice=[]);
             testCase.verifyEqual(captured{1}.tool_choice, "auto");
 
-            function [response, streamedText] = fakeSend(parameters, ~, ~, ~, ~)
+            function response = fakeSend(parameters, ~, ~, ~, ~, ~)
                 captured{1} = parameters;
                 response = struct("StatusCode", "OK", "Body", struct("Data", ...
                     struct("choices", struct("message", struct("role","assistant","content","x")), ...
                     "usage", struct("prompt_tokens",0,"completion_tokens",0,"total_tokens",0))));
-                streamedText = "";
             end
         end
 
@@ -180,12 +176,11 @@ classdef tClientBase < matlab.unittest.TestCase
             generate(client, "hi");
             testCase.verifyFalse(isfield(captured{1}, "tool_choice"));
 
-            function [response, streamedText] = fakeSend(parameters, ~, ~, ~, ~)
+            function response = fakeSend(parameters, ~, ~, ~, ~, ~)
                 captured{1} = parameters;
                 response = struct("StatusCode", "OK", "Body", struct("Data", ...
                     struct("choices", struct("message", struct("role","assistant","content","x")), ...
                     "usage", struct("prompt_tokens",0,"completion_tokens",0,"total_tokens",0))));
-                streamedText = "";
             end
         end
 
@@ -203,12 +198,11 @@ classdef tClientBase < matlab.unittest.TestCase
             testCase.verifyEqual(captured{1}.tool_choice.type, "function");
             testCase.verifyEqual(captured{1}.tool_choice.("function").name, "myFunc");
 
-            function [response, streamedText] = fakeSend(parameters, ~, ~, ~, ~)
+            function response = fakeSend(parameters, ~, ~, ~, ~, ~)
                 captured{1} = parameters;
                 response = struct("StatusCode", "OK", "Body", struct("Data", ...
                     struct("choices", struct("message", struct("role","assistant","content","x")), ...
                     "usage", struct("prompt_tokens",0,"completion_tokens",0,"total_tokens",0))));
-                streamedText = "";
             end
         end
 
@@ -233,7 +227,7 @@ classdef tClientBase < matlab.unittest.TestCase
             testCase.verifyEqual(funcStruct.description, "An MCP tool");
             testCase.verifyEqual(funcStruct.parameters, schema);
 
-            function [response, streamedText] = fakeSend(parameters, ~, ~, ~, ~)
+            function response = fakeSend(parameters, ~, ~, ~, ~, ~)
                 captured{1} = parameters;
                 responseData = struct( ...
                     "choices", struct( ...
@@ -241,7 +235,6 @@ classdef tClientBase < matlab.unittest.TestCase
                     "usage", struct( ...
                         "prompt_tokens", 0, "completion_tokens", 0, "total_tokens", 0));
                 response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
-                streamedText = "";
             end
         end
 
@@ -255,12 +248,11 @@ classdef tClientBase < matlab.unittest.TestCase
             generate(client, "hi", Tools=tool, ToolChoice="required");
             testCase.verifyEqual(captured{1}.tool_choice, "required");
 
-            function [response, streamedText] = fakeSend(parameters, ~, ~, ~, ~)
+            function response = fakeSend(parameters, ~, ~, ~, ~, ~)
                 captured{1} = parameters;
                 response = struct("StatusCode", "OK", "Body", struct("Data", ...
                     struct("choices", struct("message", struct("role","assistant","content","x")), ...
                     "usage", struct("prompt_tokens",0,"completion_tokens",0,"total_tokens",0))));
-                streamedText = "";
             end
         end
 
@@ -352,7 +344,7 @@ function params = captureClientParams(client)
     generate(client, "hi");
     params = captured;
 
-    function [response, streamedText] = fakeSendRequest(~, apiKey, ~, ~, ~)
+    function response = fakeSendRequest(~, apiKey, ~, ~, ~, ~)
         captured.apiKey = apiKey;
         responseData = struct( ...
             "choices", struct( ...
@@ -360,7 +352,6 @@ function params = captureClientParams(client)
             "usage", struct( ...
                 "prompt_tokens", 0, "completion_tokens", 0, "total_tokens", 0));
         response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
-        streamedText = "";
     end
 end
 
@@ -372,7 +363,7 @@ function schema = captureToolSchema(tool)
     funcStruct = captured{1}.tools{1}.("function");
     schema = funcStruct.parameters;
 
-    function [response, streamedText] = fakeSendRequest(parameters, ~, ~, ~, ~)
+    function response = fakeSendRequest(parameters, ~, ~, ~, ~, ~)
         captured{1} = parameters;
         responseData = struct( ...
             "choices", struct( ...
@@ -380,6 +371,5 @@ function schema = captureToolSchema(tool)
             "usage", struct( ...
                 "prompt_tokens", 0, "completion_tokens", 0, "total_tokens", 0));
         response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
-        streamedText = "";
     end
 end
