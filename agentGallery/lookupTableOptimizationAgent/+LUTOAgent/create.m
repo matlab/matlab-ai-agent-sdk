@@ -4,8 +4,8 @@ function agent = create(opts)
 %   the user set up, solve, and apply FunctionApproximation LUT problems.
 %
 %   AGENT = LUTOAgent.create(Name=Value) options:
-%     Provider        - "openai" (default) or "ollama"
-%     Model           - model name (default "gpt-4.1-mini" for openai)
+%     Provider        - "openai" (default), "openai-responses", or "ollama"
+%     Model           - model name (default "gpt-4.1-mini" for either OpenAI API)
 %     DisplayMode     - "detailed" (default, shows the tool-call trace) or "off"
 %     ReasoningEffort - reasoning/"thinking" level for reasoning models:
 %                       "auto" (default), "none", "low", "medium", "high", or
@@ -24,7 +24,7 @@ function agent = create(opts)
 % Copyright 2026 The MathWorks, Inc.
 
     arguments
-        opts.Provider (1,1) string {mustBeMember(opts.Provider, ["openai","ollama"])} = "openai"
+        opts.Provider (1,1) string {mustBeMember(opts.Provider, ["openai","openai-responses","ollama"])} = "openai"
         opts.Model (1,1) string = ""
         opts.DisplayMode (1,1) string {mustBeMember(opts.DisplayMode, ["detailed","off"])} = "detailed"
         opts.ReasoningEffort (1,1) string {mustBeMember(opts.ReasoningEffort, ...
@@ -33,15 +33,15 @@ function agent = create(opts)
 
     if strlength(opts.Model) == 0
         switch opts.Provider
-            case "openai"; opts.Model = "gpt-4.1-mini";
-            otherwise;     opts.Model = "mistral";
+            case {"openai", "openai-responses"}; opts.Model = "gpt-4.1-mini";
+            otherwise;                          opts.Model = "mistral";
         end
     end
 
-    % ReasoningEffort is accepted by the OpenAI client; the Ollama client
+    % ReasoningEffort is accepted by both OpenAI clients; the Ollama client
     % rejects it as an unknown name-value argument. Only forward it for
     % providers that accept it.
-    if opts.Provider == "openai"
+    if ismember(opts.Provider, ["openai", "openai-responses"])
         client = aisdk.LLMClient(opts.Provider, opts.Model, ReasoningEffort=opts.ReasoningEffort);
     else
         if opts.ReasoningEffort ~= "auto"

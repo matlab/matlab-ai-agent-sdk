@@ -10,8 +10,8 @@ function tools = buildTools()
 %   and whose H1 line describes what it does.
 %
 %   All tools share the agent Workspace so problem/solution state persists
-%   across the conversation. Read/inspect/save tools run unapproved (the SDK
-%   default); the mutating tools listed below are approval-gated.
+%   across the conversation. Read/inspect/save tools run without approval;
+%   the mutating tools listed below prompt until permanently approved.
 
 % Copyright 2026 The MathWorks, Inc.
 
@@ -23,7 +23,7 @@ function tools = buildTools()
     checkMutatingToolsExist(fcnNames, mutating, toolsDir);
 
     approval = repmat("never", size(fcnNames));
-    approval(ismember(fcnNames, mutating)) = "always";
+    approval(ismember(fcnNames, mutating)) = "once";
 
     built = cell(1, numel(fcnNames));
     for k = 1:numel(fcnNames)

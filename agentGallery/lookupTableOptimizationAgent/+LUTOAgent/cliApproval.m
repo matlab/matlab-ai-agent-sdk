@@ -20,7 +20,8 @@ function result = cliApproval(tool, toolArguments)
 
     result = struct("Approved", false, "Permanent", false, "Reason", "");
     while true
-        answer = lower(strtrim(string(input(" Approve? [y]es / [n]o / [a]lways: ", "s"))));
+        answer = lower(strtrim(string(input( ...
+            " Approve? [y] Yes, this call / [n] No / [a] Yes, always for this tool (this session): ", "s"))));
         switch answer
             case {"y","yes"}
                 result.Approved = true;

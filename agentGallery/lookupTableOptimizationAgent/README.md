@@ -69,11 +69,16 @@ Or, to optimize a block in a Simulink model (open the model first):
 The agent prompts you for clarification, generates a solution, and reports these
 values: memory in bytes, maximum error, and percentage reduction.
 
-Before any operation that modifies your model or generates output, the agent asks for approval in the Command Window:
+Operations that modify your model or generate output require approval in the Command Window:
 
 ```
-Approve? [y]es / [n]o / [a]lways
+Approve? [y] Yes, this call / [n] No / [a] Yes, always for this tool (this session):
 ```
+
+Choose **Yes, this call** (`y`) to approve only the current call, **No** (`n`) to
+skip it, or **Yes, always for this tool** (`a`) to approve this call and future
+calls to the same tool for the rest of the agent session. Other tools still
+require their own approval.
 
 Type `exit`, `quit`, or `end`, or press **Ctrl+C**, to leave the session.
 
@@ -106,16 +111,19 @@ agent = LUTOAgent.create(Provider="openai", Model="gpt-4.1-mini", DisplayMode="d
 
 | Option            | Values                                  | Default                 |
 | ----------------- | --------------------------------------- | ----------------------- |
-| `Provider`        | `"openai"`, `"ollama"`                  | `"openai"`              |
-| `Model`           | Any model name supported by the provider | `"gpt-4.1-mini"` (openai) |
+| `Provider`        | `"openai"`, `"openai-responses"`, `"ollama"` | `"openai"`              |
+| `Model`           | Any model name supported by the provider | `"gpt-4.1-mini"` (both OpenAI APIs), `"mistral"` (Ollama) |
 | `DisplayMode`     | `"detailed"` (shows tool calls), `"off"`| `"detailed"`            |
 | `ReasoningEffort` | `"auto"`, `"none"`, `"low"`, `"medium"`, `"high"`, `"xhigh"` | `"auto"` |
 
 All function approximation domain knowledge is embedded in the agent's system
 prompt. No external skill file is required.
 
-`ReasoningEffort` applies to OpenAI models only; it is ignored with a warning
-for Ollama.
+Use `Provider="openai-responses"` to use the OpenAI Responses API instead of
+Chat Completions. Both OpenAI providers use `OPENAI_API_KEY`.
+
+`ReasoningEffort` applies to both OpenAI providers; it is ignored with a warning
+for Ollama. Choose a reasoning-capable model when specifying a reasoning level.
 
 ### Reduce Output
 
