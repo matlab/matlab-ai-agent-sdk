@@ -21,8 +21,14 @@ classdef hClientTestUtils
             testCase.verifyEqual(messages(2).Arguments, struct("y", 2));
         end
 
-        function verifyToolCallsNoText(testCase, client)
-            [text, messages] = generate(client, "Call a tool.");
+        function verifyToolCallsNoText(testCase, client, nvp)
+            arguments
+                testCase
+                client
+                nvp.ResponseFormat
+            end
+            generateArgs = namedargs2cell(nvp);
+            [text, messages] = generate(client, "Call a tool.", generateArgs{:});
 
             testCase.verifyEqual(text, "");
             testCase.verifyNumElements(messages, 1);
@@ -42,6 +48,21 @@ classdef hClientTestUtils
             testCase.verifyClass(messages, "aisdk.LLMTextMessage");
             testCase.verifyEqual(messages.Role, "assistant");
             testCase.verifyEqual(messages.Text, expectedText);
+        end
+
+        function verifyStreamedStructuredOutput(testCase, client, responseData, prototype, expected)
+            response = hClientTestUtils.okResponse(responseData);
+            client.sendRequestFcn = @(~,~,~,~,~,~) response;
+
+            text = generate(client, "Answer in JSON.", ResponseFormat=prototype);
+
+            testCase.verifyEqual(text, expected);
+        end
+
+        function response = okResponse(responseData)
+            body = struct();
+            body.Data = responseData;
+            response = struct("StatusCode", "OK", "Body", body);
         end
 
         function data = streamEventsAndMergeResponse(streamer, events, format)

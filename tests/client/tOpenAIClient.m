@@ -105,6 +105,27 @@ classdef tOpenAIClient < hOpenAIClientCommon
             hClientTestUtils.verifyStreamedTextOnly( ...
                 testCase, client, responseData, txt1 + txt2);
         end
+
+        function generate_streamedStructuredText_returnsDecodedStruct(testCase)
+            client = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) []);
+            responseData = chatCompletionsSplitTextOnlyStream("{""answer"":", "42}");
+
+            prototype = struct("answer", 0);
+            expected = struct("answer", 42);
+            hClientTestUtils.verifyStreamedStructuredOutput( ...
+                testCase, client, responseData, prototype, expected);
+        end
+
+        function generate_streamedToolCallsNoTextWithPrototypeFormat_returnsEmptyText(testCase)
+            client = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) []);
+            response = hClientTestUtils.okResponse(chatCompletionsToolCallStream());
+            client.sendRequestFcn = @(~,~,~,~,~,~) response;
+
+            hClientTestUtils.verifyToolCallsNoText(testCase, client, ...
+                ResponseFormat=struct("answer", 0));
+        end
     end
 
     methods (Access=protected)
@@ -220,6 +241,15 @@ function data = chatCompletionsParallelToolCallResponse()
     events = {
         '{"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_1","type":"function","function":{"name":"toolA","arguments":"{\"x\":1}"}}]}}]}'
         '{"choices":[{"delta":{"tool_calls":[{"index":1,"id":"call_2","type":"function","function":{"name":"toolB","arguments":"{\"y\":2}"}}]}}]}'
+        };
+    data = hClientTestUtils.streamEventsAndMergeResponse( ...
+        streamer, events, "sse");
+end
+
+function data = chatCompletionsToolCallStream()
+    streamer = aisdk.client.internal.ChatCompletionsResponseStreamer(@(~) []);
+    events = {
+        '{"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_1","type":"function","function":{"name":"toolA","arguments":"{\"x\":1}"}}]},"finish_reason":"tool_calls"}]}'
         };
     data = hClientTestUtils.streamEventsAndMergeResponse( ...
         streamer, events, "sse");

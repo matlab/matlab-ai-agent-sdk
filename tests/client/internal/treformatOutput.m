@@ -74,5 +74,17 @@ classdef treformatOutput < matlab.unittest.TestCase
                 @() aisdk.client.internal.reformatOutput("not json{", proto), ...
                 "aisdk:apiReturnedIncompleteJSON");
         end
+
+        function reformatOutput_emptyTextWithPrototypeAndToolCalls_returnsEmptyText(testCase)
+            result = aisdk.client.internal.reformatOutput("", struct("x", 0.0), ...
+                HasToolCalls=true);
+            testCase.verifyEqual(result, "");
+        end
+
+        function reformatOutput_emptyTextWithPrototypeWithoutToolCalls_throwsModelReturnedNoOutput(testCase)
+            testCase.verifyError( ...
+                @() aisdk.client.internal.reformatOutput("", struct("x", 0.0)), ...
+                "aisdk:modelReturnedNoOutput");
+        end
     end
 end

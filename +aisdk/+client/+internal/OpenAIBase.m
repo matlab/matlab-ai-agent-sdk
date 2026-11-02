@@ -93,9 +93,9 @@ classdef (Abstract) OpenAIBase < aisdk.client.ClientBase
 
             messages = this.buildOutputMessages(text, output);
 
-            if ~isempty(text)
-                text = aisdk.client.internal.reformatOutput(text, responseFormat);
-            end
+            hasToolCalls = any(arrayfun(@(m) isa(m, 'aisdk.LLMToolCallMessage'), messages));
+            text = aisdk.client.internal.reformatOutput(text, responseFormat, ...
+                HasToolCalls=hasToolCalls);
 
             info = struct("Tokens", this.parseUsage(response));
         end

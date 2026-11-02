@@ -133,6 +133,27 @@ classdef tOpenAIResponsesClient < hOpenAIClientCommon
                 testCase, client, responseData, txt1 + txt2);
         end
 
+        function generate_streamedStructuredText_returnsDecodedStruct(testCase)
+            client = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) []);
+            responseData = responsesSplitTextOnlyStream("{""answer"":", "42}");
+
+            prototype = struct("answer", 0);
+            expected = struct("answer", 42);
+            hClientTestUtils.verifyStreamedStructuredOutput( ...
+                testCase, client, responseData, prototype, expected);
+        end
+
+        function generate_streamedToolCallsNoTextWithPrototypeFormat_returnsEmptyText(testCase)
+            client = testCase.createClient( ...
+                "gpt-4o", APIKey="fake-key", StreamFcn=@(~) []);
+            response = hClientTestUtils.okResponse(responsesToolCallStream());
+            client.sendRequestFcn = @(~,~,~,~,~,~) response;
+
+            hClientTestUtils.verifyToolCallsNoText(testCase, client, ...
+                ResponseFormat=struct("answer", 0));
+        end
+
         function generate_streamedUsage_matchesNonStreamedUsage(testCase)
             streamer = aisdk.client.internal.ResponsesResponseStreamer(@(~) []);
             event = ['{"type":"response.completed","response":{"usage":{' ...
@@ -554,6 +575,15 @@ function data = responsesParallelToolCallResponse()
     events = {
         '{"type":"response.output_item.done","output_index":0,"item":{"id":"fc_1","type":"function_call","call_id":"call_1","name":"toolA","arguments":"{\"x\":1}"}}'
         '{"type":"response.output_item.done","output_index":1,"item":{"id":"fc_2","type":"function_call","call_id":"call_2","name":"toolB","arguments":"{\"y\":2}"}}'
+        };
+    data = hClientTestUtils.streamEventsAndMergeResponse( ...
+        streamer, events, "sse");
+end
+
+function data = responsesToolCallStream()
+    streamer = aisdk.client.internal.ResponsesResponseStreamer(@(~) []);
+    events = {
+        '{"type":"response.output_item.done","output_index":0,"item":{"id":"fc_1","type":"function_call","call_id":"call_1","name":"toolA","arguments":"{\"x\":1}"}}'
         };
     data = hClientTestUtils.streamEventsAndMergeResponse( ...
         streamer, events, "sse");

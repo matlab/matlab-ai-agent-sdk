@@ -226,6 +226,20 @@ classdef (Abstract) hOpenAIClientCommon < hconstructorCommon
             hClientTestUtils.verifyToolCallsNoText(testCase, client);
         end
 
+        function generate_toolCallsNoTextWithPrototypeFormat_returnsEmptyText(testCase)
+            client = testCase.clientWithFakeHTTP(testCase.toolCallResponse( ...
+                {toolCallFixture()}, ""));
+            hClientTestUtils.verifyToolCallsNoText(testCase, client, ...
+                ResponseFormat=struct("answer", 0));
+        end
+
+        function generate_toolCallsNoTextWithJSONSchemaFormat_returnsEmptyText(testCase)
+            client = testCase.clientWithFakeHTTP(testCase.toolCallResponse( ...
+                {toolCallFixture()}, ""));
+            hClientTestUtils.verifyToolCallsNoText(testCase, client, ...
+                ResponseFormat='{"type":"object","properties":{"answer":{"type":"number"}}}');
+        end
+
         function generate_toolCallsWithText_returnsTextAndToolCalls(testCase)
             client = testCase.clientWithFakeHTTP(testCase.toolCallResponse( ...
                 {toolCallFixture()}, "Let me calculate that"));
@@ -285,6 +299,13 @@ classdef (Abstract) hOpenAIClientCommon < hconstructorCommon
             testCase.verifyClass(text, "struct");
             testCase.verifyEmpty(text);
             testCase.verifyThat(fieldnames(text), IsSameSetAs(fieldnames(proto)));
+        end
+
+        function generate_emptyTextWithoutToolCallsWithPrototypeFormat_throwsModelReturnedNoOutput(testCase)
+            client = testCase.clientWithFakeHTTP(testCase.textResponse(""));
+            testCase.verifyError( ...
+                @() generate(client, "Hi", ResponseFormat=struct("answer", 0)), ...
+                "aisdk:modelReturnedNoOutput");
         end
 
         %% generate — request contents common to both APIs

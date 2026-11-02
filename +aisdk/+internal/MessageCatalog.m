@@ -52,6 +52,7 @@ catalog("aisdk:unreadableResponse") = "Unable to read the reply from ""{1}"" as 
 catalog("aisdk:responseIsChatCompletions") = "The reply from ""{1}"" is a Chat Completions response. Create the client with aisdk.LLMClient(""openai"", ...) instead.";
 catalog("aisdk:client:missingAPIKey") = "Server rejected the request: ""{1}"". Set the APIKey property of the client.";
 catalog("aisdk:apiReturnedIncompleteJSON") = "Model output is invalid JSON: {1}";
+catalog("aisdk:modelReturnedNoOutput") = "Model failed to return output.";
 catalog("aisdk:stream:responseStreamer:InvalidInput") = "Unable to stream model output.";
 catalog("aisdk:unsupportedDatatypeInPrototype") = "Invalid argument data type. Field values of struct must be numeric, string, logical, or categorical.";
 catalog("aisdk:incorrectResponseFormat") = "Response format must be ""text"", ""json"", a struct containing example output, or a string scalar containing a JSON schema.";

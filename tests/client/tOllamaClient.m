@@ -288,6 +288,27 @@ classdef tOllamaClient < hconstructorCommon
                 testCase, client, responseData, txt1 + txt2);
         end
 
+        function generate_streamedStructuredText_returnsDecodedStruct(testCase)
+            client = testCase.createClient( ...
+                "qwen3:0.6b", StreamFcn=@(~) []);
+            responseData = ollamaSplitTextOnlyStream("{""answer"":", "42}");
+
+            prototype = struct("answer", 0);
+            expected = struct("answer", 42);
+            hClientTestUtils.verifyStreamedStructuredOutput( ...
+                testCase, client, responseData, prototype, expected);
+        end
+
+        function generate_streamedToolCallsNoTextWithPrototypeFormat_returnsEmptyText(testCase)
+            client = testCase.createClient( ...
+                "qwen3:0.6b", StreamFcn=@(~) []);
+            response = hClientTestUtils.okResponse(ollamaToolCallStream());
+            client.sendRequestFcn = @(~,~,~,~,~,~) response;
+
+            hClientTestUtils.verifyToolCallsNoText(testCase, client, ...
+                ResponseFormat=struct("answer", 0));
+        end
+
         function generate_missingUsage_defaultsZero(testCase)
             responseData = struct("message", struct("role", "assistant", "content", "ok"));
             response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
@@ -304,6 +325,20 @@ classdef tOllamaClient < hconstructorCommon
             response = makeOllamaToolCallResponse("");
             client = makeOllamaClientWithFakeHTTP(testCase, response);
             hClientTestUtils.verifyToolCallsNoText(testCase, client);
+        end
+
+        function generate_toolCallsNoTextWithPrototypeFormat_returnsEmptyText(testCase)
+            response = makeOllamaToolCallResponse("");
+            client = makeOllamaClientWithFakeHTTP(testCase, response);
+            hClientTestUtils.verifyToolCallsNoText(testCase, client, ...
+                ResponseFormat=struct("answer", 0));
+        end
+
+        function generate_toolCallsNoTextWithJSONSchemaFormat_returnsEmptyText(testCase)
+            response = makeOllamaToolCallResponse("");
+            client = makeOllamaClientWithFakeHTTP(testCase, response);
+            hClientTestUtils.verifyToolCallsNoText(testCase, client, ...
+                ResponseFormat='{"type":"object","properties":{"answer":{"type":"number"}}}');
         end
 
         function generate_toolCallsNullContent_returnsEmptyText(testCase)
@@ -377,6 +412,13 @@ classdef tOllamaClient < hconstructorCommon
             testCase.verifyEmpty(text);
             testCase.verifyThat(fieldnames(text), IsSameSetAs(fieldnames(proto)));
         end
+
+        function generate_emptyTextWithoutToolCallsWithPrototypeFormat_throwsModelReturnedNoOutput(testCase)
+            client = makeOllamaClientWithFakeHTTP(testCase, makeOllamaTextResponse(""));
+            testCase.verifyError( ...
+                @() generate(client, "Hi", ResponseFormat=struct("answer", 0)), ...
+                "aisdk:modelReturnedNoOutput");
+        end
     end
 
     methods (Test, TestTags = {'Unit'})
@@ -423,6 +465,15 @@ function data = ollamaParallelToolCallResponse()
     event = ['{"message":{"role":"assistant","content":"","tool_calls":[' ...
         '{"id":"call_1","function":{"name":"toolA","arguments":{"x":1}}},' ...
         '{"id":"call_2","function":{"name":"toolB","arguments":{"y":2}}}' ...
+        ']},"done":true}'];
+    data = hClientTestUtils.streamEventsAndMergeResponse( ...
+        streamer, event, "ndjson");
+end
+
+function data = ollamaToolCallStream()
+    streamer = aisdk.client.internal.OllamaResponseStreamer(@(~) []);
+    event = ['{"message":{"role":"assistant","content":"","tool_calls":[' ...
+        '{"id":"call_1","function":{"name":"toolA","arguments":{"x":1}}}' ...
         ']},"done":true}'];
     data = hClientTestUtils.streamEventsAndMergeResponse( ...
         streamer, event, "ndjson");

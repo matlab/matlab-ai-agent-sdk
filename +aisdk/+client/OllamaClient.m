@@ -209,9 +209,9 @@ classdef OllamaClient < aisdk.client.ClientBase
             this.handleErrorResponse(response);
 
             assistantText = text;
-            if ~isempty(text)
-                text = aisdk.client.internal.reformatOutput(text, nvp.ResponseFormat);
-            end
+            hasToolCalls = isfield(message, "tool_calls") && ~isempty(message.tool_calls);
+            text = aisdk.client.internal.reformatOutput(text, nvp.ResponseFormat, ...
+                HasToolCalls=hasToolCalls);
 
             info = struct("Tokens", parseUsage(response));
 
