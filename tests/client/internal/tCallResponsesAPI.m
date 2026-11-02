@@ -35,6 +35,31 @@ classdef tCallResponsesAPI < matlab.unittest.TestCase
                 @aisdk.client.internal.ResponsesResponseStreamer);
         end
 
+        function request_withStreamFcn_acceptsEventStream(testCase)
+            captured = {};
+            messages = {struct("role", "user", "content", "Hello")};
+
+            aisdk.client.internal.callResponsesAPI(messages, [], ...
+                ModelName="gpt-4o", ToolChoice=[], ...
+                Temperature="auto", TopP="auto", MaxNumTokens=inf, ...
+                ResponseFormat="text", ...
+                ReasoningEffort="auto", Verbosity="auto", ...
+                APIKey="fake-key", TimeOut=10, StreamFcn=@(~) [], ...
+                sendRequestFcn=@(varargin) aisdk.client.internal.sendRequest( ...
+                    varargin{:}, @fakeSend), ...
+                Endpoint="https://example.invalid/v1");
+
+            request = captured{1};
+            accept = request.Header([request.Header.Name] == "Accept");
+            testCase.assertNumElements(accept, 1);
+            testCase.verifyEqual(accept.Value, "text/event-stream");
+
+            function response = fakeSend(request, ~, ~, ~)
+                captured{1} = request;
+                response = struct("StatusCode", "OK", "Body", struct("Data", ""));
+            end
+        end
+
         function buildParams_toolsAdded_asFlatFunctions(testCase)
             import matlab.unittest.constraints.HasField
             tools = {struct("type","function","name","myTool","parameters",struct())};

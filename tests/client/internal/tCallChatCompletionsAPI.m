@@ -56,6 +56,33 @@ classdef tCallChatCompletionsAPI < matlab.unittest.TestCase
                 @aisdk.client.internal.ChatCompletionsResponseStreamer);
         end
 
+        function request_withStreamFcn_acceptsEventStream(testCase)
+            captured = {};
+            messages = {struct("role", "user", "content", "Hello")};
+
+            aisdk.client.internal.callChatCompletionsAPI(messages, [], ...
+                ModelName="gpt-4o", ToolChoice=[], ...
+                Temperature="auto", TopP="auto", ...
+                StopSequences=strings(1,0), MaxNumTokens=inf, ...
+                PresencePenalty="auto", FrequencyPenalty="auto", ...
+                NumCompletions=1, Seed=[], ResponseFormat="text", ...
+                ReasoningEffort="auto", Verbosity="auto", ...
+                APIKey="fake-key", TimeOut=10, StreamFcn=@(~) [], ...
+                sendRequestFcn=@(varargin) aisdk.client.internal.sendRequest( ...
+                    varargin{:}, @fakeSend), ...
+                Endpoint="https://example.invalid/v1");
+
+            request = captured{1};
+            accept = request.Header([request.Header.Name] == "Accept");
+            testCase.assertNumElements(accept, 1);
+            testCase.verifyEqual(accept.Value, "text/event-stream");
+
+            function response = fakeSend(request, ~, ~, ~)
+                captured{1} = request;
+                response = struct("StatusCode", "OK", "Body", struct("Data", ""));
+            end
+        end
+
         function buildParams_toolsAdded_whenNonEmpty(testCase)
             tools = {struct("type","function","function",struct("name","myTool","parameters",struct()))};
             params = callAPIAndCaptureRequest(Tools=tools);

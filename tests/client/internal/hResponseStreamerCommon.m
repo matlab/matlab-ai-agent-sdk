@@ -58,6 +58,47 @@ classdef (Abstract) hResponseStreamerCommon < matlab.unittest.TestCase
     end
 
     methods (Test, TestTags = {'Unit'})
+        function constructor_setsStreamFcn(testCase)
+            streamFcn = @(txt) txt;
+
+            streamer = feval(testCase.StreamerFactory, streamFcn);
+
+            testCase.verifyEqual(streamer.StreamFcn, streamFcn);
+        end
+
+        function constructor_initializesState(testCase)
+            streamer = feval(testCase.StreamerFactory, @(~) []);
+
+            testCase.verifyEmpty(streamer.ResponseText);
+            testCase.verifyClass(streamer.ResponseText, "char");
+            testCase.verifyEmpty(streamer.Incomplete);
+            testCase.verifyEmpty(streamer.Usage);
+            testCase.verifyEmpty(streamer.StreamedOutputItems);
+            testCase.verifyEmpty(streamer.StreamError);
+        end
+
+        function partialLineWithoutNewline_isBuffered(testCase)
+            streamer = feval(testCase.StreamerFactory, @(~) []);
+            bytes = hResponseStreamerUtils.streamBytes("partial line");
+
+            streamer.doPutData(bytes, false);
+
+            testCase.verifyEqual( ...
+                string(native2unicode(streamer.Incomplete', 'UTF-8')), ...
+                "partial line");
+            testCase.verifyEmpty(streamer.ResponseText);
+        end
+
+        function emptyDataWithNoBufferedLine_keepsStateUnchanged(testCase)
+            streamer = feval(testCase.StreamerFactory, @(~) []);
+
+            stop = streamer.doPutData(uint8.empty(0,1), false);
+
+            testCase.verifyFalse(stop);
+            testCase.verifyEmpty(streamer.ResponseText);
+            testCase.verifyEmpty(streamer.Incomplete);
+        end
+
         function textDelta_appendsToResponseText(testCase)
             streamer = feval(testCase.StreamerFactory, @(~) []);
 

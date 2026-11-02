@@ -5,13 +5,6 @@ classdef tSendRequest < matlab.unittest.TestCase
 
     properties (TestParameter)
         EmptyToken = {[], "", ''};
-        StreamerFactory = struct( ...
-            "chatCompletions", @aisdk.client.internal.ChatCompletionsResponseStreamer, ...
-            "responses", @aisdk.client.internal.ResponsesResponseStreamer, ...
-            "ollama", @aisdk.client.internal.OllamaResponseStreamer);
-        SSEStreamerFactory = struct( ...
-            "chatCompletions", @aisdk.client.internal.ChatCompletionsResponseStreamer, ...
-            "responses", @aisdk.client.internal.ResponsesResponseStreamer);
     end
 
     methods (Test, TestTags = {'Unit'})
@@ -92,12 +85,12 @@ classdef tSendRequest < matlab.unittest.TestCase
             end
         end
 
-        function sendRequest_withSSEConsumer_requestsEventStream(testCase, SSEStreamerFactory)
+        function sendRequest_withSSEConsumer_requestsEventStream(testCase)
             captured = {};
             aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
                 "https://example.invalid/v1", 10, @(~) [], ...
-                SSEStreamerFactory, @fakeSend);
+                @(~) hSSEResponseStreamer, @fakeSend);
 
             request = captured{1};
             accept = request.Header([request.Header.Name] == "Accept");
@@ -126,12 +119,14 @@ classdef tSendRequest < matlab.unittest.TestCase
             end
         end
 
-        function sendRequest_noStreamFcn_doesNotRequestEventStream(testCase, StreamerFactory)
+        function sendRequest_noStreamFcn_doesNotRequestEventStream(testCase)
             captured = {};
+            % Without a streamFcn, sendRequest never constructs the
+            % streamer, so we can use any streamer class here.
             aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
                 "https://example.invalid/v1", 10, [], ...
-                StreamerFactory, @fakeSend);
+                @aisdk.client.internal.ChatCompletionsResponseStreamer, @fakeSend);
 
             request = captured{1};
             testCase.verifyEmpty(request.Header([request.Header.Name] == "Accept"));
@@ -285,14 +280,15 @@ classdef tSendRequest < matlab.unittest.TestCase
             end
         end
 
-        function sendRequest_streamingNonJSONError_preservesBody( ...
-                testCase, StreamerFactory)
+        function sendRequest_streamingNonJSONError_preservesBody(testCase)
             serverText = "<html>Bad gateway</html>";
 
+            % The streamer receives no data and error bodies skip
+            % mergeResponseData, so any streamer gives the same result.
             response = aisdk.client.internal.sendRequest( ...
                 struct("model", "test"), "tok", ...
                 "https://example.invalid/v1", 10, @(~) [], ...
-                StreamerFactory, @fakeSend);
+                @aisdk.client.internal.ChatCompletionsResponseStreamer, @fakeSend);
 
             testCase.verifyEqual(string(response.Body.Data), serverText);
 
