@@ -1378,9 +1378,9 @@ classdef tAIAgent < matlab.unittest.TestCase
     end
 
     methods (Test, TestTags = {'Integration'})
-        function run_twoSequentialToolCalls(testCase)
-            stepOne = aisdk.LLMTool(@addTwoNumbers);
-            stepTwo = aisdk.LLMTool(@addTwoToNumber);
+        function run_twoSequentialToolCalls_executesBoth(testCase)
+            stepOne = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
+            stepTwo = aisdk.LLMTool(@addTwoToNumber, ApprovalRequest="never");
             tokens = struct("Tokens", struct( ...
                 "NumInputTokens", 10, "NumOutputTokens", 5, ...
                 "NumTotalTokens", 15, "NumCachedInputTokens", 0));
@@ -1400,6 +1400,7 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             toolResults = agent.Messages([agent.Messages.Role] == "tool");
             testCase.verifyEqual([toolResults.Name], ["addTwoNumbers", "addTwoToNumber"]);
+            testCase.verifyEqual([toolResults.Result], ["{""c"":5}", "{""c"":7}"]);
         end
     end
 
