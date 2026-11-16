@@ -57,6 +57,29 @@ classdef tOpenAIResponsesClient < hOpenAIClientCommon
     end
 
     methods (Test, TestTags = {'Unit'})
+        function generate_withTool_disablesStrictMode(testCase)
+            import matlab.unittest.constraints.HasField
+            tool = aisdk.LLMTool(@toolWithOptionalInput);
+
+            params = testCase.generateAndCaptureRequest( ...
+                aisdk.LLMTextMessage("hi"), Tools=tool);
+
+            toolDef = params.tools{1};
+            testCase.assertThat(toolDef, HasField("strict"));
+            testCase.verifyEqual(toolDef.strict, false);
+        end
+
+        function generate_withOptionalToolInput_preservesSchema(testCase)
+            tool = aisdk.LLMTool(@toolWithOptionalInput);
+
+            params = testCase.generateAndCaptureRequest( ...
+                aisdk.LLMTextMessage("hi"), Tools=tool);
+
+            toolDef = params.tools{1};
+            testCase.verifyEqual(toolDef.parameters, tool.inputSchema());
+            testCase.verifyEqual(string(toolDef.parameters.required), "requiredValue");
+        end
+
         function generate_sendsInputAndStatelessStore(testCase)
             import matlab.unittest.constraints.HasField
             params = testCase.generateAndCaptureRequest(aisdk.LLMTextMessage("hello"));
@@ -541,6 +564,14 @@ classdef tOpenAIResponsesClient < hOpenAIClientCommon
         end
     end
 
+end
+
+function result = toolWithOptionalInput(requiredValue, optionalValue)
+    arguments
+        requiredValue (1,1) double
+        optionalValue (1,1) double = 0
+    end
+    result = optionalValue;
 end
 
 function client = streamingClient(responseData)
