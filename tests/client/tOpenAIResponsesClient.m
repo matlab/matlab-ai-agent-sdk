@@ -381,8 +381,8 @@ classdef tOpenAIResponsesClient < hOpenAIClientCommon
                 testCase.toolCallResponse({toolCall}, firstTurnText), ...
                 testCase.textResponse("Five squared is 25."));
 
-            % Both turns carried text, so the answer holds each of them in turn order.
-            testCase.verifyEqual(answer, firstTurnText + newline + "Five squared is 25.");
+            % Only the final turn's text is returned; the first turn's text stays in the history.
+            testCase.verifyEqual(answer, "Five squared is 25.");
 
             % The loop selected the tool, ran it, and kept its computed value.
             toolResults = agent.Messages([agent.Messages.Role] == "tool");

@@ -3,6 +3,10 @@ classdef tAIAgent < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
+    properties (TestParameter)
+        FinalText = struct("nonempty", "The answer is 5.", "empty", "")
+    end
+
     methods (TestClassSetup)
         function addResourcesToPath(testCase)
             testsRoot = fileparts(mfilename("fullpath"));
@@ -79,29 +83,93 @@ classdef tAIAgent < matlab.unittest.TestCase
     end
 
     methods (Test, TestTags = {'Integration'})
-        function responseConcatenatesTextAcrossToolCallRounds(testCase)
+        function structuredOutput_withToolCalls_returnsFinalStructArray(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
-
-            client = MockClient();
-            client.GenerateOutputs = {
-                % Round 1: text + tool call
-                {"Let me check.", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), ToolCallID="call_1"), ...
-                 struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
-                        "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
-                % Round 2: empty text + tool call
-                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 1), ToolCallID="call_2"), ...
-                 struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
-                        "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
-                % Round 3: text, no tool call
-                {"The answer is 5.", aisdk.LLMTextMessage("The answer is 5.", Role="assistant"), ...
-                 struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
-                        "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
+            prototype = [struct(answer=2), struct(answer=3)];
+            responseMessages = {
+                struct("role", "assistant", ...
+                    "content", '{"result":[{"answer":0},{"answer":0}]}', ...
+                    "tool_calls", {{struct("id", "call_1", "type", "function", ...
+                        "function", struct("name", "addTwoNumbers", ...
+                            "arguments", '{"a":2,"b":3}'))}})
+                struct("role", "assistant", ...
+                    "content", '{"result":[{"answer":5},{"answer":0}]}', ...
+                    "tool_calls", {{struct("id", "call_2", "type", "function", ...
+                        "function", struct("name", "addTwoNumbers", ...
+                            "arguments", '{"a":3,"b":4}'))}})
+                struct("role", "assistant", ...
+                    "content", '{"result":[{"answer":5},{"answer":7}]}')
             };
+            requestIndex = 0;
+            client = aisdk.client.OpenAIClient("gpt-4o", APIKey="fake-key", ...
+                BaseURL="https://example.invalid/v1");
+            client.sendRequestFcn = @sendResponse;
+
+            agent = aisdk.AIAgent(client, Tools=tool, DisplayMode="off");
+            response = agent.run("What are 2+3 and 3+4?", ...
+                ToolChoice="required", ResponseFormat=prototype);
+
+            testCase.assertClass(response, "struct");
+            testCase.assertNumElements(response, 2);
+            testCase.verifyEqual([response.answer], [5, 7]);
+            textMessages = agent.Messages(arrayfun(@(m) isa(m, 'aisdk.LLMTextMessage') ...
+                && m.Role == "assistant", agent.Messages));
+            testCase.verifyEqual([textMessages.Text], ...
+                string(cellfun(@(m) m.content, responseMessages, UniformOutput=false)).');
+            toolResults = agent.Messages([agent.Messages.Role] == "tool");
+            testCase.assertNumElements(toolResults, 2);
+            testCase.verifyEqual([toolResults.ToolCallID], ["call_1", "call_2"]);
+            testCase.verifyEqual(jsondecode(toolResults(1).Result), struct("c", 5));
+            testCase.verifyEqual(jsondecode(toolResults(2).Result), struct("c", 7));
+
+            function response = sendResponse(~, ~, ~, ~, ~, ~)
+                requestIndex = requestIndex + 1;
+                responseData = struct( ...
+                    "choices", struct("message", responseMessages{requestIndex}), ...
+                    "usage", struct("prompt_tokens", 0, "completion_tokens", 0, "total_tokens", 0));
+                response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
+            end
+        end
+
+        function responseWithToolCalls_returnsFinalTextAndPreservesHistory(testCase, FinalText)
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
+            responseMessages = {
+                % Round 1: text + tool call
+                struct("role", "assistant", "content", "Let me check.", ...
+                    "tool_calls", {{struct("id", "call_1", "type", "function", ...
+                        "function", struct("name", "addTwoNumbers", ...
+                            "arguments", '{"a":2,"b":3}'))}})
+                % Round 2: empty text + tool call
+                struct("role", "assistant", "content", "", ...
+                    "tool_calls", {{struct("id", "call_2", "type", "function", ...
+                        "function", struct("name", "addTwoNumbers", ...
+                            "arguments", '{"a":1,"b":1}'))}})
+                % Round 3: text, no tool call
+                struct("role", "assistant", "content", FinalText)
+            };
+            requestIndex = 0;
+            client = aisdk.client.OpenAIClient("gpt-4o", APIKey="fake-key", ...
+                BaseURL="https://example.invalid/v1");
+            client.sendRequestFcn = @sendResponse;
 
             agent = aisdk.AIAgent(client, Tools=tool, DisplayMode="off");
             response = agent.run("What is 2+3?");
 
-            testCase.verifyEqual(response, "Let me check." + newline + "The answer is 5.");
+            testCase.verifyEqual(response, FinalText);
+            textMessages = agent.Messages(arrayfun(@(m) isa(m, 'aisdk.LLMTextMessage') ...
+                && m.Role == "assistant", agent.Messages));
+            testCase.verifyEqual([textMessages.Text], ["Let me check.", FinalText]);
+            toolResults = agent.Messages([agent.Messages.Role] == "tool");
+            testCase.assertNumElements(toolResults, 2);
+            testCase.verifyEqual([toolResults.ToolCallID], ["call_1", "call_2"]);
+
+            function response = sendResponse(~, ~, ~, ~, ~, ~)
+                requestIndex = requestIndex + 1;
+                responseData = struct( ...
+                    "choices", struct("message", responseMessages{requestIndex}), ...
+                    "usage", struct("prompt_tokens", 0, "completion_tokens", 0, "total_tokens", 0));
+                response = struct("StatusCode", "OK", "Body", struct("Data", responseData));
+            end
         end
 
         function toolErrorReturnedAsObservation(testCase)
@@ -146,6 +214,72 @@ classdef tAIAgent < matlab.unittest.TestCase
 
             testCase.verifyTrue(isstruct(response));
             testCase.verifyEqual(response, structResult);
+        end
+
+        function structuredOutput_withToolCalls_returnsFinalStructuredOutput(testCase)
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
+            intermediate = struct("answer", 0);
+            final = struct("answer", 5);
+            firstTokens = struct("Tokens", struct("NumInputTokens", 10, ...
+                "NumOutputTokens", 5, "NumTotalTokens", 15, "NumCachedInputTokens", 0));
+            finalTokens = struct("Tokens", struct("NumInputTokens", 20, ...
+                "NumOutputTokens", 10, "NumTotalTokens", 30, "NumCachedInputTokens", 0));
+
+            client = MockClient();
+            client.GenerateOutputs = {
+                {intermediate, [ ...
+                    aisdk.LLMTextMessage(string(jsonencode(intermediate)), Role="assistant"), ...
+                    aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), ...
+                        ToolCallID="call_1")], firstTokens}
+                {final, aisdk.LLMTextMessage(string(jsonencode(final)), Role="assistant"), finalTokens}
+            };
+
+            agent = aisdk.AIAgent(client, Tools=tool, ResponseFormat=final, DisplayMode="off");
+            response = agent.run("What is 2+3?");
+
+            testCase.verifyEqual(response, final);
+            inputs = client.GenerateInputs;
+            testCase.assertNumElements(inputs, 2);
+            messagesAfterToolExecution = inputs{2};
+            toolResults = messagesAfterToolExecution([messagesAfterToolExecution.Role] == "tool");
+            testCase.assertNumElements(toolResults, 1);
+            testCase.verifyEqual(toolResults.ToolCallID, "call_1");
+            testCase.verifyEqual(jsondecode(toolResults.Result), struct("c", 5));
+        end
+
+        function structuredOutput_withToolCalls_atMaxIterations_returnsLastStructAndWarns(testCase)
+            tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
+            intermediate = struct("answer", 0);
+            nextIntermediate = struct("answer", 1);
+            tokens = struct("Tokens", struct("NumInputTokens", 10, ...
+                "NumOutputTokens", 5, "NumTotalTokens", 15, "NumCachedInputTokens", 0));
+
+            client = MockClient();
+            client.GenerateOutputs = {
+                {intermediate, [ ...
+                    aisdk.LLMTextMessage(string(jsonencode(intermediate)), Role="assistant"), ...
+                    aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 2, "b", 3), ...
+                        ToolCallID="call_1")], tokens}
+                {nextIntermediate, [ ...
+                    aisdk.LLMTextMessage(string(jsonencode(nextIntermediate)), Role="assistant"), ...
+                    aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 3, "b", 4), ...
+                        ToolCallID="call_2")], tokens}
+            };
+
+            agent = aisdk.AIAgent(client, Tools=tool, ResponseFormat=intermediate, DisplayMode="off");
+            response = testCase.verifyWarning( ...
+                @() agent.run("What are 2+3 and 3+4?", MaxIterations=2), "aiAgent:MaxIterationsReached");
+
+            testCase.verifyEqual(response, nextIntermediate);
+            textMessages = agent.Messages(arrayfun(@(m) isa(m, 'aisdk.LLMTextMessage') ...
+                && m.Role == "assistant", agent.Messages));
+            testCase.verifyEqual([textMessages.Text], ...
+                [string(jsonencode(intermediate)), string(jsonencode(nextIntermediate))]);
+            toolResults = agent.Messages([agent.Messages.Role] == "tool");
+            testCase.assertNumElements(toolResults, 2);
+            testCase.verifyEqual([toolResults.ToolCallID], ["call_1", "call_2"]);
+            testCase.verifyEqual(jsondecode(toolResults(1).Result), struct("c", 5));
+            testCase.verifyEqual(jsondecode(toolResults(2).Result), struct("c", 7));
         end
 
     end
@@ -936,13 +1070,14 @@ classdef tAIAgent < matlab.unittest.TestCase
             testCase.verifyEqual(msgs(end).Text, "Done.");
         end
 
-        function run_maxIterationsWithNoText_returnsEmptyString(testCase)
+        function run_maxIterationsWithEmptyLastText_returnsEmptyString(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
 
             client = MockClient();
             client.GenerateOutputs = {
-                % Round 1: no text, only tool call
-                {"", aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 2), ToolCallID="call_1"), ...
+                % Round 1: intermediate text and tool call
+                {"Working...", [aisdk.LLMTextMessage("Working...", Role="assistant"), ...
+                    aisdk.LLMToolCallMessage("addTwoNumbers", struct("a", 1, "b", 2), ToolCallID="call_1")], ...
                  struct("Tokens", struct("NumInputTokens", 10, "NumOutputTokens", 5, ...
                         "NumTotalTokens", 15, "NumCachedInputTokens", 0))}
                 % Round 2: no text, only tool call (hits MaxIterations)
@@ -981,7 +1116,7 @@ classdef tAIAgent < matlab.unittest.TestCase
     end
 
     methods (Test, TestTags = {'Integration'})
-        function run_maxIterationsWithAccumulatedText_returnsJoinedText(testCase)
+        function run_maxIterationsWithText_returnsLastTextAndWarns(testCase)
             tool = aisdk.LLMTool(@addTwoNumbers, ApprovalRequest="never");
 
             client = MockClient();
@@ -999,7 +1134,7 @@ classdef tAIAgent < matlab.unittest.TestCase
                 @() agent.run("Compute", MaxIterations=2), ...
                 "aiAgent:MaxIterationsReached");
 
-            testCase.verifyEqual(response, "Working..." + newline + "Still going...");
+            testCase.verifyEqual(response, "Still going...");
         end
 
     end

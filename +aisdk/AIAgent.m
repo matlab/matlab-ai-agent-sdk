@@ -202,7 +202,10 @@ classdef AIAgent < handle
             %run   Run agentic loop with tool calling until completion.
             %
             %   RESPONSE = run(AGENT, PROMPT) runs the agentic loop for the
-            %   specified PROMPT string and returns the final text response.
+            %   specified PROMPT string and returns the final response.
+            %   Intermediate responses remain in the Messages property.
+            %   If MaxIterations is reached, returns the last response and
+            %   issues a warning.
 
             arguments
                 this (1,1) aisdk.AIAgent
@@ -222,7 +225,6 @@ classdef AIAgent < handle
             newMessages = aisdk.client.ClientBase.normalizeMessages(prompt);
             this.Messages = [this.Messages, newMessages];
 
-            allTexts = string.empty(1,0);
             currentToolChoice = nvp.ToolChoice;
 
             for iteration = 1:nvp.MaxIterations
@@ -253,17 +255,6 @@ classdef AIAgent < handle
                 this.NumOutputTokens      = this.NumOutputTokens      + info.Tokens.NumOutputTokens;
                 this.NumTotalTokens       = this.NumTotalTokens       + info.Tokens.NumTotalTokens;
                 this.NumCachedInputTokens = this.NumCachedInputTokens + info.Tokens.NumCachedInputTokens;
-
-                if isstruct(text)
-                    % assumes tool calls never produce structured text content
-                    this.LastInputTokens = info.Tokens.NumInputTokens;
-                    response = text;
-                    return;
-                end
-
-                if strlength(text) > 0
-                    allTexts(end+1) = text; %#ok<AGROW>
-                end
 
                 toolCalls = msgs(arrayfun(@(m) isa(m, 'aisdk.LLMToolCallMessage'), msgs));
                 approvalReasons = string.empty;
@@ -368,11 +359,7 @@ classdef AIAgent < handle
                 end
             end
 
-            if isempty(allTexts)
-                response = "";
-            else
-                response = join(allTexts, newline);
-            end
+            response = text;
             if iteration == nvp.MaxIterations && ~isempty(toolCalls)
                 warning("aiAgent:MaxIterationsReached", ...
                     "Tool calling loop reached maximum of %d iterations.", nvp.MaxIterations);
