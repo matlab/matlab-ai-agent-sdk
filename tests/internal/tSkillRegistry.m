@@ -60,7 +60,6 @@ classdef tSkillRegistry < matlab.unittest.TestCase
             testCase.verifyFalse(isKey(skill.Resources, "references/sub/deep.md"));
         end
 
-
         function scan_skillWithDotfile_excludesDotfileFromResources(testCase)
             tmpDir = testCase.createTemporaryFolder();
             skillDir = fullfile(tmpDir, "my-skill");
@@ -84,11 +83,9 @@ classdef tSkillRegistry < matlab.unittest.TestCase
 
             writelines(["---"; "name: my-skill"; "description: desc"; "---"; "Body"], fullfile(skillDir, "SKILL.md"));
             writelines("secret content", fullfile(refsDir, ".secret"));
-            writelines("guide content", fullfile(refsDir, "guide.md"));
 
             reg = aisdk.internal.SkillRegistry(tmpDir);
-            testCase.verifySubstring(reg.loadSkillImpl("my-skill/references/guide.md"), "guide content");
-            testCase.verifyError(@() reg.loadSkillImpl("my-skill/references/.secret"), ...
+            testCase.verifyError(@() reg.loadSkillImpl("my-skill", "references/.secret"), ...
                 "aisdk:skills:ResourceNotFound");
         end
 
@@ -222,19 +219,19 @@ classdef tSkillRegistry < matlab.unittest.TestCase
         end
 
         function construct_duplicateSkillNames_throwsDuplicateSkillName(testCase)
-            discoverFcn = @(~) ["/path/same-name/SKILL.md", "/path2/same-name/SKILL.md"];
+            discoverFcn = @(~) ["/path/first-folder/SKILL.md", "/path2/second-folder/SKILL.md"];
             fileReadFcn = @(~) sprintf("---\nname: same-name\ndescription: desc\n---\nBody");
             testCase.verifyError( ...
                 @() testCase.createRegistryWith(discoverFcn, fileReadFcn), ...
                 "aisdk:skills:DuplicateSkillName");
         end
 
-        function scan_nameMismatchesFolderName_errors(testCase)
+        function scan_nameMismatchesFolderName_usesFrontmatterName(testCase)
             discoverFcn = @(~) "/path/wrong-folder/SKILL.md";
             fileReadFcn = @(~) sprintf("---\nname: right-name\ndescription: desc\n---\nBody");
-            testCase.verifyError( ...
-                @() testCase.createRegistryWith(discoverFcn, fileReadFcn), ...
-                "aisdk:skills:NameFolderMismatch");
+            reg = testCase.createRegistryWith(discoverFcn, fileReadFcn);
+            testCase.verifyEqual(reg.Skills.Name, "right-name");
+            testCase.verifyEqual(reg.loadSkillImpl("right-name"), "Body");
         end
 
         function defaultDiscover_skillMdInRoot_errors(testCase)
@@ -357,18 +354,17 @@ classdef tSkillRegistry < matlab.unittest.TestCase
             testCase.verifyEqual(result, "Body of valid-skill.");
         end
 
-        function loadSkillImpl_namePlusRelPath_returnsResourceContent(testCase)
+        function loadSkillImpl_withResourcePath_returnsResourceContent(testCase)
             reg = testCase.createRegistryWithResource();
-            result = reg.loadSkillImpl("res-skill/references/guide.md");
-            testCase.verifySubstring(result, "guide content");
+            result = reg.loadSkillImpl("res-skill", "references/guide.md");
+            testCase.verifyEqual(result, "guide content");
         end
 
-        function loadSkillImpl_backslashPath_normalizesToForwardSlash(testCase)
+        function loadSkillImpl_withBackslashResourcePath_returnsResourceContent(testCase)
             reg = testCase.createRegistryWithResource();
-            result = reg.loadSkillImpl("res-skill\references\guide.md");
-            testCase.verifySubstring(result, "guide content");
+            result = reg.loadSkillImpl("res-skill", "references\guide.md");
+            testCase.verifyEqual(result, "guide content");
         end
-
 
         %% loadSkillImpl -- unhappy path
 
@@ -382,7 +378,7 @@ classdef tSkillRegistry < matlab.unittest.TestCase
         function loadSkillImpl_unknownResourceKey_throwsResourceNotFound(testCase)
             reg = testCase.createRegistryWithResource();
             testCase.verifyError( ...
-                @() reg.loadSkillImpl("res-skill/bad/path.md"), ...
+                @() reg.loadSkillImpl("res-skill", "bad/path.md"), ...
                 "aisdk:skills:ResourceNotFound");
         end
 
@@ -510,7 +506,10 @@ classdef tSkillRegistry < matlab.unittest.TestCase
             mkdir(refsDir);
             writelines(["---"; "name: res-skill"; "description: has resources"; "---"; "Body of res-skill."], ...
                 fullfile(skillDir, "SKILL.md"));
-            writelines("guide content", fullfile(refsDir, "guide.md"));
+            file = fopen(fullfile(refsDir, "guide.md"), 'w');
+            cleanup = onCleanup(@() fclose(file));
+            fprintf(file, '%s', "guide content");
+            clear cleanup
             reg = aisdk.internal.SkillRegistry(tmpDir);
         end
 
@@ -520,7 +519,6 @@ classdef tSkillRegistry < matlab.unittest.TestCase
             reg = aisdk.internal.SkillRegistry(pwd, ...
                 DiscoverSkillsFcn=discoverFcn, FileReadFcn=fileReadFcn, LastModifiedFcn=lastModFcn);
         end
-
 
         function skillPaths = discoverMoreOnRescan(~, counter)
             counter('n') = counter('n') + 1;

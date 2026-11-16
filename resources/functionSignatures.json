@@ -64,20 +64,11 @@
                 "name": "skill",
                 "kind": "required",
                 "type": "choices=aisdk.internal.skillCompletions(agent)"
-            }
-        ]
-    },
-    "aisdk.AIAgent.loadSkill": {
-        "inputs": [
-            {
-                "name": "agent",
-                "kind": "required",
-                "type": "aisdk.AIAgent"
             },
             {
-                "name": "skillResource",
-                "kind": "required",
-                "type": "choices=aisdk.internal.skillCompletions(agent)"
+                "name": "resourcePath",
+                "kind": "optional",
+                "type": "choices=aisdk.internal.skillCompletions(agent,skill)"
             }
         ]
     },

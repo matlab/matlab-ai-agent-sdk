@@ -7,7 +7,7 @@ Load skill into agent
 
 `loadSkill(agent,skill)`
 
-`loadSkill(agent,skillResource)`
+`loadSkill(agent,skill,resourcePath)`
 ## Description
 <a id="description"></a>
 
@@ -25,9 +25,10 @@ loads the content of the `SKILL.md` file of a skill
 `skill` into the message history of the AI agent
 `agent`.
 
-`loadSkill(agent,skillResource)`
-loads the content of the skill resource `skillResource` into the message
+`loadSkill(agent,skill,resourcePath)`
+loads the content of the skill resource `resourcePath` into the message
 history of the agent.
+
 ## Examples
 <a id="examples"></a>
 ### Run Agent With Skills
@@ -45,7 +46,7 @@ my-skill-directory/
     SKILL.md
     references/
       my-supplemental-information.md
-  my-second-favorite-skill
+  my-second-favorite-skill/
     SKILL.md
 ```
 
@@ -92,11 +93,10 @@ agent.Messages
 ans =
 
   1×4 LLMMessage array with messages:
-
-    1    User         Text         "Perform my favorite task by using my favorite skill."
-    2    Assistant    Tool Call    loadSkill({"name":"my-favorite-skill"})
-    3    Tool         Text         "# My Favorite Skill This is the text at the start of my fav…"
-    4    Assistant    Text         "This is the agent's response."
+    1     User         Text         "Perform my favorite task by using my favorite skill."
+    2     Assistant    Tool Call    "loadSkill({"name":"my-favorite-skill"})"
+    3     Tool         Text         "# My Favorite Skill  This is the text at the start of my fav..."
+    4     Assistant    Text         "This is the agent's response."
 ```
 
 If the agent has loaded the skill, then the message history contains a call to the `loadSkill` tool and a tool response that contains the text of the skill. Whether an agent loads a skill depends on the underlying model, as well as the name and description of the skill. To ensure that an agent reads a skill, load the skill manually by using the `loadSkill` function.
@@ -123,18 +123,17 @@ ans =
 
   1×2 LLMMessage array with messages:
 
-    1    Assistant    Tool Call    loadSkill({"name":"my-second-favorite-skill"})
-    2    Tool         Text         "# My Second Favorite Skill This is the text at the start of…"
+    1    Assistant    Tool Call    "loadSkill({"name":"my-second-favorite-skill"})"
+    2    Tool         Text         "# My Second Favorite Skill  This is the text at the start of..."
 ```
 ### Manually Load Skill Resource
 <a id="manually-load-skill-resource"></a>
 
-Some skills have additional resources, such as reference files. Manually load the resources
-corresponding to the `"my-favorite-skill"` skill into the same
+Some skills have additional resources, such as reference files. Manually load the supplemental information of the `"my-favorite-skill"` skill into the same
 agent.
 
 ```
-loadSkill(agent,"my-favorite-skill/references/my-supplemental-information.md");
+loadSkill(agent,"my-favorite-skill","references/my-supplemental-information.md");
 ```
 
 View the new messages in the message history.
@@ -148,8 +147,8 @@ ans =
 
   1×2 LLMMessage array with messages:
 
-    1    Assistant    Tool Call    loadSkill({"name":"my-favorite-skill/references/my-supplemen…
-    2    Tool         Text         "# Supplemental Information This is some supplemental inform…"
+    1    Assistant    Tool Call    "loadSkill({"name":"my-favorite-skill/references/my-supplemen..."
+    2    Tool         Text         "# Supplemental Information  This is some supplemental inform..."
 ```
 ## Input Arguments
 <a id="input-arguments"></a>
@@ -166,47 +165,52 @@ string scalar
 
 Skill name, specified as a string scalar.
 
-To see the skills that are available for loading, inspect the
+The skill name is defined in the metadata inside the `SKILL.md` file. The name can be different from the name of the folder that contains the `SKILL.md` file.
+
+To see the names of the skills that are available for loading, inspect the
 `Skills` property of the agent. To give the agent access to skills,
-set the `SkillDirectories` property during or after
+set the `SkillDirectories` property of the agent during or after
 construction.
 
 Example: `"my-skill"`
 
 Data Types: `string`
-### `skillResource` — Skill resource path
-<a id="skillresource"></a>
+### `resourcePath` — Path to resource file
+<a id="resourcePath"></a>
 
 string scalar
 
-Skill resource path, specified as a string scalar.
+Path to resource file, specified as a string scalar.
 
-Specify the skill resource path starting with the name of the directory that
-corresponds to the skill. For example, if you have
+Specify the skill resource path relative to the directory that contains the skill file `SKILL.md`. For example, if you have
 this file structure:
 
 ```
 my-skill-directory/
-  my-first-group-of-skills/
-    my-favorite-skill/
-      SKILL.md
-      references/
-        my-supplemental-information.md
-    my-second-favorite-skill/
-      SKILL.md
+  my-favorite-skill/
+    SKILL.md
+    references/
+      my-supplemental-information.md
 ```
 
-Then you can specify the
-`SkillDirectories` property as either
-`"my-skill-directory"` or as
-`"my-skill-directory/my-first-group-of-skills"`. In either case, to
-load the supplemental information corresponding to the
-`my-favorite-skill` skill, specify `skillResource`
-as `"my-skill/references/supplemental-information.md"`.
-
-Example: `"my-skill/references/supplemental-information.md"`
+To load the skill resource file `my-supplemental-information.md`, specify `resourcePath` as `references/my-supplemental-information.md`.
 
 Data Types: `string`
+
+## Version History
+
+> ### v0.5.0 Behavior Change
+> #### Updated syntax to load skill resources
+> Since v0.5.0, to load a skill resource, specify the skill name `skill` and the path to the resource [`resourcePath`](#resourcePath) relative to the folder that contains the skill as two separate input arguments:
+> ```
+> loadSkill(agent,"my-skill","references/my-supplemental-information.md");
+> ```
+>
+> Before v0.5.0, specify the path to the resource as a single input argument starting from the folder that contains the skill:
+> ```
+> loadSkill(agent,"my-skill/references/my-supplemental-information.md");
+> ```
+
 ## See Also
 <a id="see-also"></a>
 

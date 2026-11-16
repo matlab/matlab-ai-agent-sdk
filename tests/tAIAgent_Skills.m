@@ -3,6 +3,12 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
 
 %   Copyright 2026 The MathWorks, Inc.
 
+    properties (TestParameter)
+        ResourceIdentifier = struct( ...
+            'skillNamePrefixedPath', "my-skill/references/guide.md", ...
+            'folderPath', "parent/skill-folder/references/guide.md")
+    end
+
     methods (TestClassSetup)
         function addResourcesToPath(testCase)
             testCase.applyFixture(matlab.unittest.fixtures.PathFixture( ...
@@ -50,6 +56,22 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
             agent = aisdk.AIAgent(MockClient(), SkillDirectories=tmpDir);
             tool = agent.Tools.select("loadSkill");
             testCase.verifyEqual(tool.Name, "loadSkill");
+        end
+
+        function constructWithMismatchedFolderName_loadsByFrontmatterName(testCase)
+            tmpDir = testCase.createTemporaryFolder();
+            skillDir = fullfile(tmpDir, "prism_naming");
+            mkdir(skillDir);
+            writelines(["---"; "name: prism-name-forge"; ...
+                "description: Name things"; "---"; "Skill body"], ...
+                fullfile(skillDir, "SKILL.md"));
+
+            agent = aisdk.AIAgent(MockClient(), SkillDirectories=tmpDir, ...
+                DisplayMode="off");
+            testCase.verifyEqual(agent.Skills, "prism-name-forge");
+            agent.loadSkill("prism-name-forge");
+            results = testCase.getToolResults(agent);
+            testCase.verifyEqual(results(end).Result, "Skill body" + newline);
         end
 
         function constructWithSkillRegistry_addsLoadSkillToTools(testCase)
@@ -165,19 +187,24 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
                 "This is the body of the valid skill");
         end
 
-        function run_llmCallsLoadSkillWithResourcePath_returnsResourceContent(testCase)
-            reg = testCase.createRegistryWithResource();
+        function run_withSkillNameResourcePath_passesResourceContentToModel(testCase)
+            root = testCase.createTemporaryFolder();
+            testCase.writeSkillWithGuide(root, "skill-folder", "my-skill", "guide content");
             client = MockClient();
             client.GenerateOutputs = {
-                testCase.toolCallResponse("loadSkill", struct('name', 'valid-skill/references/guide.md'), "call_1")
+                testCase.toolCallResponse("loadSkill", ...
+                    struct('name', 'my-skill/references/guide.md'), "call_1")
                 testCase.textResponse("Done.")
             };
-            agent = aisdk.AIAgent(client, DisplayMode="off");
-            agent.SkillRegistry = reg;
+            agent = aisdk.AIAgent(client, SkillDirectories=root, DisplayMode="off");
+
             run(agent, "help");
-            toolResults = testCase.getToolResults(agent);
-            testCase.verifySubstring(toolResults(1).Result, ...
-                "This is reference content");
+
+            messages = client.GenerateInputs{2};
+            results = messages([messages.Role] == "tool");
+            testCase.assertNumElements(results, 1);
+            testCase.verifyEqual(results.Result, "guide content");
+            testCase.verifyEqual(results.ToolCallID, "call_1");
         end
 
         function run_llmCallsLoadSkillUnknownName_returnsErrorResultToLLM(testCase)
@@ -266,15 +293,89 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
             testCase.verifyEqual(resultMsg.Name, "loadSkill");
         end
 
-        function loadSkill_withResourcePath_injectsResourceContent(testCase)
-            reg = testCase.createRegistryWithResource();
+        function loadSkill_withMismatchedFolderName_injectsRequestedResource(testCase)
+            root = testCase.createTemporaryFolder();
+            testCase.writeSkillWithGuide(root, "parent/skill-folder", "my-skill", "guide content");
+            agent = aisdk.AIAgent(MockClient(), SkillDirectories=root, DisplayMode="off");
+
+            agent.loadSkill("my-skill", "references/guide.md");
+
+            results = testCase.getToolResults(agent);
+            testCase.assertNumElements(results, 1);
+            testCase.verifyEqual(results.Result, "guide content");
+        end
+
+        function loadSkill_withResourcePath_recordsSkillNamePrefixedResourcePathInHistory(testCase)
+            root = testCase.createTemporaryFolder();
+            testCase.writeSkillWithGuide(root, "skill-folder", "my-skill", "guide content");
+            agent = aisdk.AIAgent(MockClient(), SkillDirectories=root, DisplayMode="off");
+
+            agent.loadSkill("my-skill", "references/guide.md");
+
+            messages = agent.Messages;
+            calls = messages(arrayfun(@(message) isa(message, 'aisdk.LLMToolCallMessage'), messages));
+            testCase.assertNumElements(calls, 1);
+            testCase.verifyEqual(calls.Arguments, ...
+                struct('name', 'my-skill/references/guide.md'));
+        end
+
+        function loadSkill_withResourcePathAsSkillName_throwsSkillNotFound(testCase, ResourceIdentifier)
+            root = testCase.createTemporaryFolder();
+            testCase.writeSkillWithGuide(root, "parent/skill-folder", "my-skill", "guide content");
+            agent = aisdk.AIAgent(MockClient(), SkillDirectories=root, DisplayMode="off");
+
+            testCase.verifyError(@() agent.loadSkill(ResourceIdentifier), ...
+                "aisdk:skills:SkillNotFound");
+        end
+
+        function loadSkill_withUnregisteredResource_throwsResourceNotFound(testCase)
+            root = testCase.createTemporaryFolder();
+            testCase.writeSkillWithGuide(root, "skill-folder", "my-skill", "guide content");
+            agent = aisdk.AIAgent(MockClient(), SkillDirectories=root, DisplayMode="off");
+
+            testCase.verifyError(@() agent.loadSkill("my-skill", "references/missing.md"), ...
+                "aisdk:skills:ResourceNotFound");
+        end
+
+        function loadSkill_withEmptyResourcePath_throwsValidationError(testCase)
+            root = testCase.createTemporaryFolder();
+            testCase.writeSkillWithGuide(root, "skill-folder", "my-skill", "guide content");
+            agent = aisdk.AIAgent(MockClient(), SkillDirectories=root, DisplayMode="off");
+
+            testCase.verifyError(@() agent.loadSkill("my-skill", ""), ...
+                "aisdk:skills:EmptyResourcePath");
+        end
+
+        function loadSkill_afterCurrentFolderChanges_loadsRegisteredResource(testCase)
+            parent = testCase.createTemporaryFolder();
+            root = fullfile(parent, "skills");
+            testCase.writeSkillWithGuide(root, "skill-folder", "my-skill", "guide content");
+            testCase.applyFixture(matlab.unittest.fixtures.CurrentFolderFixture(parent));
+            root = "skills";
+            agent = aisdk.AIAgent(MockClient(), SkillDirectories=root, DisplayMode="off");
+            testCase.applyFixture(matlab.unittest.fixtures.CurrentFolderFixture( ...
+                testCase.createTemporaryFolder()));
+
+            agent.loadSkill("my-skill", "references/guide.md");
+
+            results = testCase.getToolResults(agent);
+            testCase.verifyEqual(results.Result, "guide content");
+        end
+
+        function loadSkill_withResourceAddedAfterConstruction_loadsResourceContent(testCase)
+            root = testCase.createTemporaryFolder();
+            testCase.writeSkillWithGuide(root, "skill-folder", "my-skill", "guide content");
+            timestamp = containers.Map({'value'}, {1});
+            registry = aisdk.internal.SkillRegistry(root, LastModifiedFcn=@(~) timestamp('value'));
             agent = aisdk.AIAgent(MockClient(), DisplayMode="off");
-            agent.SkillRegistry = reg;
-            agent.loadSkill("valid-skill/references/guide.md");
-            toolResults = testCase.getToolResults(agent);
-            testCase.verifyLength(toolResults, 1);
-            testCase.verifySubstring(toolResults(1).Result, ...
-                "This is reference content for the valid skill.");
+            agent.SkillRegistry = registry;
+            testCase.writeExactText(fullfile(root, "skill-folder", "references", "added.md"), "new guide");
+            timestamp('value') = 2; %#ok<NASGU> Handle captured by LastModifiedFcn.
+
+            agent.loadSkill("my-skill", "references/added.md");
+
+            results = testCase.getToolResults(agent);
+            testCase.verifyEqual(results.Result, "new guide");
         end
 
         function loadSkill_withResourcePath_toolCallIDHasNoPathSeparators(testCase)
@@ -283,7 +384,7 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
             reg = testCase.createRegistryWithResource();
             agent = aisdk.AIAgent(MockClient(), DisplayMode="off");
             agent.SkillRegistry = reg;
-            agent.loadSkill("valid-skill/references/guide.md");
+            agent.loadSkill("valid-skill", "references/guide.md");
             msgs = agent.Messages;
             callMsgs = msgs(arrayfun(@(m) isa(m, 'aisdk.LLMToolCallMessage'), msgs));
             testCase.verifyMatches(callMsgs(1).ToolCallID, "^[a-zA-Z0-9_.:-]+$");
@@ -561,6 +662,21 @@ classdef tAIAgent_Skills < matlab.unittest.TestCase
     end
 
     methods (Access = private)
+
+        function writeSkillWithGuide(testCase, root, folder, name, content)
+            skillDir = fullfile(root, folder);
+            mkdir(fullfile(skillDir, "references"));
+            writelines(["---"; "name: " + name; "description: desc"; "---"; "Skill body"], ...
+                fullfile(skillDir, "SKILL.md"));
+            testCase.writeExactText(fullfile(skillDir, "references", "guide.md"), content);
+        end
+
+        function writeExactText(~, filename, content)
+            file = fopen(filename, 'w');
+            cleanup = onCleanup(@() fclose(file));
+            fprintf(file, '%s', content);
+        end
+
         function reg = createStubRegistry(testCase) %#ok<MANU>
             paths = ["/path/valid-skill/SKILL.md", "/path/another-skill/SKILL.md"];
             bodyA = sprintf("---\nname: valid-skill\ndescription: A valid skill for testing\n---\nThis is the body of the valid skill.\n\nUse this skill to do valid things.");

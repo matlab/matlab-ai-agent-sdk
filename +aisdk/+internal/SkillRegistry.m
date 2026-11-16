@@ -34,9 +34,16 @@ classdef SkillRegistry < handle
                 nvp.FileReadFcn = @fileread
                 nvp.LastModifiedFcn = @aisdk.internal.SkillRegistry.defaultLastModified
             end
-            for path = paths
+            for index = 1:numel(paths)
+                path = paths(index);
                 if ~isfolder(path)
                     aisdk.internal.throwError("aisdk:skills:DirectoryNotFound", path);
+                end
+                % Anchor relative directories before the current folder changes.
+                % dir resolves both ordinary folder paths and file URIs.
+                entries = dir(path);
+                if ~isempty(entries)
+                    paths(index) = string(entries(1).folder);
                 end
             end
             this.ScanPaths = paths;
@@ -65,11 +72,6 @@ classdef SkillRegistry < handle
                 [name, description] = this.parseFrontmatter(content, skillPath);
 
                 skillDir = fileparts(skillPath);
-                [~, folderName] = fileparts(skillDir);
-                if name ~= string(folderName)
-                    aisdk.internal.throwError("aisdk:skills:NameFolderMismatch", name, folderName, skillPath);
-                end
-
                 % Error if a skill with this name was already discovered.
                 if ~isempty(skills) && any([skills.Name] == name)
                     existing = skills([skills.Name] == name).Path;
@@ -86,26 +88,42 @@ classdef SkillRegistry < handle
             this.LastScanned = this.LastModifiedFcn(this.ScanPaths);
         end
 
-        function result = loadSkillImpl(this, nameOrPath)
-        % Splits at first "/": no slash → skill body, with slash → resource lookup.
+        function [content, resolvedName] = loadSkillImpl(this, name, resourcePath)
+        % Resolve a skill name or a name/resource pair.
+        % The second output uses the model's frontmatter-name/resource syntax.
             arguments
                 this
-                nameOrPath (1,1) string
+                name (1,1) string
+                resourcePath (1,1) string = ""
             end
-            nameOrPath = replace(nameOrPath, "\", "/");
-            if contains(nameOrPath, "/")
-                parts = split(nameOrPath, "/");
-                name = parts(1);
-                resourceKey = join(parts(2:end), "/");
+            resolvedName = name;
+            if nargin == 3
+                if resourcePath == ""
+                    aisdk.internal.throwError("aisdk:skills:EmptyResourcePath");
+                end
                 skill = this.select(name);
-                if ~isKey(skill.Resources, resourceKey)
+                % Resource keys use forward slashes on every platform.
+                resourceKey = replace(resourcePath, "\", "/");
+                if numEntries(skill.Resources) == 0 || ~isKey(skill.Resources, resourceKey)
                     error("aisdk:skills:ResourceNotFound", "%s", ...
                         this.buildResourceNotFoundMessage(resourceKey, skill));
                 end
-                result = skill.Resources(resourceKey);
+                content = skill.Resources(resourceKey);
+                resolvedName = skill.Name + "/" + resourceKey;
             else
-                skill = this.select(nameOrPath);
-                result = skill.Body;
+                skill = this.select(name);
+                content = skill.Body;
+            end
+        end
+
+        function paths = resourceCompletions(this, name)
+        % Return one skill's cached relative resource keys.
+            paths = strings(1, 0);
+            for skill = this.Skills
+                if skill.Name == name && numEntries(skill.Resources) > 0
+                    paths = reshape(string(keys(skill.Resources)), 1, []);
+                    return
+                end
             end
         end
     end

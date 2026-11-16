@@ -32,7 +32,14 @@ classdef LoadSkillTool < aisdk.tool.BuiltInTool
             if ~isfield(args, 'name')
                 aisdk.internal.throwError("aisdk:requiredArgumentNotFound", "name");
             end
-            output = this.Registry.loadSkillImpl(args.name);
+            % Model resource identifiers start with the indexed frontmatter name.
+            nameOrPath = replace(string(args.name), "\", "/");
+            if contains(nameOrPath, "/")
+                parts = split(nameOrPath, "/");
+                output = this.Registry.loadSkillImpl(parts(1), join(parts(2:end), "/"));
+            else
+                output = this.Registry.loadSkillImpl(nameOrPath);
+            end
         end
     end
 end

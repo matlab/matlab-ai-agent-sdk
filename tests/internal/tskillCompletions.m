@@ -17,12 +17,28 @@ classdef tskillCompletions < matlab.unittest.TestCase
 
     methods (Test, TestTags = {'Unit'})
 
-        function returnsEachSkillNameAndResource(testCase)
-            % Both loadSkill syntaxes see every candidate, for discoverability.
-            agent = testCase.createAgentWithSkills();
+        function skillCompletions_withoutSkillName_returnsSkillNames(testCase)
+            root = testCase.createTemporaryFolder();
+            skillDir = testCase.writeSkill(root, "my-skill", "parent/skill-folder");
+            mkdir(fullfile(skillDir, "references"));
+            writelines("guide", fullfile(skillDir, "references", "guide.md"));
+            agent = aisdk.AIAgent(MockClient(), SkillDirectories=root);
+
             names = aisdk.internal.skillCompletions(agent);
-            testCase.verifyEqual(sort(names), ["datacleaning", "livescript", ...
-                "livescript/example.m", "livescript/references/guide.md"]);
+
+            testCase.verifyEqual(names, "my-skill");
+        end
+
+        function skillCompletions_withSkillName_returnsRelativeResourcePaths(testCase)
+            root = testCase.createTemporaryFolder();
+            skillDir = testCase.writeSkill(root, "my-skill", "parent/skill-folder");
+            mkdir(fullfile(skillDir, "references"));
+            writelines("guide", fullfile(skillDir, "references", "guide.md"));
+            agent = aisdk.AIAgent(MockClient(), SkillDirectories=root);
+
+            names = aisdk.internal.skillCompletions(agent, "my-skill");
+
+            testCase.verifyEqual(names, "references/guide.md");
         end
 
         function skillWithoutSupportingFiles_contributesOnlyItsName(testCase)
@@ -74,8 +90,11 @@ classdef tskillCompletions < matlab.unittest.TestCase
             agent = aisdk.AIAgent(MockClient(), SkillDirectories=tmpDir);
         end
 
-        function skillDir = writeSkill(~, parentDir, name)
-            skillDir = fullfile(parentDir, name);
+        function skillDir = writeSkill(~, parentDir, name, folder)
+            if nargin < 4
+                folder = name;
+            end
+            skillDir = fullfile(parentDir, folder);
             mkdir(skillDir);
             writelines(["---"; "name: " + name; "description: desc"; "---"; "Body"], ...
                 fullfile(skillDir, "SKILL.md"));

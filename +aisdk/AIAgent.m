@@ -366,7 +366,7 @@ classdef AIAgent < handle
             end
         end
 
-        function loadSkill(this, nameOrPath)
+        function loadSkill(this, name, resourcePath)
             %loadSkill   Load a skill or skill resource into the message history.
             %
             %   Agents can decide to load skills based on the user prompt. Use
@@ -378,17 +378,17 @@ classdef AIAgent < handle
             %   SKILL.md file into the message history of AGENT. SKILL must
             %   match the frontmatter name of a skill in SkillDirectories.
             %
-            %   loadSkill(AGENT, SKILLRESOURCE) loads a supporting file into
-            %   the message history of AGENT. Specify SKILLRESOURCE as a skill
-            %   name followed by a path relative to its folder, for example
-            %   "livescript/references/guide.md".
+            %   loadSkill(AGENT, SKILL, RESOURCEPATH) selects SKILL by frontmatter
+            %   name and loads RESOURCEPATH relative to its SKILL.md folder.
+            %   An explicitly empty RESOURCEPATH is an error.
             %
-            %   Either syntax appends a tool call and a tool result to the
+            %   Each syntax appends a tool call and a tool result to the
             %   Messages property, matching what a model-initiated load
             %   produces. Repeated calls are additive.
             arguments
                 this (1,1) aisdk.AIAgent
-                nameOrPath (1,1) string
+                name (1,1) string
+                resourcePath (1,1) string = ""
             end
 
             if isempty(this.SkillRegistry)
@@ -396,8 +396,12 @@ classdef AIAgent < handle
             end
 
             this.refreshSkillsIfStale();
-            skillBody = this.SkillRegistry.loadSkillImpl(nameOrPath);
-            args = struct('name', char(nameOrPath));
+            if nargin == 3
+                [skillBody, recordedName] = this.SkillRegistry.loadSkillImpl(name, resourcePath);
+            else
+                [skillBody, recordedName] = this.SkillRegistry.loadSkillImpl(name);
+            end
+            args = struct('name', char(recordedName));
             % Derived from the message count so repeated loads produce unique
             % IDs — some providers reject duplicates. Deliberately excludes
             % the skill name: a resource load would put "/" in the ID, which

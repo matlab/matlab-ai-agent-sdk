@@ -20,12 +20,14 @@ classdef tLoadSkillTool < matlab.unittest.TestCase
             testCase.verifyEqual(tool.ApprovalRequest, aisdk.tool.ApprovalRequest.never);
         end
 
-        function constructed_declaresNameInputArgument(testCase)
+        function constructed_declaresOnlyRequiredNameInput(testCase)
             tool = testCase.createTool();
-            testCase.verifyEqual(numel(tool.InputArguments), 1);
-            testCase.verifyEqual(tool.InputArguments(1).Name, "name");
-            testCase.verifyEqual(tool.InputArguments(1).DataType, "string");
-            testCase.verifyTrue(tool.InputArguments(1).Required);
+            inputs = tool.InputArguments;
+            testCase.assertNumElements(inputs, 1);
+            % "name" is fixed by the tool schema, independent of the registered skill name.
+            testCase.verifyEqual(inputs.Name, "name");
+            testCase.verifyEqual(inputs.DataType, "string");
+            testCase.verifyTrue(inputs.Required);
         end
 
         function evaluateWithSkillName_returnsBody(testCase)
@@ -37,7 +39,15 @@ classdef tLoadSkillTool < matlab.unittest.TestCase
         function evaluateWithResourcePath_returnsContent(testCase)
             tool = testCase.createToolWithResource();
             output = tool.evaluate(struct('name', 'res-skill/references/guide.md'));
-            testCase.verifySubstring(output, "guide content");
+            testCase.verifyEqual(output, "guide content");
+        end
+
+        function evaluateWithFolderResourcePath_throwsSkillNotFound(testCase)
+            tool = testCase.createToolWithResource();
+
+            testCase.verifyError( ...
+                @() tool.evaluate(struct('name', 'res-skill-folder/references/guide.md')), ...
+                "aisdk:skills:SkillNotFound");
         end
 
         function description_referencesCorrectToolName(testCase)
@@ -65,13 +75,16 @@ classdef tLoadSkillTool < matlab.unittest.TestCase
 
         function tool = createToolWithResource(testCase)
             tmpDir = testCase.createTemporaryFolder();
-            skillDir = fullfile(tmpDir, "res-skill");
+            skillDir = fullfile(tmpDir, "res-skill-folder");
             mkdir(skillDir);
             refsDir = fullfile(skillDir, "references");
             mkdir(refsDir);
             writelines(["---"; "name: res-skill"; "description: has resources"; "---"; "Body"], ...
                 fullfile(skillDir, "SKILL.md"));
-            writelines("guide content", fullfile(refsDir, "guide.md"));
+            file = fopen(fullfile(refsDir, "guide.md"), 'w');
+            cleanup = onCleanup(@() fclose(file));
+            fprintf(file, '%s', "guide content");
+            clear cleanup
             reg = aisdk.internal.SkillRegistry(tmpDir);
             tool = aisdk.tool.LoadSkillTool(reg);
         end
