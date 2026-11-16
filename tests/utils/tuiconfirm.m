@@ -12,7 +12,7 @@ classdef tuiconfirm < matlab.uitest.TestCase
         end
     end
 
-    methods (Test, TestTags = {'Unit'})
+    methods (Test, TestTags = {'Unit', 'GUI'})
         function approveButton_approvesNonPermanently(testCase)
             dlg = makeDialog(testCase, "always");
 
@@ -152,6 +152,9 @@ classdef tuiconfirm < matlab.uitest.TestCase
             testCase.verifyClass(dlg.Result.Reason, "string");
         end
 
+    end
+
+    methods (Test, TestTags = {'Unit'})
         function wrapper_returnsResultStruct(testCase)
             testCase.assumeFail("Test double not picked up correctly.");
 

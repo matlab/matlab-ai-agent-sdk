@@ -128,28 +128,6 @@ classdef tExamples < matlab.unittest.TestCase
             evalc("AnalyzeTextDataUsingLLMTool");
         end
 
-        function testFitPolynomialToDataUsingAIAgent(testCase)
-
-            testCase.assumeFalse( ...
-                isMATLABReleaseOlderThan("R2026b"), ...
-                "MATLABWindow exited Unexpected in TeamCity.");
-
-            % Requires Curve Fitting Toolbox
-            testCase.assumeTrue( ...
-                ~isempty(ver("curvefit")), ...
-                "Curve Fitting Toolbox is not installed");
-
-            % The example adds random noise to its data, and the agent's
-            % tools then reject fits based on that data. Replaying canned
-            % responses only makes sense against the data they were
-            % recorded for, so fix the generator.
-            generatorState = rng(0,"twister");
-            testCase.addTeardown(@() rng(generatorState));
-
-            testCase.prepareExample("FitPolynomialToDataUsingAIAgent");
-            evalc("FitPolynomialToDataUsingAIAgent");
-        end
-
         function testOrchestrateMultipleSubagents(testCase)
             testCase.prepareExample("OrchestrateMultipleSubagents");
             evalc("OrchestrateMultipleSubagents");
@@ -172,6 +150,32 @@ classdef tExamples < matlab.unittest.TestCase
             model = "gpt-4.1-mini"; %#ok<NASGU>
 
             evalc("CallMCPClientUsingAIAgent");
+        end
+
+    end
+
+    % These examples create real figures through plot and imshow.
+    methods(Test, TestTags = {'Integration', 'GUI'})
+        function testFitPolynomialToDataUsingAIAgent(testCase)
+
+            testCase.assumeFalse( ...
+                isMATLABReleaseOlderThan("R2026b"), ...
+                "MATLABWindow exited Unexpected in TeamCity.");
+
+            % Requires Curve Fitting Toolbox
+            testCase.assumeTrue( ...
+                ~isempty(ver("curvefit")), ...
+                "Curve Fitting Toolbox is not installed");
+
+            % The example adds random noise to its data, and the agent's
+            % tools then reject fits based on that data. Replaying canned
+            % responses only makes sense against the data they were
+            % recorded for, so fix the generator.
+            generatorState = rng(0,"twister");
+            testCase.addTeardown(@() rng(generatorState));
+
+            testCase.prepareExample("FitPolynomialToDataUsingAIAgent");
+            evalc("FitPolynomialToDataUsingAIAgent");
         end
 
         function testLabelImagesUsingLLM(testCase)
