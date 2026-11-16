@@ -169,7 +169,7 @@
             {
                 "name": "StopSequences",
                 "kind": "namevalue",
-                "type": [["string"], ["cell"]]
+                "type": [["string"], ["char"], ["cell"]]
             },
             {
                 "name": "MaxNumTokens",
@@ -435,6 +435,455 @@
                         }
                     ]
                 ]
+            }
+        ]
+    },
+    "aisdk.LLMTextMessage": {
+        "inputs": [
+            {
+                "name": "text",
+                "kind": "required",
+                "type": [["string", "scalar"], ["char"]]
+            },
+            {
+                "name": "Role",
+                "kind": "namevalue",
+                "type": "choices={'user','assistant','system'}"
+            }
+        ]
+    },
+    "aisdk.LLMImageMessage": {
+        "inputs": [
+            {
+                "mutuallyExclusiveGroup": [
+                    [
+                        {
+                            "name": "filename",
+                            "kind": "required",
+                            "type": [["file"], ["string", "scalar"]]
+                        }
+                    ],
+                    [
+                        {
+                            "name": "img",
+                            "kind": "required",
+                            "type": [["numeric"], ["logical"]]
+                        }
+                    ]
+                ]
+            },
+            {
+                "name": "Detail",
+                "kind": "namevalue",
+                "type": "choices={'auto','low','high','original'}"
+            }
+        ]
+    },
+    "aisdk.LLMToolArgument": {
+        "inputs": [
+            {
+                "mutuallyExclusiveGroup": [
+                    [
+                        {
+                            "name": "name",
+                            "kind": "required",
+                            "type": [["string", "scalar"], ["char"]]
+                        },
+                        {
+                            "name": "Description",
+                            "kind": "namevalue",
+                            "type": [["string", "scalar"], ["char"]]
+                        },
+                        {
+                            "name": "DataType",
+                            "kind": "namevalue",
+                            "type": "choices={'string','number','integer','boolean'}"
+                        },
+                        {
+                            "name": "Required",
+                            "kind": "namevalue",
+                            "type": ["logical", "scalar"]
+                        },
+                        {
+                            "name": "NameValue",
+                            "kind": "namevalue",
+                            "type": ["logical", "scalar"]
+                        }
+                    ],
+                    [
+                        {
+                            "name": "exampleArgument",
+                            "kind": "required",
+                            "type": ["struct", "scalar"]
+                        },
+                        {
+                            "name": "Description",
+                            "kind": "namevalue",
+                            "type": [["string"], ["char"]]
+                        },
+                        {
+                            "name": "Required",
+                            "kind": "namevalue",
+                            "type": "logical"
+                        },
+                        {
+                            "name": "NameValue",
+                            "kind": "namevalue",
+                            "type": "logical"
+                        }
+                    ]
+                ]
+            }
+        ]
+    },
+    "aisdk.LLMToolCallMessage": {
+        "inputs": [
+            {
+                "name": "name",
+                "kind": "required",
+                "type": [["string", "scalar"], ["char"]]
+            },
+            {
+                "name": "arguments",
+                "kind": "positional",
+                "type": ["struct", "scalar"]
+            },
+            {
+                "name": "ToolCallID",
+                "kind": "namevalue",
+                "type": ["string", "scalar"]
+            }
+        ]
+    },
+    "aisdk.LLMToolResultMessage": {
+        "inputs": [
+            {
+                "name": "result",
+                "kind": "required",
+                "type": [["string", "scalar"], ["char"]]
+            },
+            {
+                "name": "ToolCallID",
+                "kind": "namevalue",
+                "type": ["string", "scalar"]
+            },
+            {
+                "name": "Name",
+                "kind": "namevalue",
+                "type": [["string", "scalar"], ["char"]]
+            }
+        ]
+    },
+    "aisdk.client.OpenAIClient.generate": {
+        "inputs": [
+            {
+                "name": "client",
+                "kind": "required",
+                "type": "aisdk.client.OpenAIClient"
+            },
+            {
+                "mutuallyExclusiveGroup": [
+                    [
+                        {
+                            "name": "prompt",
+                            "kind": "required",
+                            "type": [["string", "scalar"], ["char", "row"]]
+                        }
+                    ],
+                    [
+                        {
+                            "name": "messageHistory",
+                            "kind": "required",
+                            "type": "aisdk.message.LLMMessage"
+                        }
+                    ]
+                ]
+            },
+            {
+                "name": "Tools",
+                "kind": "namevalue",
+                "type": "aisdk.tool.LLMTool"
+            },
+            {
+                "name": "ToolChoice",
+                "kind": "namevalue",
+                "type": [["choices={'auto','none','required'}"], ["string", "scalar"], ["char", "row"]]
+            },
+            {
+                "name": "MaxNumTokens",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", ">0"]
+            },
+            {
+                "name": "ReasoningEffort",
+                "kind": "namevalue",
+                "type": "choices=aisdk.client.internal.reasoningEffortValues"
+            },
+            {
+                "name": "StopSequences",
+                "kind": "namevalue",
+                "type": [["string"], ["char"], ["cell"]]
+            },
+            {
+                "name": "StreamFcn",
+                "kind": "namevalue",
+                "type": "function_handle"
+            },
+            {
+                "name": "TimeOut",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", ">0"]
+            },
+            {
+                "name": "ResponseFormat",
+                "kind": "namevalue",
+                "type": [["choices={'text','json'}"], ["struct"], ["string", "scalar"]]
+            },
+            {
+                "name": "NumCompletions",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", "integer", ">0"]
+            },
+            {
+                "name": "Seed",
+                "kind": "namevalue",
+                "type": "numeric"
+            },
+            {
+                "name": "Verbosity",
+                "kind": "namevalue",
+                "type": "choices=aisdk.client.internal.verbosityValues"
+            },
+            {
+                "name": "PresencePenalty",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=-2", "<=2"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "FrequencyPenalty",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=-2", "<=2"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "Temperature",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0", "<=2"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "TopP",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0", "<=1"], ["choices={'auto'}"]]
+            }
+        ]
+    },
+    "aisdk.client.OpenAIResponsesClient.generate": {
+        "inputs": [
+            {
+                "name": "client",
+                "kind": "required",
+                "type": "aisdk.client.OpenAIResponsesClient"
+            },
+            {
+                "mutuallyExclusiveGroup": [
+                    [
+                        {
+                            "name": "prompt",
+                            "kind": "required",
+                            "type": [["string", "scalar"], ["char", "row"]]
+                        }
+                    ],
+                    [
+                        {
+                            "name": "messageHistory",
+                            "kind": "required",
+                            "type": "aisdk.message.LLMMessage"
+                        }
+                    ]
+                ]
+            },
+            {
+                "name": "Tools",
+                "kind": "namevalue",
+                "type": "aisdk.tool.LLMTool"
+            },
+            {
+                "name": "ToolChoice",
+                "kind": "namevalue",
+                "type": [["choices={'auto','none','required'}"], ["string", "scalar"], ["char", "row"]]
+            },
+            {
+                "name": "MaxNumTokens",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", ">0"]
+            },
+            {
+                "name": "ReasoningEffort",
+                "kind": "namevalue",
+                "type": "choices=aisdk.client.internal.reasoningEffortValues"
+            },
+            {
+                "name": "StreamFcn",
+                "kind": "namevalue",
+                "type": "function_handle"
+            },
+            {
+                "name": "TimeOut",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", ">0"]
+            },
+            {
+                "name": "ResponseFormat",
+                "kind": "namevalue",
+                "type": [["choices={'text','json'}"], ["struct"], ["string", "scalar"]]
+            },
+            {
+                "name": "Verbosity",
+                "kind": "namevalue",
+                "type": "choices=aisdk.client.internal.verbosityValues"
+            },
+            {
+                "name": "Temperature",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0", "<=2"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "TopP",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0", "<=1"], ["choices={'auto'}"]]
+            }
+        ]
+    },
+    "aisdk.client.OllamaClient.generate": {
+        "inputs": [
+            {
+                "name": "client",
+                "kind": "required",
+                "type": "aisdk.client.OllamaClient"
+            },
+            {
+                "mutuallyExclusiveGroup": [
+                    [
+                        {
+                            "name": "prompt",
+                            "kind": "required",
+                            "type": [["string", "scalar"], ["char", "row"]]
+                        }
+                    ],
+                    [
+                        {
+                            "name": "messageHistory",
+                            "kind": "required",
+                            "type": "aisdk.message.LLMMessage"
+                        }
+                    ]
+                ]
+            },
+            {
+                "name": "Tools",
+                "kind": "namevalue",
+                "type": "aisdk.tool.LLMTool"
+            },
+            {
+                "name": "MaxNumTokens",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", ">0"]
+            },
+            {
+                "name": "StopSequences",
+                "kind": "namevalue",
+                "type": [["string"], ["char"], ["cell"]]
+            },
+            {
+                "name": "StreamFcn",
+                "kind": "namevalue",
+                "type": "function_handle"
+            },
+            {
+                "name": "TimeOut",
+                "kind": "namevalue",
+                "type": ["numeric", "scalar", ">0"]
+            },
+            {
+                "name": "ResponseFormat",
+                "kind": "namevalue",
+                "type": [["choices={'text','json'}"], ["struct"], ["string", "scalar"]]
+            },
+            {
+                "name": "Seed",
+                "kind": "namevalue",
+                "type": "numeric"
+            },
+            {
+                "name": "Temperature",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0", "<=2"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "TopP",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0", "<=1"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "MinP",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">=0", "<=1"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "TopK",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar", ">0"], ["choices={'auto'}"]]
+            },
+            {
+                "name": "TailFreeSamplingZ",
+                "kind": "namevalue",
+                "type": [["numeric", "scalar"], ["choices={'auto'}"]]
+            }
+        ]
+    },
+    "aisdk.AIAgent.resetApproval": {
+        "inputs": [
+            {
+                "name": "agent",
+                "kind": "required",
+                "type": "aisdk.AIAgent"
+            },
+            {
+                "name": "toolNames",
+                "kind": "positional",
+                "type": [["choices=agent.UserApprovedTools"], ["string"], ["char", "row"]]
+            }
+        ]
+    },
+    "aisdk.tool.LLMTool.select": {
+        "inputs": [
+            {
+                "name": "tools",
+                "kind": "required",
+                "type": "aisdk.tool.LLMTool"
+            },
+            {
+                "name": "name",
+                "kind": "required",
+                "type": [["string", "scalar"], ["char", "row"]]
+            }
+        ]
+    },
+    "aisdk.tool.internal.CallableTool.evaluate": {
+        "inputs": [
+            {
+                "name": "tool",
+                "kind": "required",
+                "type": [["aisdk.tool.LocalLLMTool"], ["aisdk.tool.MCPTool"]]
+            },
+            {
+                "name": "inputArguments",
+                "kind": "required",
+                "type": ["struct", "scalar"]
+            },
+            {
+                "name": "data",
+                "kind": "positional",
+                "type": ["struct", "scalar"]
             }
         ]
     }
