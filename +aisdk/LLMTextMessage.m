@@ -36,12 +36,17 @@ classdef LLMTextMessage < aisdk.message.LLMMessage
     end
 
     methods (Access = protected)
+        function groups = getPropertyGroups(obj)
+            props = struct("Role", obj.Role, "Text", obj.Text);
+            groups = matlab.mixin.util.PropertyGroup(props);
+        end
+
         function label = displayTypeLabel(~)
             label = "Text";
         end
 
         function txt = contentPreview(this)
-            txt = this.truncateForDisplay(this.Text);
+            txt = this.formatPreview(this.Text);
         end
     end
 

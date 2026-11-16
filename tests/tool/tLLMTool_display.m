@@ -76,21 +76,36 @@ classdef tLLMTool_display < matlab.unittest.TestCase
                 repmat('x', 1, 60) + "…");
         end
 
-        function borderlineDescription_notTruncated(testCase)
-            desc61 = repmat('y', 1, 61);
-            tool = aisdk.tool.LocalLLMTool(@pwd, Name="borderline", ...
-                Description=desc61);
+        function description_with60Characters_isNotTruncated(testCase)
+            description = string(repmat('y', 1, 60));
+            tool = aisdk.tool.LocalLLMTool(@pwd, Description=description);
+
             output = formattedDisplayText([tool, tool]);
-            testCase.verifySubstring(output, desc61);
+
+            testCase.verifySubstring(output, description);
             testCase.verifyThat(output, ...
                 ~matlab.unittest.constraints.ContainsSubstring("…"));
         end
 
-        function descriptionWithNewline_showsOnOneLine(testCase)
-            tool = aisdk.tool.LocalLLMTool(@pwd, Name="multiline", ...
-                Description="Line one" + newline + "Line two");
+        function description_with61Characters_isTruncated(testCase)
+            text60 = string(repmat('y', 1, 60));
+            tool = aisdk.tool.LocalLLMTool(@pwd, Description=text60 + "z");
+
             output = formattedDisplayText([tool, tool]);
+
+            testCase.verifySubstring(output, text60 + "…");
+            testCase.verifyThat(output, ...
+                ~matlab.unittest.constraints.ContainsSubstring(text60 + "z"));
+        end
+
+        function descriptionWithWhitespace_normalizesPreviewOnly(testCase)
+            original = "  Line one  " + newline + "  Line two  ";
+            tool = aisdk.tool.LocalLLMTool(@pwd, Description=original);
+
+            output = formattedDisplayText([tool, tool]);
+
             testCase.verifySubstring(output, "Line one Line two");
+            testCase.verifyEqual(tool.Description, original);
         end
 
         function longArgs_truncatesAndClosesParenthesis(testCase)

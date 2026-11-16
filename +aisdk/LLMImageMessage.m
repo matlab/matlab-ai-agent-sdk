@@ -66,9 +66,7 @@ classdef LLMImageMessage < aisdk.message.LLMMessage
         end
 
         function groups = getPropertyGroups(obj)
-            props = struct( ...
-                "Role", obj.Role, ...
-                "Image", contentPreview(obj));
+            props = struct("Role", obj.Role, "Image", contentPreview(obj));
             if obj.Detail ~= "auto"
                 props.Detail = obj.Detail;
             end

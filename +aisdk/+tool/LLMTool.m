@@ -74,7 +74,7 @@ classdef LLMTool < matlab.mixin.Heterogeneous & matlab.mixin.CustomDisplay
 
             for i = 1:n
                 syntaxCol(i) = displaySignature(obj(i));
-                descriptionCol(i) = truncateDescription(obj(i).Description);
+                descriptionCol(i) = aisdk.internal.formatPreview(obj(i).Description);
                 typeCol(i) = displayTypeLabel(obj(i));
                 workspaceCol(i) = displayWorkspaceLabel(obj(i));
             end
@@ -125,14 +125,5 @@ classdef LLMTool < matlab.mixin.Heterogeneous & matlab.mixin.CustomDisplay
             end
             tools = these(toolIndex);
         end
-    end
-end
-
-function txt = truncateDescription(description)
-% Flatten newlines and truncate to maxLen chars.
-    maxLen = 60;
-    txt = replace(description, newline, " ");
-    if strlength(txt) > maxLen + 1
-        txt = extractBefore(txt, maxLen + 1) + "…";
     end
 end

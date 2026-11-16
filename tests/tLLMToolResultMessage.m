@@ -4,6 +4,16 @@ classdef tLLMToolResultMessage < matlab.unittest.TestCase
 %   Copyright 2026 The MathWorks, Inc.
 
     methods (Test, TestTags = {'Unit'})
+        function displayScalar_showsRoleBeforeResultProperties(testCase)
+            msg = aisdk.LLMToolResultMessage("result");
+
+            output = formattedDisplayText(msg);
+
+            testCase.verifySubstring(extractBefore(output, "Result:"), "Role:");
+            testCase.verifySubstring(extractBefore(output, "Name:"), "Result:");
+            testCase.verifySubstring(extractBefore(output, "ToolCallID:"), "Name:");
+        end
+
         function constructorSetsRole(testCase)
             msg = aisdk.LLMToolResultMessage("result", ToolCallID="tc1", Name="myTool");
             testCase.verifyEqual(msg.Role, "tool");

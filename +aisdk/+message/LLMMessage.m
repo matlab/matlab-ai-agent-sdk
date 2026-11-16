@@ -26,11 +26,8 @@ classdef(Abstract) LLMMessage < matlab.mixin.Heterogeneous & matlab.mixin.Custom
             label = classParts(end);
         end
 
-        function txt = truncateForDisplay(~, txt)
-            txt = replace(txt, newline, " ");
-            if strlength(txt) > 60
-                txt = extractBefore(txt, 61) + "...";
-            end
+        function txt = formatPreview(~, txt)
+            txt = aisdk.internal.formatMessagePreview(txt);
             txt = """" + txt + """";
         end
     end
@@ -50,8 +47,9 @@ classdef(Abstract) LLMMessage < matlab.mixin.Heterogeneous & matlab.mixin.Custom
         function displayMessages(obj)
             n = numel(obj);
             dimStr = matlab.mixin.CustomDisplay.convertDimensionsToString(obj);
-            className = matlab.mixin.CustomDisplay.getClassNameForHeader(obj);
-            fprintf("  %s %s array with messages:\n\n", dimStr, className);
+            header = aisdk.internal.MessageCatalog.getMessage( ...
+                "aisdk:message:arrayHeader", dimStr);
+            fprintf("  %s\n\n", header);
 
             % Build display data
             roles  = strings(n,1);

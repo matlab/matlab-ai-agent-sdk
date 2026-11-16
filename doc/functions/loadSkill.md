@@ -92,10 +92,11 @@ agent.Messages
 ans =
 
   1×4 LLMMessage array with messages:
-    1     User         Text         "Perform my favorite task by using my favorite skill."
-    2     Assistant    Tool Call    "loadSkill({"name":"my-favorite-skill"})"
-    3     Tool         Text         "# My Favorite Skill  This is the text at the start of my fav..."
-    4     Assistant    Text         "This is the agent's response."
+
+    1    User         Text         "Perform my favorite task by using my favorite skill."
+    2    Assistant    Tool Call    loadSkill({"name":"my-favorite-skill"})
+    3    Tool         Text         "# My Favorite Skill This is the text at the start of my fav…"
+    4    Assistant    Text         "This is the agent's response."
 ```
 
 If the agent has loaded the skill, then the message history contains a call to the `loadSkill` tool and a tool response that contains the text of the skill. Whether an agent loads a skill depends on the underlying model, as well as the name and description of the skill. To ensure that an agent reads a skill, load the skill manually by using the `loadSkill` function.
@@ -122,8 +123,8 @@ ans =
 
   1×2 LLMMessage array with messages:
 
-    1    Assistant    Tool Call    "loadSkill({"name":"my-second-favorite-skill"})"
-    2    Tool         Text         "# My Second Favorite Skill  This is the text at the start of..."
+    1    Assistant    Tool Call    loadSkill({"name":"my-second-favorite-skill"})
+    2    Tool         Text         "# My Second Favorite Skill This is the text at the start of…"
 ```
 ### Manually Load Skill Resource
 <a id="manually-load-skill-resource"></a>
@@ -147,8 +148,8 @@ ans =
 
   1×2 LLMMessage array with messages:
 
-    1    Assistant    Tool Call    "loadSkill({"name":"my-favorite-skill/references/my-supplemen..."
-    2    Tool         Text         "# Supplemental Information  This is some supplemental inform..."
+    1    Assistant    Tool Call    loadSkill({"name":"my-favorite-skill/references/my-supplemen…
+    2    Tool         Text         "# Supplemental Information This is some supplemental inform…"
 ```
 ## Input Arguments
 <a id="input-arguments"></a>

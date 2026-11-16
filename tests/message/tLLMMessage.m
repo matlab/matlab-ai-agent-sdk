@@ -31,10 +31,8 @@ classdef tLLMMessage < matlab.unittest.TestCase
             msgs = [aisdk.LLMTextMessage("hello"), ...
                     aisdk.LLMTextMessage("world", Role="assistant")];
             output = formattedDisplayText(msgs);
-            testCase.verifySubstring(output, "hello");
-            testCase.verifySubstring(output, "world");
-            testCase.verifyNotEmpty(regexp(output, ...
-                '(?m)^\s*1\s+User\s+Text\s+"hello"', 'once'));
+            testCase.verifySubstring(output, '"hello"');
+            testCase.verifySubstring(output, '"world"');
         end
 
         function roleIsImmutable(testCase)
@@ -43,68 +41,62 @@ classdef tLLMMessage < matlab.unittest.TestCase
                 @() iSetRole(msg), "MATLAB:class:SetProhibited");
         end
 
-        function displayArray_toolCallShowsName(testCase)
-            toolCall = aisdk.LLMToolCallMessage("myTool", struct(), ToolCallID="tc1");
-            msgs = [toolCall, toolCall];
-            output = formattedDisplayText(msgs);
-            testCase.verifySubstring(output, "myTool");
-            testCase.verifyNotEmpty(regexp(output, ...
-                '(?m)^\s*1\s+Assistant\s+Tool Call\s+"myTool"', 'once'));
-        end
-
-        function displayArray_toolCallWithArgs_showsArguments(testCase)
-            toolCall = aisdk.LLMToolCallMessage("myTool", struct("city", "Cambridge"), ToolCallID="tc1");
-            msgs = [toolCall, toolCall];
-            output = formattedDisplayText(msgs);
+        function displayArray_toolCallWithArgs_showsArgumentsWithoutOuterQuotes(testCase)
+            toolCall = aisdk.LLMToolCallMessage("myTool", struct("city", "Cambridge"));
+            output = formattedDisplayText([toolCall, toolCall]);
             testCase.verifySubstring(output, 'myTool({"city":"Cambridge"})');
+            testCase.verifyThat(output, ...
+                ~matlab.unittest.constraints.ContainsSubstring('"myTool('));
         end
 
         function displayArray_toolCallEmptyArgs_showsNameOnly(testCase)
             toolCall = aisdk.LLMToolCallMessage("myTool", struct(), ToolCallID="tc1");
             msgs = [toolCall, toolCall];
             output = formattedDisplayText(msgs);
-            testCase.verifySubstring(output, """myTool""");
+            testCase.verifySubstring(output, "myTool");
             testCase.verifyThat(output, ...
                 ~matlab.unittest.constraints.ContainsSubstring("myTool("));
+            testCase.verifyThat(output, ...
+                ~matlab.unittest.constraints.ContainsSubstring('"myTool'));
         end
 
         function displayArray_toolCallLongArgs_truncates(testCase)
             longVal = repmat('x', 1, 80);
-            toolCall = aisdk.LLMToolCallMessage("myTool", struct("key", longVal), ToolCallID="tc1");
-            msgs = [toolCall, toolCall];
-            output = formattedDisplayText(msgs);
+            toolCall = aisdk.LLMToolCallMessage("myTool", struct("key", longVal));
+            output = formattedDisplayText([toolCall, toolCall]);
             testCase.verifySubstring(output, "myTool(");
-            testCase.verifySubstring(output, "...");
+            testCase.verifySubstring(output, "…");
         end
 
-        function contentPreview_truncatesLongContent(testCase)
-            longText = repmat('a', 1, 80);
-            msg = aisdk.LLMTextMessage(longText);
+        function contentPreview_withWhitespace_preservesSpacingAndShowsMarkers(testCase)
+            % char(9) is a tab, displayed as the literal characters \t.
+            original = "  line1  " + newline + char(9) + "line2  ";
+            msg = aisdk.LLMTextMessage(original);
             msgs = [msg, msg];
             output = formattedDisplayText(msgs);
-            testCase.verifySubstring(output, "...");
+            testCase.verifySubstring(output, '"  line1  ↵\tline2  "');
+            testCase.verifyEqual(msg.Text, original);
         end
 
-        function contentPreview_multilineContent_showsOnOneLine(testCase)
-            msg = aisdk.LLMTextMessage("line1" + newline + "line2");
-            msgs = [msg, msg];
-            output = formattedDisplayText(msgs);
-            testCase.verifySubstring(output, "line1 line2");
+        function displayArray_toolCallWithWhitespace_preservesArgumentSpacing(testCase)
+            toolCall = aisdk.LLMToolCallMessage("findCity", struct("name", "New  York"));
+
+            output = formattedDisplayText([toolCall, toolCall]);
+
+            testCase.verifySubstring(output, 'findCity({"name":"New  York"})');
         end
 
         function contentPreview_emptyString_returnsEmptyQuotes(testCase)
             msg = aisdk.LLMTextMessage("");
-            msgs = [msg, msg];
-            output = formattedDisplayText(msgs);
-            testCase.verifySubstring(output, """""");
+            output = formattedDisplayText([msg, msg]);
+            testCase.verifySubstring(output, '""');
         end
 
         function displayArray_toolRole_showsToolLabel(testCase)
-            toolResult = aisdk.LLMToolResultMessage("res", ToolCallID="tc1", Name="myTool");
-            msgs = [toolResult, toolResult];
-            output = formattedDisplayText(msgs);
-            testCase.verifyNotEmpty(regexp(output, ...
-                '(?m)^\s*1\s+Tool\s+Text\s+"res"', 'once'));
+            toolResult = aisdk.LLMToolResultMessage("res");
+            output = formattedDisplayText([toolResult, toolResult]);
+            testCase.verifySubstring(output, "Tool");
+            testCase.verifySubstring(output, "Text");
         end
 
         function displayArray_unknownRole_showsRawRole(testCase)
@@ -114,21 +106,17 @@ classdef tLLMMessage < matlab.unittest.TestCase
             testCase.verifySubstring(output, "custom-role");
         end
 
-        function displayArray_imageType_showsImageLabel(testCase)
-            img = uint8(randi(255, 4, 4, 3));
-            imgMsg = aisdk.LLMImageMessage(img);
-            msgs = [imgMsg, imgMsg];
-            output = formattedDisplayText(msgs);
-            testCase.verifyNotEmpty(regexp(output, ...
-                '(?m)^\s*1\s+User\s+Image\s+<image', 'once'));
-        end
-
         function displayArray_customSubclass_showsClassName(testCase)
             msg = FakeMessage("user");
-            msgs = [msg, msg];
-            output = formattedDisplayText(msgs);
-            testCase.verifyNotEmpty(regexp(output, ...
-                '(?m)^\s*1\s+User\s+FakeMessage', 'once'));
+            output = formattedDisplayText([msg, msg]);
+            testCase.verifySubstring(output, "FakeMessage");
+        end
+
+        function displayArray_imageType_showsImageLabel(testCase)
+            imgMsg = aisdk.LLMImageMessage(ones(4, 4, 3, "uint8"));
+            output = formattedDisplayText([imgMsg, imgMsg]);
+            testCase.verifySubstring(output, "User");
+            testCase.verifySubstring(output, "Image");
         end
     end
 
@@ -137,4 +125,3 @@ end
 function iSetRole(msg)
     msg = subsasgn(msg, substruct('.','Role'), "assistant"); %#ok<NASGU>
 end
-

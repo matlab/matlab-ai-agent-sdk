@@ -84,6 +84,7 @@ catalog("aisdk:message:InvalidImageDimensions") = "Size of image data must be m-
 catalog("aisdk:message:InvalidLogicalImageDimensions") = "Size of logical image data must be m-by-n.";
 catalog("aisdk:message:InvalidTextContent") = "Message content must be a string scalar or character vector.";
 catalog("aisdk:tool:arrayHeader") = "{1} LLMTool array with tools:";
+catalog("aisdk:message:arrayHeader") = "{1} LLMMessage array with messages:";
 catalog("aisdk:vararginInInputs") = "Unable to derive input arguments because the function signature contains varargin. Specify the InputArguments name-value argument.";
 catalog("aisdk:cannotInferInputArguments") = "Unable to derive input arguments from the function metadata. Specify the InputArguments name-value argument.";
 catalog("aisdk:varargoutInOutputs") = "Unable to derive output arguments because the function signature contains varargout. Specify the OutputArguments name-value argument.";

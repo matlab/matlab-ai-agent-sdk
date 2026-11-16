@@ -42,6 +42,16 @@ classdef tLLMToolCallMessage < matlab.unittest.TestCase
                 "MATLAB:validators:mustBeNonzeroLengthText");
         end
 
+        function displayScalar_showsRoleBeforeToolProperties(testCase)
+            msg = aisdk.LLMToolCallMessage("myTool");
+
+            output = formattedDisplayText(msg);
+
+            testCase.verifySubstring(extractBefore(output, "Name:"), "Role:");
+            testCase.verifySubstring(extractBefore(output, "Arguments:"), "Name:");
+            testCase.verifySubstring(extractBefore(output, "ToolCallID:"), "Arguments:");
+        end
+
         function displayScalar_showsToolName(testCase)
             msg = aisdk.LLMToolCallMessage("myTool", struct(), ToolCallID="tc1");
             output = formattedDisplayText(msg);

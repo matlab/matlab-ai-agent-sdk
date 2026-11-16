@@ -4,6 +4,14 @@ classdef tLLMTextMessage < matlab.unittest.TestCase
 %   Copyright 2026 The MathWorks, Inc.
 
     methods (Test, TestTags = {'Unit'})
+        function displayScalar_showsRoleBeforeText(testCase)
+            msg = aisdk.LLMTextMessage("hello");
+
+            output = formattedDisplayText(msg);
+
+            testCase.verifySubstring(extractBefore(output, "Text:"), "Role:");
+        end
+
         function constructorSetsRoleUser(testCase)
             msg = aisdk.LLMTextMessage("hello", Role="user");
             testCase.verifyEqual(msg.Role, "user");

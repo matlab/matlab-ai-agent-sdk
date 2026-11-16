@@ -125,7 +125,7 @@ ans =
     1    User         Text         "How many times is the letter r in the word strawberry?"
     2    Assistant    Tool Call    countLetters({"word":"strawberry","letter":"r"})
     3    Tool         Text         "{"numLetter":3}"
-    4    Assistant    Text         "The letter "r" appears 3 times in the word "strawberry."
+    4    Assistant    Text         "The letter "r" appears 3 times in the word "strawberry.""
 ```
 
 In this example, the message history contains two text messages, the first user
@@ -206,8 +206,8 @@ newMessage =
 
   aisdk.LLMTextMessage with properties:
 
-       Text: "False botanically; they are a fruit, but commonly used as a vegetable."
        Role: "assistant"
+       Text: "False botanically; they are a fruit, but commonly used as a vegetable."
 ```
 
 ## Version History

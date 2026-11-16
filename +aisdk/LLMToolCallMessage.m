@@ -41,7 +41,7 @@ classdef LLMToolCallMessage < aisdk.message.LLMMessage
             if ~isempty(fieldnames(this.Arguments))
                 txt = txt + "(" + jsonencode(this.Arguments) + ")";
             end
-            txt = this.truncateForDisplay(txt);
+            txt = aisdk.internal.truncateForDisplay(txt);
         end
 
         function groups = getPropertyGroups(obj)

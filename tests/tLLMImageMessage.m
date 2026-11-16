@@ -85,11 +85,21 @@ classdef tLLMImageMessage < matlab.unittest.TestCase
                 "aisdk:message:InvalidImageSource");
         end
 
-        function displayShowsDetail_whenNonAuto(testCase)
+        function displayScalar_showsRoleBeforeImage(testCase)
+            msg = aisdk.LLMImageMessage(ones(2, 2));
+
+            output = formattedDisplayText(msg);
+
+            testCase.verifySubstring(extractBefore(output, "Image:"), "Role:");
+        end
+
+        function displayScalar_withNonAutoDetail_showsRoleImageThenDetail(testCase)
             img = ones(10, 10, 3, "uint8");
             msg = aisdk.LLMImageMessage(img, Detail="high");
             output = formattedDisplayText(msg);
             testCase.verifySubstring(output, "high");
+            testCase.verifySubstring(extractBefore(output, "Detail:"), "Image:");
+            testCase.verifySubstring(extractBefore(output, "Image:"), "Role:");
         end
 
         function constructorFromNonImageFile_throwsError(testCase)

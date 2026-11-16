@@ -71,12 +71,12 @@ agent.Messages
 ```
 ans =
 
-  1×4 aisdk.LLMTextMessage array with messages:
+  1×4 LLMMessage array with messages:
 
     1    User         Text    "TOMATO FRUIT OR VEGETABLE STOP"
-    2    Assistant    Text    "TOMATO TECHNICALLY A FRUIT STOP COMMONLY USED AS VEGETABLE I..."
+    2    Assistant    Text    "TOMATO TECHNICALLY A FRUIT STOP COMMONLY USED AS VEGETABLE I…"
     3    User         Text    "HOW ABOUT AVOCADO STOP"
-    4    Assistant    Text    "AVOCADO ALSO A FRUIT STOP KNOWN AS ALLIGATOR PEAR STOP HIGH ..."
+    4    Assistant    Text    "AVOCADO ALSO A FRUIT STOP KNOWN AS ALLIGATOR PEAR STOP HIGH …"
 ```
 ## Input Arguments
 <a id="input-arguments"></a>

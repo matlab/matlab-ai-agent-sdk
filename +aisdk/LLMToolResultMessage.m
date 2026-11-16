@@ -52,12 +52,21 @@ classdef LLMToolResultMessage < aisdk.message.LLMMessage
     end
 
     methods (Access = protected)
+        function groups = getPropertyGroups(obj)
+            props = struct( ...
+                "Role", obj.Role, ...
+                "Result", obj.Result, ...
+                "Name", obj.Name, ...
+                "ToolCallID", obj.ToolCallID);
+            groups = matlab.mixin.util.PropertyGroup(props);
+        end
+
         function label = displayTypeLabel(~)
             label = "Text";
         end
 
         function txt = contentPreview(this)
-            txt = this.truncateForDisplay(this.Result);
+            txt = this.formatPreview(this.Result);
         end
     end
 
