@@ -16,7 +16,7 @@ classdef tinternal_MessageCatalog < matlab.unittest.TestCase
         end
     end
 
-    methods (Test, TestTags = {'Unit', 'Internal'})
+    methods (Test, TestTags = {'Unit'})
 
         function throwError_withUnknownId_throws(testCase)
             % Fails on the lookup rather than throwing the id it was handed.
